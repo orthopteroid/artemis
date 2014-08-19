@@ -261,7 +261,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 
 	if( outbuflen == 0 ) { ASSERT(0); rc = -1; goto EXIT; }
 	if( outbuflen < pARecord->bufused ) { ASSERT(0); rc = -2; goto EXIT; }
-	if( numSRecords < pARecord->threshold ) { rc = -7; goto EXIT; }
+	if( numSRecords < pARecord->threshold ) { ASSERT(0); rc = -7; goto EXIT; }
 
 	///////////
 	// check topic consistiency between ARecord, cryptext and all SRecords
@@ -273,11 +273,11 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 		sha1_digest( digest, pARecord->buf, pARecord->bufused );
 		vlSetWord64( topic, digest[0], digest[1] );
 	}
-	if( !vlEqual( pARecord->topic, topic ) ) { rc = -6; goto EXIT; }
+	if( !vlEqual( pARecord->topic, topic ) ) { ASSERT(0); rc = -6; goto EXIT; }
 
 	for( int i=0; i<numSRecords; i++ )
 	{
-		if( !vlEqual( topic, pSRecordArr[i].topic ) ) { rc = -6; goto EXIT; }
+		if( !vlEqual( topic, pSRecordArr[i]->topic ) ) { ASSERT(0); rc = -6; goto EXIT; }
 	}
 
 	////////////
@@ -307,7 +307,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 			sha1_final( c, digest );
 			vlSetWord64( authhash, digest[0], digest[1] );
 		}
-		if( !cpVerify( pARecord->pubkey, authhash, &pARecord->authsig ) ) { rc = -4; goto EXIT; }
+		if( !cpVerify( pARecord->pubkey, authhash, &pARecord->authsig ) ) { ASSERT(0); rc = -4; goto EXIT; }
 	}
 
 	////////////
@@ -335,7 +335,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 			sha1_final( c, digest );
 			vlSetWord64( saltedsharehash, digest[0], digest[1] );
 		}
-		if( !cpVerify( pARecord->pubkey, saltedsharehash, &pSRecordArr[i].sharesig ) ) { rc = -3; goto EXIT; }
+		if( !cpVerify( pARecord->pubkey, saltedsharehash, &pSRecordArr[i]->sharesig ) ) { ASSERT(0); rc = -3; goto EXIT; }
 	}
 
 	//////////////
@@ -379,7 +379,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 			sha1_final( c, digest );
 			vlSetWord32( verify, digest[0] );
 		}
-		if( !vlEqual( verify, pARecord->verify ) ) { rc = -5; goto EXIT; }
+		if( !vlEqual( verify, pARecord->verify ) ) { ASSERT(0); rc = -5; goto EXIT; }
 	}
 
 EXIT:
