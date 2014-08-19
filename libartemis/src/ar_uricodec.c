@@ -106,53 +106,85 @@ static int ps_scan_item( parsestate *ps, byteptr prefix, int itemnum )
 
 ///////////////////
 
-void ar_uri_estimatebufsize( size_t* uribufsize, arAuth* pARecord )
+static void ar_uri_arglen( size_t* arglen, byteptr arg, byteptr buf )
 {
-	*uribufsize = 16; // padding
-	*uribufsize += 8; // verify
-	*uribufsize += 3 * 4; // info
-	*uribufsize += pARecord->pubkey[0] * 4; // key
-	*uribufsize += pARecord->authsig.r[0] * 4 + pARecord->authsig.s[0] * 4; // signature
-	*uribufsize += pARecord->bufused; // message
-	*uribufsize = *uribufsize * 4 / 3; // b64 encoding
+	*arglen = 0;
+
+	byteptr s = strstr( buf, arg );
+	if( !s ) { return; }
+	s += strlen(arg);
+
+	byteptr e=s;
+	while( *e != '!' && *e != '&' && *e != '?' ) { e++; }
+
+	*arglen = e - s;
 }
 
-void ar_uri_estimatemessagesize( size_t* uribufsize, byteptr buf )
-{
-	*uribufsize = 0;
+///////////////////
 
-	if( strstr( buf, "&mt=" ) )
-	{
-		*uribufsize = strlen( buf ) - (strstr( buf, "&mt=" ) - buf) + 16; // +16 for padding
-	}
+void ar_uri_bufsize_a( size_t* uribufsize, arAuth* pARecord )
+{
+	*uribufsize = ( sizeof(arAuth) + pARecord->bufused ) * 4 / 3; // b64 encoding
 }
 
-void ar_uri_estimateshares( word16* shares, byteptr buf )
+void ar_uri_bufsize_s( size_t* uribufsize, arShare* pSRecord )
 {
+	*uribufsize = ( sizeof(arShare) + pSRecord->bufused ) * 4 / 3; // b64 encoding
+}
+
+void ar_uri_parse_messlen( size_t* len, byteptr buf )
+{
+	ar_uri_arglen( len, "mt=", buf );
+}
+
+void ar_uri_parse_cluelen( size_t* len, byteptr buf )
+{
+	ar_uri_arglen( len, "mc=", buf );
+	if( !len ) { ar_uri_arglen( len, "sc=", buf ); }
+}
+
+int ar_uri_parse_type( byteptr buf )
+{
+	if( strstr( buf, "ai=" ) )			{ return 1; }
+	else if( strstr( buf, "si=" ) )		{ return 2; }
+	return -1;
+}
+
+void ar_uri_parse_sharecount( word16* shares, byteptr buf )
+{
+	int rc = 0;
 	*shares = 0;
 
 	parsestate ss;
 	ps_init( &ss, buf );
 
-	int rc = 0;
-	if( ps_scan_item( &ss, "&si=", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( strstr( buf, "ai=" ) )
+	{
+		if( ps_scan_item( &ss, "&ai=", 0 ) ) { ASSERT(0); goto FAIL; }
+	}
+	else if( strstr( buf, "si=" ) )
+	{
+		if( ps_scan_item( &ss, "&si=", 0 ) ) { ASSERT(0); goto FAIL; }
+	}
+	else { ASSERT(0); goto FAIL; }
+
 	if( rc = ar_util_6Bto12B( shares, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
+
 FAIL:
 	ps_cleanup( &ss );
 }
 
 int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 {
+	size_t buflen = 0;
 	char sz[3] = {0,0,0};
 	int rc = 0;
 
 	strcat_s( buf, bufsize, "artemis:" );
 	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->topic ) ) { ASSERT(0); goto DONE; }
 
-	strcat_s( buf, bufsize, "?vf=" );
-	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->verify ) ) { ASSERT(0); goto DONE; }
-
-	strcat_s( buf, bufsize, "&si=" );
+	strcat_s( buf, bufsize, "?" );
+	strcat_s( buf, bufsize, "ai=" );
 	if( rc = ar_util_12Bto6B( sz, pARecord->shares ) ) { ASSERT(0); goto DONE; }
 	strcat_s( buf, bufsize, sz );
 	strcat_s( buf, bufsize, "!" );
@@ -162,19 +194,38 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 	if( rc = ar_util_12Bto6B( sz, pARecord->fieldsize ) ) { ASSERT(0); goto DONE; }
 	strcat_s( buf, bufsize, sz );
 
-	strcat_s( buf, bufsize, "&pk=" );
+	strcat_s( buf, bufsize, "&" );
+	strcat_s( buf, bufsize, "vf=" );
+	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->verify ) ) { ASSERT(0); goto DONE; }
+
+	strcat_s( buf, bufsize, "&" );
+	strcat_s( buf, bufsize, "pk=" );
 	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->pubkey ) ) { ASSERT(0); goto DONE; }
 
-	strcat_s( buf, bufsize, "&as=" );
+	strcat_s( buf, bufsize, "&" );
+	strcat_s( buf, bufsize, "as=" );
 	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.r ) ) { ASSERT(0); goto DONE; }
 	strcat_s( buf, bufsize, "!" );
 	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.s ) ) { ASSERT(0); goto DONE; }
 
-	strcat_s( buf, bufsize, "&mt=" );
-	size_t deltalen = 0;
-	size_t buflen = strlen(buf);
-	rc = ar_util_8BAto6BA( &deltalen, buf + buflen, bufsize - buflen, pARecord->buf, pARecord->bufused );
-	if( rc == 0 ) { buf[ deltalen + buflen ] = 0; } else { ASSERT(0); goto DONE; }
+	strcat_s( buf, bufsize, "&" );
+	strcat_s( buf, bufsize, "mt=" );
+	byteptr cryptext = pARecord->buf + pARecord->cluelen;
+	size_t  cryplen = pARecord->bufused - pARecord->cluelen;
+	buflen = strlen(buf);
+	size_t mtlen = 0;
+	rc = ar_util_8BAto6BA( &mtlen, buf + buflen, bufsize - buflen, cryptext, cryplen );
+	if( rc == 0 ) { buf[ mtlen + buflen ] = 0; } else { ASSERT(0); goto DONE; }
+
+	if( pARecord->cluelen > 0 )
+	{
+		strcat_s( buf, bufsize, "&" );
+		strcat_s( buf, bufsize, "mc=" );
+		buflen = strlen(buf);
+		size_t mclen = 0;
+		rc = ar_util_8BAto6BA( &mclen, buf + buflen, bufsize - buflen, pARecord->buf, pARecord->cluelen );
+		if( rc == 0 ) { buf[ mclen + buflen ] = 0; } else { ASSERT(0); goto DONE; }
+	}
 
 DONE:
 
@@ -183,89 +234,142 @@ DONE:
 
 int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 {
+	size_t buflen = 0;
 	char sz[3] = {0,0,0};
 	int rc = 0;
 
 	strcat_s( buf, bufsize, "artemis:" );
 	if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->topic ) ) { ASSERT(0); goto DONE; }
 
-	strcat_s( buf, bufsize, "?sh=" );
-	if( rc = ar_util_12Bto6B( sz, pSRecord->shareid ) ) { ASSERT(0); goto DONE; }
+	strcat_s( buf, bufsize, "?" );
+	strcat_s( buf, bufsize, "si=" );
+	if( rc = ar_util_12Bto6B( sz, pSRecord->shares ) ) { ASSERT(0); goto DONE; }
 	strcat_s( buf, bufsize, sz );
 	strcat_s( buf, bufsize, "!" );
+	if( rc = ar_util_12Bto6B( sz, pSRecord->shareid ) ) { ASSERT(0); goto DONE; }
+	strcat_s( buf, bufsize, sz );
+
+	strcat_s( buf, bufsize, "&" );
+	strcat_s( buf, bufsize, "sh=" );
 	if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->share ) ) { ASSERT(0); goto DONE; }
 
-	strcat_s( buf, bufsize, "&ss=" );
+	strcat_s( buf, bufsize, "&" );
+	strcat_s( buf, bufsize, "ss=" );
 	if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.r ) ) { ASSERT(0); goto DONE; }
 	strcat_s( buf, bufsize, "!" );
 	if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.s ) ) { ASSERT(0); goto DONE; }
+
+	if( pSRecord->bufused > 0 )
+	{
+		strcat_s( buf, bufsize, "&" );
+		strcat_s( buf, bufsize, "sc=" );
+		size_t deltalen = 0;
+		buflen = strlen(buf);
+		rc = ar_util_8BAto6BA( &deltalen, buf + buflen, bufsize - buflen, pSRecord->buf, pSRecord->bufused );
+		if( rc == 0 ) { buf[ deltalen + buflen ] = 0; } else { ASSERT(0); goto DONE; }
+	}
 
 DONE:
 
 	return rc;
 }
 
-int ar_uri_parse( arAuth* pARecord, arShare* pSRecord, byteptr szRecord )
+int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord )
 {
-	if( !pARecord || !pSRecord || !szRecord ) { ASSERT(0); return -1; }
+	int rc = 0;
+
+	if( !pARecord || !szRecord ) { ASSERT(0); return -1; }
 	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
 
 	parsestate ss;
 	parsestate* pss = &ss;
 	ps_init( pss, szRecord );
 
-	int rc = 0;
-	int isARecord = strstr( szRecord, "&mt=" ) ? 1 : 0;
+	size_t cryptlen = 0;
+	ar_uri_arglen( &cryptlen, "mt=", szRecord );
+	if( cryptlen >= pARecord->bufmax ) { ASSERT(0); rc=-2; goto FAIL; }
 
-	if( isARecord )
+	if( ps_scan_item( pss, "artemis:", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = txt_to_vl( pARecord->topic, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	if( ps_scan_item( pss, "vf=", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = txt_to_vl( pARecord->verify, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	if( ps_scan_item( pss, "ai=", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( &pARecord->shares, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+	if( ps_scan_item( pss, "ai=", 1 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( &pARecord->threshold, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+	if( ps_scan_item( pss, "ai=", 2 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( &pARecord->fieldsize, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	if( ps_scan_item( pss, "pk=", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = txt_to_vl( pARecord->pubkey, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	if( ps_scan_item( pss, "as=", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = txt_to_vl( pARecord->authsig.r, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+	if( ps_scan_item( pss, "as=", 1 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = txt_to_vl( pARecord->authsig.s, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	byteptr bufloc = pARecord->buf;
+	size_t buflen = 0;
+
+	size_t mclen = 0;
+	if( ps_scan_item( pss, "mc=", 0 ) ) { /* optional, but first */ } else
 	{
-		size_t cryptlen = strlen( szRecord ) - (strstr( szRecord, "&mt=" ) - szRecord);
-		if( cryptlen >= pARecord->bufmax ) { ASSERT(0); rc=-2; goto FAIL; }
-
-		if( ps_scan_item( pss, "artemis:", 0 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = txt_to_vl( pARecord->topic, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-
-		if( ps_scan_item( pss, "vf=", 0 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = txt_to_vl( pARecord->verify, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-
-		if( ps_scan_item( pss, "si=", 0 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = ar_util_6Bto12B( &pARecord->shares, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-		if( ps_scan_item( pss, "si=", 1 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = ar_util_6Bto12B( &pARecord->threshold, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-		if( ps_scan_item( pss, "si=", 2 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = ar_util_6Bto12B( &pARecord->fieldsize, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-
-		if( ps_scan_item( pss, "pk=", 0 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = txt_to_vl( pARecord->pubkey, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-
-		if( ps_scan_item( pss, "as=", 0 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = txt_to_vl( pARecord->authsig.r, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-		if( ps_scan_item( pss, "as=", 1 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = txt_to_vl( pARecord->authsig.s, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-
-		if( ps_scan_item( pss, "mt=", 0 ) ) { ASSERT(0); goto FAIL; }
-		size_t deltalen = 0;
-		if( rc = ar_util_6BAto8BA( &deltalen, pARecord->buf, pARecord->bufmax, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
-		pARecord->bufused = (word16)deltalen;
-	} else {
-		if( ps_scan_item( pss, "artemis:", 0 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = txt_to_vl( pSRecord->topic, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-
-		if( ps_scan_item( pss, "sh=", 0 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = ar_util_6Bto12B( &pSRecord->shareid, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-		if( ps_scan_item( pss, "sh=", 1 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = txt_to_vl( pSRecord->share, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-
-		if( ps_scan_item( pss, "ss=", 0 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = txt_to_vl( pSRecord->sharesig.r, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
-		if( ps_scan_item( pss, "ss=", 1 ) ) { ASSERT(0); goto FAIL; }
-		if( rc = txt_to_vl( pSRecord->sharesig.s, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+		if( rc = ar_util_6BAto8BA( &mclen, bufloc, pARecord->bufmax, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
+		bufloc += mclen;
+		buflen += mclen;
 	}
 
-	ASSERT( rc == 0 );
+	size_t mtlen = 0;
+	if( ps_scan_item( pss, "mt=", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6BAto8BA( &mtlen, bufloc, pARecord->bufmax, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
+	bufloc += mtlen;
+	buflen += mtlen;
+
+	pARecord->cluelen = (word16)(mclen);
+	pARecord->bufused = (word16)(buflen);
+
+FAIL:
 
 	ps_cleanup( pss );
-	return isARecord ? 1 : 2;
+	return rc;
+}
+
+int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord )
+{
+	int rc = 0;
+
+	if( !pSRecord || !szRecord ) { ASSERT(0); return -1; }
+	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
+
+	parsestate ss;
+	parsestate* pss = &ss;
+	ps_init( pss, szRecord );
+
+	if( ps_scan_item( pss, "artemis:", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = txt_to_vl( pSRecord->topic, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	if( ps_scan_item( pss, "si=", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( &pSRecord->shares, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+	if( ps_scan_item( pss, "si=", 1 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( &pSRecord->shareid, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	if( ps_scan_item( pss, "sh=", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = txt_to_vl( pSRecord->share, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	if( ps_scan_item( pss, "ss=", 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = txt_to_vl( pSRecord->sharesig.r, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+	if( ps_scan_item( pss, "ss=", 1 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = txt_to_vl( pSRecord->sharesig.s, pss->seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	size_t sclen = 0;
+	if( ps_scan_item( pss, "sc=", 0 ) ) { /* optional */ } else
+	{
+		if( rc = ar_util_6BAto8BA( &sclen, pSRecord->buf, pSRecord->bufmax, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
+	}
+
+	pSRecord->bufused = (word16)(sclen);
 
 FAIL:
 
@@ -280,25 +384,46 @@ void ar_uri_test()
 
 	printf("# ar_uri_test: ");
 
-	char* bufa = 0;
-	char* bufs0 = 0;
-	char* bufs1 = 0;
+	typedef struct arAuth80_
+	{
+		arAuth x;
+		byte y[80];
+	} arAuth80;
 
-	arAuth* arecord = 0;
-	arShare srecords[2];
+	typedef struct arShare80_
+	{
+		arShare x;
+		byte y[80];
+	} arShare80;
 
-	arAuth* arecord_ = 0;
-	arShare srecords_[2];
+	typedef arShare80* arShare80ptr;
+
+	arAuth80		arecord;
+	arShare80		srecords[2];
+	arShare80ptr	srecordarr[2] = { &srecords[0], &srecords[1] };
+
+	memset( &arecord, 0, sizeof(arAuth80) );
+	memset( &srecords[0], 0, sizeof(arShare80) );
+	memset( &srecords[1], 0, sizeof(arShare80) );
+	arecord.x.bufmax = srecords[0].x.bufmax = srecords[1].x.bufmax = 80;
+
+	arAuth80		arecord_;
+	arShare80		srecords_[2];
+	arShare80ptr	srecordarr_[2] = { &srecords_[0], &srecords_[1] };
+
+	memset( &arecord_, 0, sizeof(arAuth80) );
+	memset( &srecords_[0], 0, sizeof(arShare80) );
+	memset( &srecords_[1], 0, sizeof(arShare80) );
+	arecord_.x.bufmax = srecords_[0].x.bufmax = srecords_[1].x.bufmax = 80;
+
+	char* clues[3] = {"topiclue", "clue1", "clue2"};
 
 	char cleartextin[20];
 	char cleartextout[80];
 
-	if( (arecord = malloc( sizeof(arAuth) + 80 )) == 0 ) { ASSERT(0); goto EXIT; }
-	if( (arecord_ = malloc( sizeof(arAuth) + 80 )) == 0 ) { ASSERT(0); goto EXIT; }
+	typedef byte byte2048[2048];
 
-	if( (bufa = malloc( 2048 )) == 0 ) { ASSERT(0); goto EXIT; }
-	if( (bufs0 = malloc( 2048 )) == 0 ) { ASSERT(0); goto EXIT; }
-	if( (bufs1 = malloc( 2048 )) == 0 ) { ASSERT(0); goto EXIT; }
+	byte2048 bufa, bufs0, bufs1;
 
 	int numtests = 100;
 	for( int i=0; i<numtests; i++ )
@@ -308,23 +433,19 @@ void ar_uri_test()
 		for( int j=0; j<20; j++ ) { cleartextin[j] = (char)(platform_rnd32() % (122 - 32) + 32); }
 		cleartextin[ platform_rnd32() % 20 ] = 0;
 
-		memset( arecord, 0, sizeof(arAuth) + 80 );
-		memset( srecords, 0, sizeof(arShare) * 2 );
-		arecord->bufmax = 80;
-
-		rc = ar_core_create( arecord, srecords, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1) ); // +1 to include \0
+		rc = ar_core_create( &arecord.x, (arShareptr*)srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), clues ); // +1 to include \0
 		ASSERT( rc == 0 );
 
 		bufa[0] = 0;
-		rc = ar_uri_create_a( bufa, 2048, arecord );
+		rc = ar_uri_create_a( bufa, 2048, &arecord.x );
 		ASSERT( rc == 0 );
 
 		bufs0[0] = 0;
-		rc = ar_uri_create_s( bufs0, 2048, &srecords[0] );
+		rc = ar_uri_create_s( bufs0, 2048, &srecords[0].x );
 		ASSERT( rc == 0 );
 
 		bufs1[0] = 0;
-		rc = ar_uri_create_s( bufs1, 2048, &srecords[1] );
+		rc = ar_uri_create_s( bufs1, 2048, &srecords[1].x );
 		ASSERT( rc == 0 );
 
 		if(0)
@@ -332,24 +453,19 @@ void ar_uri_test()
 			printf("%s\n",bufa);
 			printf("%s\n",bufs0);
 			printf("%s\n",bufs1);
-			ASSERT(0);
 		}
 
-		memset( arecord_, 0, sizeof(arAuth) + 80 );
-		memset( srecords_, 0, sizeof(arShare) * 2 );
-		arecord_->bufmax = 80;
+		rc = ar_uri_parse_a( &arecord_.x, bufa );
+		ASSERT( rc == 0 );
 
-		rc = ar_uri_parse( arecord_, &srecords_[0], bufa );
-		ASSERT( rc == 1 );
+		rc = ar_uri_parse_s( &srecords_[0].x, bufs0 );
+		ASSERT( rc == 0 );
 
-		rc = ar_uri_parse( arecord_, &srecords_[0], bufs0 );
-		ASSERT( rc == 2 );
-
-		rc = ar_uri_parse( arecord_, &srecords_[1], bufs1 );
-		ASSERT( rc == 2 );
+		rc = ar_uri_parse_s( &srecords_[1].x, bufs1 );
+		ASSERT( rc == 0 );
 
 		cleartextout[0]=0;
-		rc = ar_core_decrypt( cleartextout, 80, arecord_, srecords_, 2 );
+		rc = ar_core_decrypt( cleartextout, 80, &arecord_.x, (arShareptr*)srecordarr_, 2 );
 		ASSERT( rc == 0 );
 
 		ASSERT( strcmp( cleartextin, cleartextout ) == 0 );
@@ -357,14 +473,6 @@ void ar_uri_test()
 		if(i > 0 &&  i % 10 == 0 ) { printf("%d",9 - i / (numtests / 9)); }
 	}
 	putchar('\n');
-
-EXIT:
-
-	if( bufa )	free( bufa );
-	if( bufs0 )	free( bufs0 );
-	if( bufs1 )	free( bufs1 );
-	if( arecord )	free( arecord );
-	if( arecord_ )	free( arecord_ );
 
 #endif
 

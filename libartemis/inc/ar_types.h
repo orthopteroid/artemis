@@ -20,15 +20,25 @@ typedef struct arAuth_
 	//
 	word16		bufmax;
 	word16		bufused;
-	byte		buf[1];
+	word16		cluelen;		// optional plaintext clue for share-series
+	byte		buf[1];			// optional plaintext clue stored first
 } arAuth;
+
+typedef arAuth*		arAuthptr;
 
 typedef struct arShare_
 {
 	vlPoint		topic;			// high 64 bits of crypt digest
 	word16		shareid;		// bits 11...0
+	word16		shares;			// 12 bits
 	vlPoint		share;
 	cpPair		sharesig;
+	//
+	word16		bufmax;
+	word16		bufused;
+	byte		buf[1];			// optional plaintext clue (for some other share)
 } arShare;
+
+typedef arShare*	arShareptr;
 
 #endif // _AR_TYPES_H_

@@ -11,15 +11,23 @@
 // The arg 'si' is a triplet made from shares, threshold and fieldsize, which only have their lower 12 bits encoded in the uri scheme.
 
 DLLDECL 
-void ar_uri_estimatebufsize( size_t* uribufsize, arAuth* pARecord );
+void ar_uri_bufsize_a( size_t* uribufsize, arAuth* pARecord );
 	/* returns number of bytes needed for uri compose buffer */
 
 DLLDECL 
-void ar_uri_estimatemessagesize( size_t* uribufsize, byteptr buf );
-	/* returns number of bytes needed for ARecord, if buf holds an arecord uri */
+void ar_uri_bufsize_s( size_t* uribufsize, arShare* pASecord );
+	/* returns number of bytes needed for uri compose buffer */
 
 DLLDECL 
-void ar_uri_estimateshares( word16* shares, byteptr buf );
+void ar_uri_parse_messlen( size_t* len, byteptr buf );
+	/* returns num of bytes in message arg, if buf holds an arecord uri */
+
+DLLDECL 
+void ar_uri_parse_cluelen( size_t* len, byteptr buf );
+	/* returns num of bytes in clue arg, if buf holds an arecord uri */
+
+DLLDECL 
+void ar_uri_parse_sharecount( word16* shares, byteptr buf );
 	/* returns number of shares, if buf holds an arecord uri */
 
 DLLDECL 
@@ -29,8 +37,16 @@ DLLDECL
 int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord );
 
 DLLDECL 
-int ar_uri_parse( arAuth* pARecord, arShare* pSRecord, byteptr szRecord );
+int ar_uri_parse_type( byteptr szRecord );
 	/* -1 for error, 1 for ARecord, 2 for SRecord */
+
+DLLDECL 
+int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord );
+	/* -1 for error */
+
+DLLDECL 
+int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord );
+	/* -1 for error */
 
 void ar_uri_test();
 

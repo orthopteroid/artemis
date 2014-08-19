@@ -10,11 +10,11 @@
 #include "ec_crypt.h"
 
 DLLDECL 
-int ar_core_create( arAuth* pARecord, arShare* pSRecordArr, word16 numShares, word16 numThres, byteptr bytes, word16 bytelen );
+int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares, word16 numThres, byteptr bytes, word16 bytelen, byteptr* clueArr );
 	/* -2 bounds, -1 api, 0 OK */
 
 DLLDECL 
-int ar_core_decrypt( byteptr buf, word16 buflen, arAuth* pARecord, arShare* pSRecordArr, word16 numSRecords );
+int ar_core_decrypt( byteptr buf, word16 buflen, arAuth* pARecord, arShareptr* pSRecordArr, word16 numSRecords );
 	/* -5 decrypt, -4 authsig, -3 sharesig, -6 topichash, -7 too few shares, -2 bounds, -1 api, 0 OK */
 
 void ar_core_test();
