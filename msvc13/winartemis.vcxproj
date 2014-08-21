@@ -181,7 +181,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c" />
+    <ClCompile Include="..\src\main.c" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="winartemis.cpp" />
   </ItemGroup>

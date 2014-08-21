@@ -8,7 +8,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winartemis", "winartemis.vc
 		{101BF751-FA77-4B44-8A38-567692635BB2} = {101BF751-FA77-4B44-8A38-567692635BB2}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winlibartemis", "..\libartemis\winlibartemis\winlibartemis.vcxproj", "{101BF751-FA77-4B44-8A38-567692635BB2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winlibartemis", "..\libartemis\msvc13\winlibartemis.vcxproj", "{101BF751-FA77-4B44-8A38-567692635BB2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

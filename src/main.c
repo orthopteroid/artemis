@@ -5,19 +5,26 @@
 
 #include "ar_uricodec.h"
 #include "ar_core.h"
-
 #include "test.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 #else
 	#define strncpy_s(a,b,c,d) strncpy(a,c,d)
 	#define sscanf_s sscanf
+
+int ar_main(int argc, char **argv);
+
+int main(int argc, _TCHAR* argv[])
+{
+	return ar_main( argc, argv );
+}
+
 #endif
 
 unsigned long app_vmajor = 0;
 unsigned long app_vminor = 1;
 
-int main(int argc, char **argv)
+int ar_main(int argc, char **argv)
 {
 	int rc = 0;
 	char* message = 0;

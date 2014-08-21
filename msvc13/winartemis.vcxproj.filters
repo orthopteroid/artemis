@@ -32,7 +32,7 @@
     <ClCompile Include="winartemis.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.c">
+    <ClCompile Include="..\src\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
