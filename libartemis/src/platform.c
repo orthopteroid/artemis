@@ -61,8 +61,18 @@ word32 platform_keylength()
 
 word32 platform_rnd32()
 {
+
+#if defined(_WIN32) || defined(_WIN64)
+
 	word32 r;
 	rand_s( &r );
 	return r;
+	
+#else
+
+	return rand();
+
+#endif
+
 }
 

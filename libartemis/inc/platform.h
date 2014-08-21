@@ -15,24 +15,32 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 
-#include <crtdefs.h>
+	#include <crtdefs.h>
 
-//#if defined(WINDLL_EXPORTS)
-#define DLLDECL __declspec(dllexport)
-//#else // WINDLL_EXPORTS
-//#define DLLDECL __declspec(dllimport)
-//#endif // WINDLL_EXPORTS
+	//#if defined(WINDLL_EXPORTS)
+	#define DLLDECL __declspec(dllexport)
+	//#else // WINDLL_EXPORTS
+	//#define DLLDECL __declspec(dllimport)
+	//#endif // WINDLL_EXPORTS
 
-#if defined(_DEBUG)
-#define ASSERT( c ) do { if( !(c) ) { __debugbreak(); } } while( 0 )
-#else // debug
-#define ASSERT(...) (0)
-#endif // debug
+	#if defined(_DEBUG)
+		#define ASSERT( c ) do { if( !(c) ) { __debugbreak(); } } while( 0 )
+	#else // debug
+		#define ASSERT(...) (0)
+	#endif // debug
 
 #else // win
 
-#include <assert.h>
-#define ASSERT(...) assert( __VA_ARGS__ )
+	#include <stddef.h>
+
+	#define DLLDECL
+
+	#include <assert.h>
+	#define ASSERT(...) assert( __VA_ARGS__ )
+
+	#define max(a,b) ((a)>(b)?(a):(b))
+	#define memcpy_s(a,b,c,d) memcpy(a,c,d)
+	#define strcat_s(a,b,c) strcat(a,c)
 
 #endif // win
 
