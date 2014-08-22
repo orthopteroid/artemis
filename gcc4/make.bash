@@ -1,6 +1,8 @@
 #!/bin/bash
 
-gcc -I../libartemis/inc/ -std=c99 -o ./obj/artemis ../src/main.c  ../libartemis/gcc4/obj/libartemis.a
+mkdir obj 2> /dev/null
 
-readelf --symbols ./obj/artemis
+gcc -g -I../libartemis/inc/ -std=c99 -o ./obj/artemis ../src/main.c  ../libartemis/gcc4/obj/libartemis.so
+
+#readelf --symbols ./obj/artemis
 
