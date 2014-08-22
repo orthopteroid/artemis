@@ -45,7 +45,6 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	word16* shareIDArr = 0;
 	int rc = 0;
 
-	if( clueArr == 0 ) { rc = -1; goto EXIT; }
 	if( inbuflen == 0 ) { rc = -1; goto EXIT; }
 	if( numShares < numThres ) { rc = -1; goto EXIT; }
 
@@ -56,11 +55,13 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	///////////
 	// ensure structs have storage for cryptext and clues
 
-	if( pARecord->bufmax < ( strlen( clueArr[0] ) + inbuflen ) ) { ASSERT(0); rc = -2; goto EXIT; }
+	size_t acluelen = clueArr ? strlen( clueArr[0] ) : 0;
+	if( pARecord->bufmax < ( acluelen + inbuflen ) ) { ASSERT(0); rc = -2; goto EXIT; }
 
 	for( int i=0; i<numShares; i++ )
 	{
-		if( pSRecordArr[i]->bufmax < strlen( clueArr[i+1] ) ) { ASSERT(0); rc = -2; goto EXIT; }
+		size_t scluelen = clueArr ? strlen( clueArr[i+1] ) : 0;
+		if( pSRecordArr[i]->bufmax < scluelen ) { ASSERT(0); rc = -2; goto EXIT; }
 	}
 
 	///////////
@@ -103,15 +104,19 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	///////////
 	// create cryptcoefs (and cryptkey), cipher the cleartext and split the shares
 
-	pARecord->cluelen = strlen( clueArr[0] );
-	pARecord->bufused = strlen( clueArr[0] ) + inbuflen;
+	pARecord->cluelen = acluelen;
+	pARecord->bufused = acluelen + inbuflen;
 
 	byteptr cryptext = pARecord->buf + pARecord->cluelen;
 	word16  cryptlen = inbuflen;
-	word16  cluelen = strlen( clueArr[0] );
+	word16  cluelen = acluelen;
 
-	memcpy_s( pARecord->buf, pARecord->bufmax, clueArr[0], cluelen );						// clue first
-	memcpy_s( pARecord->buf + cluelen, pARecord->bufmax - cluelen, inbuf, cryptlen );		// cryptext second
+	// fill buf with clue first (if applic) then message
+	if( clueArr )
+	{
+		memcpy_s( pARecord->buf, pARecord->bufmax, clueArr[0], cluelen );
+	}
+	memcpy_s( pARecord->buf + cluelen, pARecord->bufmax - cluelen, inbuf, cryptlen );
 
 	for( word16 t = 0; t < numThres; t++ )
 	{
@@ -237,8 +242,12 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		}
 		vlCopy( pSRecordArr[i]->share, vlShare );
 
-		pSRecordArr[i]->bufused = strlen( clueArr[i+1] );
-		memcpy_s( pSRecordArr[i]->buf, pSRecordArr[i]->bufmax, clueArr[i+1], pSRecordArr[i]->bufused );
+		size_t scluelen = clueArr ? strlen( clueArr[i+1] ) : 0;
+		pSRecordArr[i]->bufused = scluelen;
+		if( scluelen > 0 )
+		{
+			memcpy_s( pSRecordArr[i]->buf, pSRecordArr[i]->bufmax, clueArr[i+1], pSRecordArr[i]->bufused );
+		}
 
 		//////////
 		// construct sharesignature to ensure consistiency between topic, shareid, share and clue

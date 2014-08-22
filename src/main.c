@@ -197,26 +197,31 @@ FAILDECRYPT:
 		byteptr outbuf = 0;
 		arAuth* arecord = 0;
 		arShareptr* srecordArr = 0;
-
+		byteptr* clueArr = 0;
+		
 		if( threshold == 0 || shares == 0 || message == 0 ) { return 1; }
 
-		size_t clueDataLen = strlen( clueData );
-		int clueIndex = 0;
-		byteptr* clueArr = malloc( sizeof(byteptr) * shares + 1 );
-		clueArr[clueIndex++] = clueData;							// index 0 is topiclue
-		for( size_t i=0; i<clueDataLen; i++ )
+		if( clueData )
 		{
-			if( clueData[i] == '|' )
+			size_t clueDataLen = strlen( clueData );
+			int clueIndex = 0;
+			clueArr = malloc( sizeof(byteptr) * shares + 1 );
+			clueArr[clueIndex++] = clueData;							// index 0 is topiclue
+			for( size_t i=0; i<clueDataLen; i++ )
 			{
-				clueArr[clueIndex++] = &clueData[i] + 1;
-				clueData[i] = 0;
+				if( clueData[i] == '|' )
+				{
+					clueArr[clueIndex++] = &clueData[i] + 1;
+					clueData[i] = 0;
+				}
 			}
 		}
 
 		size_t messlen = strlen( message );
 
 		// alloc arecord
-		size_t abuflen = ( strlen( clueArr[0] ) + messlen );
+		size_t acluelen = clueArr ? strlen( clueArr[0] ) : 0;
+		size_t abuflen = ( acluelen + messlen + 1 /* +1 for \0 */ );
 		size_t astructlen = sizeof(arAuth) + abuflen;
 		if( !(arecord = malloc( astructlen ) ) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
 		memset( arecord, 0, astructlen );
@@ -227,7 +232,7 @@ FAILDECRYPT:
 		memset( srecordArr, 0, sizeof(arShareptr) * shares );
 		for( word16 i=0; i<shares; i++ )
 		{
-			size_t sbuflen = ( strlen( clueArr[i] ) );
+			size_t sbuflen = clueArr ? ( strlen( clueArr[i] ) + 1 /* +1 for \0 */ ) : 0;
 			size_t sstructlen = sizeof(arShare) + abuflen;
 			if( !(srecordArr[i] = malloc( sstructlen ) ) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
 			memset( srecordArr[i], 0, sstructlen );
