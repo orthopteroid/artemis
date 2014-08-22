@@ -5,15 +5,15 @@
 
 #include "ec_types.h"
 
-#if !defined(LITTLE_ENDIAN) && !defined(BIG_ENDIAN)
-	#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_I86) || defined(__alpha)
-		#define LITTLE_ENDIAN
-	#else
-		#define BIG_ENDIAN
-	#endif
-#endif
-
 #if defined(_WIN32) || defined(_WIN64)
+
+	#if !defined(LITTLE_ENDIAN) && !defined(BIG_ENDIAN)
+		#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_I86) || defined(__alpha)
+			#define LITTLE_ENDIAN
+		#else
+			#define BIG_ENDIAN
+		#endif
+	#endif
 
 	#include <crtdefs.h>
 
@@ -30,6 +30,12 @@
 	#endif // debug
 
 #else // win
+
+	#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+		#define BIG_ENDIAN
+	#else
+		#define LITTLE_ENDIAN
+	#endif
 
 	#include <stddef.h>
 
