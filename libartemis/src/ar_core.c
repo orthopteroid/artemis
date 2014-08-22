@@ -455,12 +455,12 @@ void ar_core_test()
 	memset( arecord, 0, ( sizeof(arAuth) + 80 ) );
 	memset( srecordmemory, 0, ( sizeof(arShare) + 80 ) * 2 );
 	arecord->bufmax = 80;
-	srecordarr[0] = srecordmemory + 0 * (sizeof(arShare) + 80);
-	srecordarr[1] = srecordmemory + 1 * (sizeof(arShare) + 80);
+	srecordarr[0] = (arShare*)srecordmemory + 0 * (sizeof(arShare) + 80);
+	srecordarr[1] = (arShare*)srecordmemory + 1 * (sizeof(arShare) + 80);
 	srecordarr[0]->bufmax = 80;
 	srecordarr[1]->bufmax = 80;
 
-	rc = ar_core_create( arecord, srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), clues ); // +1 to include \0
+	rc = ar_core_create( arecord, srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues ); // +1 to include \0
 	ASSERT( rc == 0 );
 
 	rc = ar_core_decrypt( cleartextout, 80, arecord, srecordarr, 2 );

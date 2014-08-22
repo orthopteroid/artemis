@@ -7,14 +7,21 @@
 #include "ar_core.h"
 #include "test.h"
 
-#if defined(_WIN32) || defined(_WIN64)
-#else
-	#define strncpy_s(a,b,c,d) strncpy(a,c,d)
-	#define sscanf_s sscanf
-
 int ar_main(int argc, char **argv);
 
+#if defined(_WIN32) || defined(_WIN64)
+
 int main(int argc, _TCHAR* argv[])
+{
+	return ar_main( argc, argv );
+}
+
+#else
+
+#define strncpy_s(a,b,c,d) strncpy(a,c,d)
+#define sscanf_s sscanf
+
+int main(int argc, char* argv[])
 {
 	return ar_main( argc, argv );
 }
@@ -228,7 +235,7 @@ FAILDECRYPT:
 		}
 
 		// +1 to include \0
-		rc = ar_core_create( arecord, srecordArr, shares, threshold, message, (word16)(messlen + 1), clueArr );
+		rc = ar_core_create( arecord, srecordArr, shares, threshold, message, (word16)messlen+1, clueArr );
 		if( rc ) { printf("# encrypt error\n"); goto FAILCRYPT; }
 
 		size_t uribufsize = 0;

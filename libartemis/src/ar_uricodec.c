@@ -433,7 +433,7 @@ void ar_uri_test()
 		for( int j=0; j<20; j++ ) { cleartextin[j] = (char)(platform_rnd32() % (122 - 32) + 32); }
 		cleartextin[ platform_rnd32() % 20 ] = 0;
 
-		rc = ar_core_create( &arecord.x, (arShareptr*)srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), clues ); // +1 to include \0
+		rc = ar_core_create( &arecord.x, (arShareptr*)srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues ); // +1 to include \0
 		ASSERT( rc == 0 );
 
 		bufa[0] = 0;

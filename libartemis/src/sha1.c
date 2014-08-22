@@ -219,7 +219,7 @@ void sha1_test()
 	x = "abc";
 	y = "A9993E364706816ABA3E25717850C26C9CD0D89D";
 	sha1_digest( digest, x, strlen(x) );
-	sprintf_s( buf, bufSize, "%X%X%X%X%X", digest[0], digest[1], digest[2], digest[3], digest[4] );
+	sprintf( buf, "%X%X%X%X%X", (unsigned int)digest[0], (unsigned int)digest[1], (unsigned int)digest[2], (unsigned int)digest[3], (unsigned int)digest[4] );
 	if( strcmp( y, buf ) != 0 )
 	{
 		printf( "%s -> %s (should be %s)\n", x, buf, y );
@@ -229,7 +229,7 @@ void sha1_test()
 	x = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
 	y = "84983E441C3BD26EBAAE4AA1F95129E5E54670F1";
 	sha1_digest( digest, x, strlen(x) );
-	sprintf_s( buf, bufSize, "%X%X%X%X%X", digest[0], digest[1], digest[2], digest[3], digest[4] );
+	sprintf( buf, "%X%X%X%X%X", (unsigned int)digest[0], (unsigned int)digest[1], (unsigned int)digest[2], (unsigned int)digest[3], (unsigned int)digest[4] );
 	if( strcmp( y, buf ) != 0 )
 	{
 		printf( "%s -> %s (should be %s)\n", x, buf, y );
