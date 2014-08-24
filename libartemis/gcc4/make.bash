@@ -27,6 +27,7 @@ gcc -shared -o obj/libartemis.so $OBJS
 
 if [ "$1" != "debug" ]
 then
-strip -w -K platform_* -K ar_core_* -K ar_uri_* -K test_* obj/libartemis.a
-readelf --symbols ./obj/libartemis.a
+echo strip -w -K platform_* -K ar_core_* -K ar_uri_* -K test_* obj/libartemis.so
+strip -w -K platform_* -K ar_core_* -K ar_uri_* -K test_* obj/libartemis.so
+readelf --symbols ./obj/libartemis.so
 fi
