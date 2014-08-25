@@ -28,8 +28,8 @@ int main(int argc, char* argv[])
 
 #endif
 
-unsigned long app_vmajor = 0;
-unsigned long app_vminor = 1;
+word32 app_vmajor = 0;
+word32 app_vminor = 1;
 
 int ar_main(int argc, char **argv)
 {
@@ -48,7 +48,7 @@ int ar_main(int argc, char **argv)
 			{
 			case 'h':
 HELP:
-				printf("(artemis v%lu.%lu, libartemis v%lu.%lu KL%lu %s)\n", app_vmajor, app_vminor, platform_vmajor(), platform_vminor(), platform_keylength(), platform_isdemo() ? "crippleware" : "");
+				printf("(artemis v%u.%u, libartemis v%u.%u KL%u %s)\n", app_vmajor, app_vminor, platform_vmajor(), platform_vminor(), platform_keylength(), platform_isdemo() ? "crippleware" : "");
 				printf("usage: -h | -z | -d <newline delimited data> | -s <sharesize> -t <thresholdsize> -c \"<topiclue>|<shareclue1>|...|<shareclueN>\" -m \"<textmessage>\"\n");
 				return 0;
 				break;

@@ -6,9 +6,9 @@
 #define HW 5
 
 typedef struct {
-    word32	state[5];
-    word32	count[2];
-    byte	buffer[64];
+	byte	buffer[64]; // requires proper alignment 
+	word32	state[5];
+	word32	count[2];
 } sha1_context;
 
 // digest stored in big endian, i think

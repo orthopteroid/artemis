@@ -7,6 +7,11 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 
+	#define PRAGMA_SOMETHING __pragma("something")
+	#define PRAGMA_PUSH
+	#define PRAGMA_POP
+	#define PRAGMA_O3
+
 	#if !defined(LITTLE_ENDIAN) && !defined(BIG_ENDIAN)
 		#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_I86) || defined(__alpha)
 			#define LITTLE_ENDIAN
@@ -31,6 +36,10 @@
 
 #else // win
 
+	#define PRAGMA_PUSH _Pragma("GCC push_options")
+	#define PRAGMA_POP _Pragma("GCC pop_options")
+	#define PRAGMA_O3 _Pragma("GCC optimize(\"O3\")")
+	
 	#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
 		#define BIG_ENDIAN
 	#else

@@ -12,8 +12,6 @@ A million repetitions of "a"
   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
 
-/* #define SHA1HANDSOFF * Copies data before messing with it. */
-
 #include <string.h>
 #include <stdio.h>
 
@@ -40,14 +38,16 @@ A million repetitions of "a"
 #define R3(v,w,x,y,z,i) z+=(((w|x)&y)|(w&x))+blk(i)+0x8F1BBCDC+rol(v,5);w=rol(w,30);
 #define R4(v,w,x,y,z,i) z+=(w^x^y)+blk(i)+0xCA62C1D6+rol(v,5);w=rol(w,30);
 
+//#define SHA1HANDSOFF // Copies data before messing with it.
+
 static int testEndianness()
 {
 	static int tested = 0;
 	if( tested ) return 0; else tested = 1;
 
-	static unsigned char x[4] = {1,2,3,4};
+	static byte x[4] = {1,2,3,4};
 	#ifdef LITTLE_ENDIAN
-	if ( *(unsigned long int*)x != 0x04030201 )
+	if ( *(word32*)x != 0x04030201 )
 	{
 		fputs( "# libartemis error: expected BIG_ENDIAN, found LITTLE_ENDIAN\n", stderr );
 		ASSERT(0);
@@ -67,19 +67,22 @@ static int testEndianness()
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
-void sha1_transform(unsigned long state[5], unsigned char buffer[64])
+PRAGMA_PUSH
+PRAGMA_O3
+
+void sha1_transform( word32 state[5], byte buffer[64])
 {
-	unsigned long a, b, c, d, e;
+	word32 a, b, c, d, e;
 	typedef union
 	{
-		unsigned char c[64];
-		unsigned long l[16];
+		byte c[64];
+		word32 l[16];
 	} CHAR64LONG16;
 	CHAR64LONG16* block;
 
 #ifdef SHA1HANDSOFF
 
-	static unsigned char workspace[64];
+	static byte workspace[64];
     block = (CHAR64LONG16*)workspace;
     memcpy(block, buffer, 64);
 
@@ -128,6 +131,7 @@ void sha1_transform(unsigned long state[5], unsigned char buffer[64])
     a = b = c = d = e = 0;
 }
 
+PRAGMA_POP
 
 /* Initialize new context */
 
@@ -140,6 +144,7 @@ void sha1_initial(sha1_context* context)
     context->state[3] = 0x10325476;
     context->state[4] = 0xC3D2E1F0;
     context->count[0] = context->count[1] = 0;
+    memset(context->buffer, 0, 64);
 }
 
 
