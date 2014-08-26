@@ -13,6 +13,8 @@ typedef word16 vlPoint [VL_UNITS + 2];
 
 void vlClear (vlPoint p);
 
+word16 vlGetWord16(vlPoint p, word16 i);
+
 void vlSetWord16(vlPoint p, word16 u);
 void vlSetWord32(vlPoint p, word32 u);
 void vlSetWord64(vlPoint p, word32 h, word32 l);

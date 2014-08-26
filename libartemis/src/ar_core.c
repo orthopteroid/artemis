@@ -36,7 +36,10 @@
 // 10 authentication is distributed in the concatenated form T | V | I | Kpub | Sa | M' | Mc
 // 11 shares are distributed in the concatenated form { T | i | C'i | Si | Sc }
 
-#define AR_RC4CRANKS 337
+// rc4 is cranked between 1024 and 2047 times before being used on stream
+// 1024 + (LS 10 bits of cipher key)
+#define AR_RC4CRANK_OFFSET	1024
+#define AR_RC4CRANK_MASK	1023
 
 int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares, word16 numThres, byteptr inbuf, word16 inbuflen, byteptr* clueArr )
 {
@@ -137,10 +140,12 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		vlPoint vlCryptkey;
 		gfPack( gfCryptCoefArr[0], vlCryptkey );
 
+		word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlCryptkey, 0 ));
+
 		size_t deltalen = 0;
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
 		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, 16, AR_RC4CRANKS, cryptext, cryptlen );
+		rc4( cryptkeyBArr, 16, rc4cranks, cryptext, cryptlen );
 
 		vlClear( vlCryptkey );
 	}
@@ -408,10 +413,12 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 		vlPoint vlCryptkey;
 		gfPack( gfCryptkey, vlCryptkey );
 
+		word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlCryptkey, 0 ));
+
 		size_t deltalen = 0;
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
 		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, 16, AR_RC4CRANKS, outbuf, cryptlen );
+		rc4( cryptkeyBArr, 16, rc4cranks, outbuf, cryptlen );
 	}
 
 	///////////
@@ -447,8 +454,7 @@ void ar_core_test()
 	printf("# ar_core_test\n");
 
 	arAuth* arecord = 0;
-	arShare** srecordarr = 0;
-	byteptr srecordmemory = 0;
+	arShare* srecordarr[2] = {0,0};
 	char* reftextin = "dog food.";
 	char* cleartextin = 0;
 	char cleartextout[80];
@@ -456,16 +462,16 @@ void ar_core_test()
 	int rc = 0;
 
 	if( !(arecord = malloc( sizeof(arAuth) + 80 )) ) { ASSERT(0); goto EXIT; }
-	if( !(srecordmemory = malloc( 2 * ( sizeof(arAuth) + 80 ) )) ) { ASSERT(0); goto EXIT; }
-	if( !(srecordarr = malloc( 2 * sizeof(arAuth*) )) ) { ASSERT(0); goto EXIT; }
+	if( !(srecordarr[0] = malloc( sizeof(arAuth) + 80 )) ) { ASSERT(0); goto EXIT; }
+	if( !(srecordarr[1] = malloc( sizeof(arAuth) + 80 )) ) { ASSERT(0); goto EXIT; }
 	if( !(cleartextin = malloc( strlen(reftextin)+1 )) ) { ASSERT(0); goto EXIT; }
 	strcpy_s( cleartextin, strlen(reftextin)+1, reftextin );
 
-	memset( arecord, 0, ( sizeof(arAuth) + 80 ) );
-	memset( srecordmemory, 0, ( sizeof(arShare) + 80 ) * 2 );
+	memset( arecord, 0, sizeof(arAuth) + 80 );
+	memset( srecordarr[0], 0, sizeof(arShare) + 80 );
+	memset( srecordarr[1], 0, sizeof(arShare) + 80 );
+
 	arecord->bufmax = 80;
-	srecordarr[0] = (arShare*)srecordmemory + 0 * (sizeof(arShare) + 80);
-	srecordarr[1] = (arShare*)srecordmemory + 1 * (sizeof(arShare) + 80);
 	srecordarr[0]->bufmax = 80;
 	srecordarr[1]->bufmax = 80;
 
@@ -479,8 +485,8 @@ EXIT:
 
 	if( cleartextin ) free( cleartextin );
 	if( arecord ) free( arecord );
-	if( srecordmemory ) free( srecordmemory );
-	if( srecordarr ) free( srecordarr );
+	if( srecordarr[0] ) free( srecordarr[0] );
+	if( srecordarr[1] ) free( srecordarr[1] );
 
 #endif
 }

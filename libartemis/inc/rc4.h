@@ -3,6 +3,6 @@
 
 #include "ec_types.h"
 
-void rc4( byteptr key, int keylen, int skip, byteptr txt, int txtlen );
+void rc4( byteptr key, word32 keylen, word32 skip, byteptr txt, word32 txtlen );
 
 #endif // _RC4_H_

@@ -62,6 +62,12 @@ void vlCopy (vlPoint p, const vlPoint q)
 } /* vlCopy */
 
 
+word16 vlGetWord16(vlPoint p, word16 i)
+{
+	ASSERT (p != NULL);
+	return ( i <= p[0] ) ? p[ p[0] - i ] : 0; // orthopteroid
+}
+
 void vlSetWord16(vlPoint p, word16 u)
 {
 	ASSERT (p != NULL);
