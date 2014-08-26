@@ -9,12 +9,9 @@
 
 int ar_main(int argc, char **argv);
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WINDOWS)
 
-int main(int argc, _TCHAR* argv[])
-{
-	return ar_main( argc, argv );
-}
+// declared elsewhere
 
 #else
 

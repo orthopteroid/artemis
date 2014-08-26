@@ -1,6 +1,6 @@
 // Copyright 2014 John Howard (orthopteroid@gmail.com)
 
-#if defined( _WIN32 ) || defined ( _WIN64 )
+#if defined(_WINDOWS)
 
 #define _CRT_RAND_S
 #include "stdlib.h"
@@ -62,7 +62,7 @@ word32 platform_keylength()
 word32 platform_rnd32()
 {
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WINDOWS)
 
 	word32 r;
 	rand_s( &r );

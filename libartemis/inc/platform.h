@@ -5,7 +5,7 @@
 
 #include "ec_types.h"
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WINDOWS)
 
 	#define PRAGMA_SOMETHING __pragma("something")
 	#define PRAGMA_PUSH
