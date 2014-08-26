@@ -107,6 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,6 +148,7 @@
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
       <DebugInformationFormat>None</DebugInformationFormat>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
