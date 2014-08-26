@@ -79,7 +79,11 @@ HELP:
 		}
 	}
 
-	platform_init();
+	if( platform_init() )
+	{
+		printf("# platform init fail\n");
+		goto FAILPLATFORM;
+	}
 
 	if( testmode )
 	{
@@ -269,6 +273,8 @@ FAILCRYPT:
 		if( clueArr ) free( clueArr );
 		if( outbuf ) free( outbuf );
 	}
+
+FAILPLATFORM:
 
 	platform_cleanup();
 

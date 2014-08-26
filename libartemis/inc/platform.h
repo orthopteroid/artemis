@@ -62,7 +62,7 @@
 
 ///////////////////////
 
-DLLDECL void platform_init();
+DLLDECL word32 platform_init();
 
 DLLDECL void platform_cleanup();
 

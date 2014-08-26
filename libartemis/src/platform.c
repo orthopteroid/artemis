@@ -19,10 +19,38 @@
 
 #include "ec_field.h"
 
-void platform_init()
+static word32 testendianness()
 {
+	static byte x[4] = {1,2,3,4};
+#ifdef LITTLE_ENDIAN
+	if ( *(word32*)x != 0x04030201 )
+	{
+		fputs( "# libartemis error: expected BIG_ENDIAN, found LITTLE_ENDIAN\n", stderr );
+		ASSERT(0);
+		return 1;
+	}
+#else
+	if ( *(word32*)x != 0x01020304 )
+	{
+		fputs( "# libartemis error: expected LITTLE_ENDIAN, found BIG_ENDIAN\n", stderr );
+		ASSERT(0);
+		return 1;
+	}
+#endif
+
+	return 0;
+}
+
+//////////////////
+
+word32 platform_init()
+{
+	if( testendianness() ) return 1;
+
 	srand( 1 );
 	gfInit();
+
+	return 0;
 }
 
 void platform_cleanup()

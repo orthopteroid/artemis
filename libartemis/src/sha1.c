@@ -40,31 +40,6 @@ A million repetitions of "a"
 
 //#define SHA1HANDSOFF // Copies data before messing with it.
 
-static int testEndianness()
-{
-	static int tested = 0;
-	if( tested ) return 0; else tested = 1;
-
-	static byte x[4] = {1,2,3,4};
-	#ifdef LITTLE_ENDIAN
-	if ( *(word32*)x != 0x04030201 )
-	{
-		fputs( "# libartemis error: expected BIG_ENDIAN, found LITTLE_ENDIAN\n", stderr );
-		ASSERT(0);
-		return -1;
-	}
-	#else
-	if ( *(word32*)x != 0x01020304 )
-	{
-		fputs( "# libartemis error: expected LITTLE_ENDIAN, found BIG_ENDIAN\n", stderr );
-		ASSERT(0);
-		return -1;
-	}
-	#endif
-
-	return 0;
-}
-
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
 PRAGMA_PUSH
@@ -91,8 +66,6 @@ void sha1_transform( word32 state[5], byte buffer[64])
     block = (CHAR64LONG16*)buffer;
 
 #endif
-
-	if( testEndianness() ) { return; }
 
     /* Copy context->state[] to working vars */
     a = state[0];
