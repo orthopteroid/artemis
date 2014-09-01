@@ -31,8 +31,9 @@ word32 app_vminor = 1;
 int ar_main(int argc, char **argv)
 {
 	int rc = 0;
-	char* message = 0;
+	char* messageArg = 0;
 	char* clueData = 0;
+	char* location = 0;
 	unsigned int shares = 0, threshold = 0, testmode = 0, pause = 0, decode = 0;
 
 	if( argc == 1 ) { goto HELP; }
@@ -46,7 +47,7 @@ int ar_main(int argc, char **argv)
 			case 'h':
 HELP:
 				printf("(artemis v%u.%u, libartemis v%u.%u KL%u %s)\n", app_vmajor, app_vminor, platform_vmajor(), platform_vminor(), platform_keylength(), platform_isdemo() ? "crippleware" : "");
-				printf("usage: -h | -z | -d <newline delimited data> | -s <sharesize> -t <thresholdsize> -c \"<topiclue>|<shareclue1>|...|<shareclueN>\" -m \"<textmessage>\"\n");
+				printf("usage: -h | -z | -d <newline delimited data> | -l <locationURL> -s <sharesize> -t <thresholdsize> [ -c \"<topiclue>|<shareclue1>|...|<shareclueN>\" ] -m \"<textmessage>\"\n");
 				return 0;
 				break;
 			case 'p':
@@ -65,7 +66,11 @@ HELP:
 				break;
 			case 'm':
 				if( ++i >= argc ) { return 1; }
-				message = argv[i];
+				messageArg = argv[i];
+				break;
+			case 'l':
+				if( ++i >= argc ) { return 1; }
+				location = argv[i];
 				break;
 			case 's':
 				if( ++i >= argc ) { return 1; }
@@ -148,7 +153,7 @@ HELP:
 					arecord->bufmax = (word16)buflen;
 				}
 
-				if( !ar_uri_parse_a( arecord, inbuf ) ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
+				if( !ar_uri_parse_a( arecord, inbuf, location ) ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
 			}
 			else
 			{
@@ -174,7 +179,7 @@ HELP:
 
 				srecordArr[sharenum++]= pShare;
 
-				if( !ar_uri_parse_s( pShare, inbuf ) ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
+				if( !ar_uri_parse_s( pShare, inbuf, location ) ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
 			}
 		}
 
@@ -200,7 +205,7 @@ FAILDECRYPT:
 		arShareptr* srecordArr = 0;
 		byteptr* clueArr = 0;
 		
-		if( threshold == 0 || shares == 0 || message == 0 ) { return 1; }
+		if( threshold == 0 || shares == 0 || messageArg == 0 || location == 0 ) { return 1; }
 
 		if( clueData )
 		{
@@ -218,11 +223,12 @@ FAILDECRYPT:
 			}
 		}
 
-		size_t messlen = strlen( message );
+		size_t loclen = strlen( location );
+		size_t messlen = strlen( messageArg );
 
 		// alloc arecord
-		size_t acluelen = clueArr ? strlen( clueArr[0] ) : 0;
-		size_t abuflen = ( acluelen + messlen + 1 /* +1 for \0 */ );
+		size_t acluelen = ( clueArr && clueArr[0] ) ? strlen( clueArr[0] ) : 0;
+		size_t abuflen = ( loclen + acluelen + messlen + 1 /* +1 for \0 */ );
 		size_t astructlen = sizeof(arAuth) + abuflen;
 		if( !(arecord = malloc( astructlen ) ) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
 		memset( arecord, 0, astructlen );
@@ -233,15 +239,16 @@ FAILDECRYPT:
 		memset( srecordArr, 0, sizeof(arShareptr) * shares );
 		for( word16 i=0; i<shares; i++ )
 		{
-			size_t sbuflen = clueArr ? ( strlen( clueArr[i] ) + 1 /* +1 for \0 */ ) : 0;
-			size_t sstructlen = sizeof(arShare) + abuflen;
+			size_t scluelen = ( clueArr && clueArr[i] ) ? ( strlen( clueArr[i] ) + 1 /* +1 for \0 */ ) : 0;
+			size_t sbuflen = loclen + scluelen;
+			size_t sstructlen = sizeof(arShare) + sbuflen;
 			if( !(srecordArr[i] = malloc( sstructlen ) ) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
 			memset( srecordArr[i], 0, sstructlen );
 			srecordArr[i]->bufmax = (word16)sbuflen;
 		}
 
 		// +1 to include \0
-		rc = ar_core_create( arecord, srecordArr, shares, threshold, message, (word16)messlen+1, clueArr );
+		rc = ar_core_create( arecord, srecordArr, shares, threshold, messageArg, (word16)messlen+1, clueArr, location );
 		if( rc ) { printf("# encrypt error\n"); goto FAILCRYPT; }
 
 		size_t uribufsize = 0;

@@ -68,6 +68,7 @@
 	#define memcpy_s(a,b,c,d) memcpy(a,c,d)
 	#define strcpy_s(a,b,c) strcpy(a,c)
 	#define strcat_s(a,b,c) strcat(a,c)
+	#define strncat_s(a,b,c,d) strncat(a,c,d)
 
 #endif // win
 

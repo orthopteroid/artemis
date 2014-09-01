@@ -20,8 +20,9 @@ typedef struct arAuth_
 	//
 	word16		bufmax;
 	word16		bufused;
+	word16		loclen;			// location part of http url: domain/path/object
 	word16		cluelen;		// optional plaintext clue for share-series
-	byte		buf[1];			// optional plaintext clue stored first
+	byte		buf[1];			// location [ clue ] message
 } arAuth;
 
 typedef arAuth*		arAuthptr;
@@ -36,7 +37,8 @@ typedef struct arShare_
 	//
 	word16		bufmax;
 	word16		bufused;
-	byte		buf[1];			// optional plaintext clue (for some other share)
+	word16		loclen;			// location part of http url: domain/path/object
+	byte		buf[1];			// location [ clue ]
 } arShare;
 
 typedef arShare*	arShareptr;

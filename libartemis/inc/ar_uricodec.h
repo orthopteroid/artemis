@@ -41,12 +41,12 @@ int ar_uri_parse_type( byteptr szRecord );
 	/* -1 for error, 1 for ARecord, 2 for SRecord */
 
 DLLDECL 
-int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord );
-	/* -1 for error */
+int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location );
+	/* -1 for error, -2 for bad record */
 
 DLLDECL 
-int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord );
-	/* -1 for error */
+int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location );
+	/* -1 for error, -2 for bad record */
 
 void ar_uri_test();
 

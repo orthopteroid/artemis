@@ -10,7 +10,7 @@
 #include "ec_crypt.h"
 
 DLLDECL 
-int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares, word16 numThres, byteptr bytes, word16 bytelen, byteptr* clueArr );
+int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares, word16 numThres, byteptr bytes, word16 bytelen, byteptr* clueArr, byteptr location );
 	/* -2 bounds, -1 api, 0 OK */
 
 DLLDECL 

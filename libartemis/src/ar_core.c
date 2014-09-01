@@ -14,34 +14,35 @@
 
 ////////////////////////////
 
-// Artemis A uri is artemis:<topic>&ai=<splitinfo>&vf=<verify>&pk=<pubkey>&as=<authsig>&mt=<messagetext>&mc=<messageclue>
+// Artemis A uri is http://<location>?tp=<topic>&ai=<splitinfo>&vf=<verify>&pk=<pubkey>&as=<authsig>&mt=<messagetext>&mc=<messageclue>
 // where:
 // <splitinfo> == <shares|<threshold>|<fieldsize>
 //
-// Artemis S uri is artemis:<topic>&si=<shareinfo>&sh=<share>&ss=<sharesig>&sc=<shareclue>
+// Artemis S uri is http://<location>?tp=<topic>&si=<shareinfo>&sh=<share>&ss=<sharesig>&sc=<shareclue>
 // where:
 // <shareinfo> == <shares|<shareid>
 //
 
 // artemis
+//  0 url location L is specified as an identifying tag and as a url path
 //  1 numshares, threshold and fieldsize are combined into splitinfo I
-//  2 plaintext message M is hashed to produce 32bit verification V
+//  2 plaintext message M is hashed to produce N-bit verification V
 //  3 random cipher key C is used on message M to crypt message (producing M')
 //  4 split C into shares {C'1...C'n}
 //  5 crypted message M' is hashed to produce topic T
 //  6 random private key Kpri is used to create a matching public key Kpub
-//  7 private key Kpri is applied to hash of T | V | I | Kpub to produce authsignature Sa
-//  8 private key Kpri is applied to hash of T | { 1, ... i, ... n } | { C'1, ... C'i, ... C'n } to produce sharesignatures {S1...Sn}
+//  7 private key Kpri is applied to hash of L | T | V | I | Kpub to produce authsignature Sa
+//  8 private key Kpri is applied to hash of L | T | { 1, ... i, ... n } | { C'1, ... C'i, ... C'n } to produce sharesignatures {S1...Sn}
 //  9 private key Kpri and cipher key C are thrown away
-// 10 authentication is distributed in the concatenated form T | V | I | Kpub | Sa | M' | Mc
-// 11 shares are distributed in the concatenated form { T | i | C'i | Si | Sc }
+// 10 authentication is distributed in the concatenated form L | T | V | I | Kpub | Sa | M' | Mc
+// 11 shares are distributed in the concatenated form { L | T | i | C'i | Si | Sc }
 
-// rc4 is cranked between 1024 and 2047 times before being used on stream
-// 1024 + (LS 10 bits of cipher key)
-#define AR_RC4CRANK_OFFSET	1024
-#define AR_RC4CRANK_MASK	1023
+// rc4 is cranked between 256 and 511 times before being used on stream
+// 256 + (LS 8 bits of cipher key)
+#define AR_RC4CRANK_OFFSET	256
+#define AR_RC4CRANK_MASK	255
 
-int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares, word16 numThres, byteptr inbuf, word16 inbuflen, byteptr* clueArr )
+int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares, word16 numThres, byteptr inbuf, word16 inbuflen, byteptr* clueArr, byteptr location )
 {
 	gfPoint* gfCryptCoefArr = 0;
 	gfPoint* shareArr = 0;
@@ -56,15 +57,18 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { ASSERT(0); rc=-9; goto EXIT; }
 
 	///////////
-	// ensure structs have storage for cryptext and clues
+	// ensure structs have storage for location, cryptext and clues
 
-	size_t acluelen = clueArr ? strlen( clueArr[0] ) : 0;
-	if( pARecord->bufmax < ( acluelen + inbuflen ) ) { ASSERT(0); rc = -2; goto EXIT; }
+	size_t loclen = location ? strlen( location ) : 0;
+	if( loclen == 0 ) { ASSERT(0); rc=-2; goto EXIT; }
+
+	size_t acluelen = ( clueArr && clueArr[0] ) ? strlen( clueArr[0] ) : 0;
+	if( pARecord->bufmax < ( loclen + acluelen + inbuflen ) ) { ASSERT(0); rc = -2; goto EXIT; }
 
 	for( int i=0; i<numShares; i++ )
 	{
-		size_t scluelen = clueArr ? strlen( clueArr[i+1] ) : 0;
-		if( pSRecordArr[i]->bufmax < scluelen ) { ASSERT(0); rc = -2; goto EXIT; }
+		size_t scluelen = ( clueArr && clueArr[i+1] ) ? strlen( clueArr[i+1] ) : 0;
+		if( pSRecordArr[i]->bufmax < ( loclen + scluelen ) ) { ASSERT(0); rc = -2; goto EXIT; }
 	}
 
 	///////////
@@ -107,19 +111,17 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	///////////
 	// create cryptcoefs (and cryptkey), cipher the cleartext and split the shares
 
+	pARecord->loclen = loclen;
 	pARecord->cluelen = acluelen;
-	pARecord->bufused = acluelen + inbuflen;
+	pARecord->bufused = loclen + inbuflen + acluelen;
 
-	byteptr cryptext = pARecord->buf + pARecord->cluelen;
-	word16  cryptlen = inbuflen;
-	word16  cluelen = acluelen;
-
-	// fill buf with clue first (if applic) then message
-	if( clueArr )
+	// fill buf with location, clue (if applic) then message
+	memcpy_s( pARecord->buf, pARecord->bufmax, location, loclen );
+	if( acluelen > 0 )
 	{
-		memcpy_s( pARecord->buf, pARecord->bufmax, clueArr[0], cluelen );
+		memcpy_s( pARecord->buf + loclen, pARecord->bufmax - loclen, clueArr[0], acluelen );
 	}
-	memcpy_s( pARecord->buf + cluelen, pARecord->bufmax - cluelen, inbuf, cryptlen );
+	memcpy_s( pARecord->buf + loclen + acluelen, pARecord->bufmax - loclen - acluelen, inbuf, inbuflen );
 
 	for( word16 t = 0; t < numThres; t++ )
 	{
@@ -145,7 +147,7 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		size_t deltalen = 0;
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
 		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, 16, rc4cranks, cryptext, cryptlen );
+		rc4( cryptkeyBArr, 16, rc4cranks, pARecord->buf + loclen + acluelen, inbuflen );
 
 		vlClear( vlCryptkey );
 	}
@@ -215,6 +217,7 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 				sha1_process( c, (byteptr)&pARecord->fieldsize, (unsigned)(1 * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pubSigningkey+1, pubSigningkey[0] );
 				sha1_process( c, composebuf, (unsigned)(pubSigningkey[0] * sizeof(word16)) );
+				sha1_process( c, pARecord->buf, (unsigned)(pARecord->bufused) );
 				memset( composebuf, 0, sizeof(composebuf) );
 			}
 			sha1_final( c, digest );
@@ -247,11 +250,15 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		}
 		vlCopy( pSRecordArr[i]->share, vlShare );
 
-		size_t scluelen = clueArr ? strlen( clueArr[i+1] ) : 0;
-		pSRecordArr[i]->bufused = scluelen;
-		if( scluelen > 0 )
 		{
-			memcpy_s( pSRecordArr[i]->buf, pSRecordArr[i]->bufmax, clueArr[i+1], pSRecordArr[i]->bufused );
+			size_t scluelen = ( clueArr && clueArr[i+1] ) ? strlen( clueArr[i+1] ) : 0;
+			
+			memcpy_s( pSRecordArr[i]->buf, pSRecordArr[i]->bufmax, location, loclen );
+			if( scluelen > 0 )
+			{
+				memcpy_s( pSRecordArr[i]->buf + loclen, pSRecordArr[i]->bufmax - loclen, clueArr[i+1], scluelen );
+			}
+			pSRecordArr[i]->bufused = loclen + scluelen;
 		}
 
 		//////////
@@ -311,8 +318,8 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 	if( outbuflen < pARecord->bufused ) { ASSERT(0); rc = -2; goto EXIT; }
 	if( numSRecords < pARecord->threshold ) { ASSERT(0); rc = -7; goto EXIT; }
 
-	byteptr cryptext = pARecord->buf + pARecord->cluelen;
-	word16  cryptlen = pARecord->bufused - pARecord->cluelen;
+	byteptr cryptext = pARecord->buf + pARecord->loclen + pARecord->cluelen;
+	word16  cryptlen = pARecord->bufused - pARecord->loclen - pARecord->cluelen;
 
 	///////////
 	// check topic consistiency between ARecord, cryptext and all SRecords
@@ -332,7 +339,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 	}
 
 	////////////
-	// check authsignature to ensure clue, topic and pubkey have consistient pairing
+	// check authsignature to ensure location, clue, topic and pubkey have consistient pairing
 
 	{
 		vlPoint authhash;
@@ -353,6 +360,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 				sha1_process( c, (byteptr)&pARecord->fieldsize, (unsigned)(1 * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->pubkey+1, pARecord->pubkey[0] );
 				sha1_process( c, composebuf, (unsigned)(pARecord->pubkey[0] * sizeof(word16)) );
+				sha1_process( c, pARecord->buf, (unsigned)(pARecord->bufused) );
 				memset( composebuf, 0, sizeof(composebuf) );
 			}
 			sha1_final( c, digest );
@@ -475,7 +483,7 @@ void ar_core_test()
 	srecordarr[0]->bufmax = 80;
 	srecordarr[1]->bufmax = 80;
 
-	rc = ar_core_create( arecord, srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues ); // +1 to include \0
+	rc = ar_core_create( arecord, srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues, "foo.bar" ); // +1 to include \0
 	ASSERT( rc == 0 );
 
 	rc = ar_core_decrypt( cleartextout, 80, arecord, srecordarr, 2 );
