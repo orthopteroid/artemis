@@ -1,23 +1,19 @@
 // Copyright 2014 John Howard (orthopteroid@gmail.com)
 
 #if defined(_WINDOWS)
-
-#define _CRT_RAND_S
-#include "stdlib.h"
-
-#else
-
-#include "stdlib.h"
-
+	#define _CRT_RAND_S
 #endif
 
-//#include <time.h>
-//#include <ctype.h>
+#include "stdlib.h"
 
 #include "platform.h"
 #include "version.h"
 
 #include "ec_field.h"
+
+#if defined(__ANDROID__)
+	#define printf(...) __android_log_print(ANDROID_LOG_DEBUG, "TAG", __VA_ARGS__);
+#endif
 
 static word32 testendianness()
 {
@@ -25,17 +21,27 @@ static word32 testendianness()
 #ifdef LITTLE_ENDIAN
 	if ( *(word32*)x != 0x04030201 )
 	{
-		fputs( "# libartemis error: expected BIG_ENDIAN, found LITTLE_ENDIAN\n", stderr );
+		printf( "# libartemis: expected BIG_ENDIAN, found LITTLE_ENDIAN\n" );
 		ASSERT(0);
 		return 1;
 	}
+
+#if defined(_DEBUG)
+   	printf( "# libartemis: BIG_ENDIAN\n" );
+#endif
+
 #else
 	if ( *(word32*)x != 0x01020304 )
 	{
-		fputs( "# libartemis error: expected LITTLE_ENDIAN, found BIG_ENDIAN\n", stderr );
+		printf( "# libartemis: expected LITTLE_ENDIAN, found BIG_ENDIAN\n" );
 		ASSERT(0);
 		return 1;
 	}
+	
+#if defined(_DEBUG)
+	printf( "# libartemis: LITTLE_ENDIAN\n" );
+#endif
+
 #endif
 
 	return 0;

@@ -36,9 +36,20 @@
 
 #else // win
 
-	#define PRAGMA_PUSH _Pragma("GCC push_options")
-	#define PRAGMA_POP _Pragma("GCC pop_options")
-	#define PRAGMA_O3 _Pragma("GCC optimize(\"O3\")")
+    #if defined(__ANDROID__)
+        #include <android/log.h>
+        #if(NDK_DEBUG)
+            #define _DEBUG
+        #endif
+
+        #define PRAGMA_PUSH
+        #define PRAGMA_POP
+        #define PRAGMA_O3
+    #else
+        #define PRAGMA_PUSH _Pragma("GCC push_options")
+        #define PRAGMA_POP _Pragma("GCC pop_options")
+        #define PRAGMA_O3 _Pragma("GCC optimize(\"O3\")")
+    #endif
 	
 	#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
 		#define BIG_ENDIAN
