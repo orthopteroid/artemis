@@ -17,6 +17,7 @@ static int ar_strcat( byteptr dst, size_t dstsize, byteptr src )
 	size_t len = 0;
 	while( *dst ) { dst++; if( ++len > dstsize-1 ) { return -1; } }
 	while( *src ) { *dst = *src; src++; dst++; if( ++len > dstsize-1 ) { return -1; } }
+	*dst = 0; 
 	return 0;
 }
 
@@ -133,9 +134,9 @@ static void ar_uri_arglen( size_t* arglen, byteptr arg, byteptr buf )
 	s += strlen(arg);
 
 	byteptr e=s;
-	while( *e != '!' && *e != '&' && *e != '?' ) { e++; }
+	while( *e != '\0' && *e != '!' && *e != '&' && *e != '?' ) { e++; }
 
-	*arglen = e - s;
+	*arglen = e - s - 1; // -1 for /0
 }
 
 ///////////////////
@@ -313,9 +314,6 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 	ar_uri_arglen( &cryptlen, "mt=", szRecord );
 	if( cryptlen >= pARecord->bufmax ) { ASSERT(0); rc=-2; goto FAIL; }
 
-	// when not specified, matches all locations
-	if( location && (rc = ps_scan_item( pss, location, 0 )) ) 			{ ASSERT(0); goto FAIL; }
-	
 	if( rc = ps_scan_item( pss, "tp=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
 	if( rc = txt_to_vl( pARecord->topic, pss->seg_start ) ) 			{ ASSERT(0); goto FAIL; }
 
@@ -340,20 +338,28 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 	byteptr bufloc = pARecord->buf;
 	size_t buflen = 0;
 
+	size_t loclen = 0;
+	if( rc = ps_scan_item( pss, location, 0 ) )							{ ASSERT(0); goto FAIL; }
+	loclen = strlen( location );
+	strcpy_s( bufloc, pARecord->bufmax, location );
+	bufloc += loclen;
+	buflen += loclen;
+
 	size_t mclen = 0;
-	if( ps_scan_item( pss, "mc=", 0 ) ) { /* optional, but first */ } else
+	if( ps_scan_item( pss, "mc=", 0 ) ) { /* optional */ } else
 	{
-		if( rc = ar_util_6BAto8BA( &mclen, bufloc, pARecord->bufmax, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
+		if( rc = ar_util_6BAto8BA( &mclen, bufloc, pARecord->bufmax - buflen, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
 		bufloc += mclen;
 		buflen += mclen;
 	}
 
 	size_t mtlen = 0;
 	if( rc = ps_scan_item( pss, "mt=", 0 ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6BAto8BA( &mtlen, bufloc, pARecord->bufmax, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6BAto8BA( &mtlen, bufloc, pARecord->bufmax - buflen, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
 	bufloc += mtlen;
 	buflen += mtlen;
 
+	pARecord->loclen = (word16)(loclen);
 	pARecord->cluelen = (word16)(mclen);
 	pARecord->bufused = (word16)(buflen);
 
@@ -374,9 +380,6 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 	parsestate* pss = &ss;
 	ps_init( pss, szRecord );
 
-	// when not specified, matches all locations
-	if( location && (rc = ps_scan_item( pss, location, 0 )) ) 			{ ASSERT(0); goto FAIL; }
-	
 	if( rc = ps_scan_item( pss, "tp=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
 	if( rc = txt_to_vl( pSRecord->topic, pss->seg_start ) ) 			{ ASSERT(0); goto FAIL; }
 
@@ -393,13 +396,26 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 	if( rc = ps_scan_item( pss, "ss=", 1 ) ) 							{ ASSERT(0); goto FAIL; }
 	if( rc = txt_to_vl( pSRecord->sharesig.s, pss->seg_start ) ) 		{ ASSERT(0); goto FAIL; }
 
+	byteptr bufloc = pSRecord->buf;
+	size_t buflen = 0;
+
+	size_t loclen = 0;
+	if( rc = ps_scan_item( pss, location, 0 ) )							{ ASSERT(0); goto FAIL; }
+	loclen = strlen( location );
+	strcpy_s( bufloc, pSRecord->bufmax, location );
+	bufloc += loclen;
+	buflen += loclen;
+
 	size_t sclen = 0;
 	if( ps_scan_item( pss, "sc=", 0 ) ) { /* optional */ } else
 	{
-		if( rc = ar_util_6BAto8BA( &sclen, pSRecord->buf, pSRecord->bufmax, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
+		if( rc = ar_util_6BAto8BA( &sclen, bufloc, pSRecord->bufmax - buflen, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
+		bufloc += sclen;
+		buflen += sclen;
 	}
 
-	pSRecord->bufused = (word16)(sclen);
+	pSRecord->loclen = (word16)(loclen);
+	pSRecord->bufused = (word16)(buflen);
 
 FAIL:
 

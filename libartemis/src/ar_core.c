@@ -258,6 +258,7 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 			{
 				memcpy_s( pSRecordArr[i]->buf + loclen, pSRecordArr[i]->bufmax - loclen, clueArr[i+1], scluelen );
 			}
+			pSRecordArr[i]->loclen = loclen;
 			pSRecordArr[i]->bufused = loclen + scluelen;
 		}
 

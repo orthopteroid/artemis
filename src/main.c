@@ -213,7 +213,7 @@ FAILDECRYPT:
 		{
 			size_t clueDataLen = strlen( clueData );
 			int clueIndex = 0;
-			clueArr = malloc( sizeof(byteptr) * shares + 1 );
+			clueArr = malloc( sizeof(byteptr) * ( shares + 1 ) );
 			clueArr[clueIndex++] = clueData;							// index 0 is topiclue
 			for( size_t i=0; i<clueDataLen; i++ )
 			{
