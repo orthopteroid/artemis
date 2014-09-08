@@ -5,6 +5,8 @@
 
 #include "ar_uricodec.h"
 #include "ar_core.h"
+#include "ar_util.h"
+#include "library.h"
 #include "test.h"
 
 int ar_main(int argc, char **argv);
@@ -46,7 +48,7 @@ int ar_main(int argc, char **argv)
 			{
 			case 'h':
 HELP:
-				printf("(artemis v%u.%u, libartemis v%u.%u KL%u %s)\n", app_vmajor, app_vminor, platform_vmajor(), platform_vminor(), platform_keylength(), platform_isdemo() ? "crippleware" : "");
+				printf("(artemis v%u.%u, libartemis v%u.%u KL%u %s)\n", app_vmajor, app_vminor, library_vmajor(), library_vminor(), library_keylength(), library_isdemo() ? "crippleware" : "");
 				printf("usage: -h | -z | -d <newline delimited data> | -l <locationURL> -s <sharesize> -t <thresholdsize> [ -c \"<topiclue>|<shareclue1>|...|<shareclueN>\" ] -m \"<textmessage>\"\n");
 				return 0;
 				break;
@@ -84,7 +86,7 @@ HELP:
 		}
 	}
 
-	if( platform_init() )
+	if( library_init() )
 	{
 		printf("# platform init fail\n");
 		goto FAILPLATFORM;
@@ -283,7 +285,7 @@ FAILCRYPT:
 
 FAILPLATFORM:
 
-	platform_cleanup();
+	library_cleanup();
 
 	if( pause ) getchar();
 

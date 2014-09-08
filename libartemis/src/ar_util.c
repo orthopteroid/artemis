@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "ar_util.h"
 #include "platform.h"
+#include "ar_util.h"
 
 static char b16charout[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 static byte b16charin[]  = {0,1,2,3,4,5,6,7,8,9,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F}; // OFFSET 0x30
@@ -362,8 +362,8 @@ void ar_util_test()
 		vlPoint v0, v1;
 
 		vlClear( v0 );
-		v0[0] = platform_rnd32() % VL_UNITS;
-		for( int j=0; j<v0[0]; j++) { v0[j+1] = (word16)platform_rnd32(); }
+		v0[0] = ar_util_rnd32() % VL_UNITS;
+		for( int j=0; j<v0[0]; j++) { v0[j+1] = (word16)ar_util_rnd32(); }
 		v0[2]=0x00ff;
 
 		buf[0]=0;
@@ -378,3 +378,21 @@ void ar_util_test()
 
 #endif
 }
+
+word32 ar_util_rnd32()
+{
+
+#if defined(_WINDOWS)
+
+	word32 r;
+	rand_s( &r );
+	return r;
+	
+#else
+
+	return rand();
+
+#endif
+
+}
+

@@ -41,6 +41,10 @@ int ar_util_6BZto8BZ( byteptr buf, size_t bufsize, byteptr in );
 
 ////////
 
+word32 ar_util_rnd32();
+
+////////
+
 void ar_util_test();
 
 #endif // _ar_util_H_

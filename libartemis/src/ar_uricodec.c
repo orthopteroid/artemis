@@ -461,8 +461,8 @@ void ar_uri_test()
 	{
 		int rc = 0;
 
-		for( int j=0; j<20; j++ ) { cleartextin[j] = (char)(platform_rnd32() % (122 - 32) + 32); }
-		cleartextin[ platform_rnd32() % 20 ] = 0;
+		for( int j=0; j<20; j++ ) { cleartextin[j] = (char)(ar_util_rnd32() % (122 - 32) + 32); }
+		cleartextin[ ar_util_rnd32() % 20 ] = 0;
 
 		rc = ar_core_create( &arecord.x, (arShareptr*)srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues, location ); // +1 to include \0
 		ASSERT( rc == 0 );

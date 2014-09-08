@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "platform.h"
+#include "ar_util.h"
 #include "ar_shamir.h"
 
 #include "ec_crypt.h"	// for testing
@@ -91,7 +92,7 @@ int ar_shamir_sign( cpPair* sig, const vlPoint vlPrivateKey, const vlPoint mac )
 	int i = 0;
 	do {
 		vlPoint session;
-		vlSetWord64( session, platform_rnd32(), platform_rnd32() );
+		vlSetWord64( session, ar_util_rnd32(), ar_util_rnd32() );
 		cpSign( vlPrivateKey, session, mac, sig );
 	} while ( sig->r[0] == 0 && i++ < maxLoops );
 	return (sig->r[0] == 0) ? -1 : 0;
@@ -119,7 +120,7 @@ void ar_shamir_test()
 		{
 			for( int t=0;t<2;t++ )
 			{
-				vlSetWord64( vlTmp, platform_rnd32(), platform_rnd32() );
+				vlSetWord64( vlTmp, ar_util_rnd32(), ar_util_rnd32() );
 				gfUnpack( gfCryptCoef[t], vlTmp );
 				gfReduce( gfCryptCoef[t] );
 			}
@@ -146,7 +147,7 @@ void ar_shamir_test()
 		vlPoint pub, pri, mac;
 		cpPair sig;
 
-		vlSetWord64( pri, platform_rnd32(), platform_rnd32() );
+		vlSetWord64( pri, ar_util_rnd32(), ar_util_rnd32() );
 
 		cpMakePublicKey( pub, pri );
 

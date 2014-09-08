@@ -72,20 +72,4 @@
 
 #endif // win
 
-///////////////////////
-
-DLLDECL word32 platform_init();
-
-DLLDECL void platform_cleanup();
-
-DLLDECL int platform_isdebug();
-
-DLLDECL int platform_isdemo();
-
-DLLDECL word32 platform_vmajor();
-DLLDECL word32 platform_vminor();
-DLLDECL word32 platform_keylength();
-
-word32 platform_rnd32();
-
 #endif // _PLATFORM_H_

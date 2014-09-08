@@ -81,8 +81,8 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		word16 numswaps = max( inbuflen>>4, 1 );
 		for( word16 i=0; i<numswaps; i++ )
 		{
-			a = platform_rnd32() % (inbuflen-1);
-			b = platform_rnd32() % (inbuflen-1);
+			a = ar_util_rnd32() % (inbuflen-1);
+			b = ar_util_rnd32() % (inbuflen-1);
 			if( a != b )
 			{
 				byte tmp = inbuf[ a ];
@@ -128,11 +128,11 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		vlPoint vlTmp;
 		vlClear( vlTmp );
 #if AR_KEYLENGTH == 32
-		vlSetWord32( vlTmp, platform_rnd32() );
+		vlSetWord32( vlTmp, ar_util_rnd32() );
 #elif AR_KEYLENGTH == 64
-		vlSetWord64( vlTmp, platform_rnd32(), platform_rnd32() );
+		vlSetWord64( vlTmp, ar_util_rnd32(), ar_util_rnd32() );
 #elif AR_KEYLENGTH == 128
-		vlSetWord128( vlTmp, platform_rnd32(), platform_rnd32(), platform_rnd32(), platform_rnd32() );
+		vlSetWord128( vlTmp, ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32() );
 #endif // AR_KEYLENGTH
 		gfUnpack( gfCryptCoefArr[t], vlTmp );
 		gfReduce( gfCryptCoefArr[t] );
@@ -178,11 +178,11 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	vlPoint priSigningkey;
 	vlClear( priSigningkey );
 #if AR_KEYLENGTH == 32
-	vlSetWord32( priSigningkey, platform_rnd32() );
+	vlSetWord32( priSigningkey, ar_util_rnd32() );
 #elif AR_KEYLENGTH == 64
-	vlSetWord64( priSigningkey, platform_rnd32(), platform_rnd32() );
+	vlSetWord64( priSigningkey, ar_util_rnd32(), ar_util_rnd32() );
 #elif AR_KEYLENGTH == 128
-	vlSetWord128( priSigningkey, platform_rnd32(), platform_rnd32(), platform_rnd32(), platform_rnd32() );
+	vlSetWord128( priSigningkey, ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32() );
 #endif // AR_KEYLENGTH
 
 	vlPoint pubSigningkey;
