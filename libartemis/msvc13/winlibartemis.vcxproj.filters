@@ -75,6 +75,9 @@
     <ClInclude Include="..\inc\test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\library.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -113,9 +116,6 @@
     <ClCompile Include="..\src\ec_vlong.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\platform.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\rc4.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -123,6 +123,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\test.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\library.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

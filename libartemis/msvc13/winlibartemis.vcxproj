@@ -172,6 +172,7 @@
     <ClInclude Include="..\inc\ec_param.h" />
     <ClInclude Include="..\inc\ec_types.h" />
     <ClInclude Include="..\inc\ec_vlong.h" />
+    <ClInclude Include="..\inc\library.h" />
     <ClInclude Include="..\inc\platform.h" />
     <ClInclude Include="..\inc\rc4.h" />
     <ClInclude Include="..\inc\sha1.h" />
@@ -191,7 +192,7 @@
     <ClCompile Include="..\src\ec_field.c" />
     <ClCompile Include="..\src\ec_param.c" />
     <ClCompile Include="..\src\ec_vlong.c" />
-    <ClCompile Include="..\src\platform.c" />
+    <ClCompile Include="..\src\library.c" />
     <ClCompile Include="..\src\rc4.c" />
     <ClCompile Include="..\src\sha1.c" />
     <ClCompile Include="..\src\test.c" />
