@@ -1,5 +1,9 @@
 // Copyright 2014 John Howard (orthopteroid@gmail.com)
 
+#if defined(_WINDOWS)
+	#define _CRT_RAND_S
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

@@ -32,11 +32,9 @@ typedef lunit gfPoint [GF_POINT_UNITS];
 
 /* interface functions: */
 
-DLLDECL 
 int  gfInit (void);
 	/* initialize the library ---> MUST be called before any other gf-function */
 
-DLLDECL 
 void gfQuit (void);
 	/* perform housekeeping for library termination */
 

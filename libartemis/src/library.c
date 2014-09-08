@@ -1,19 +1,13 @@
 // Copyright 2014 John Howard (orthopteroid@gmail.com)
 
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(_WINDOWS)
-	#define _CRT_RAND_S
-#endif
-
-#include "stdlib.h"
-
 #include "platform.h"
 #include "version.h"
 
+#include "library.h"
 #include "ec_field.h"
 #include "ar_uricodec.h"
 #include "ar_core.h"
@@ -103,4 +97,6 @@ word32 library_keylength()
 {
 	return AR_KEYLENGTH;
 }
+
+//////////////////
 
