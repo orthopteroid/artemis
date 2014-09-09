@@ -28,7 +28,7 @@ gcc -shared -o obj/libartemis.so $OBJS
 
 if [ "$1" != "debug" ]
 then
-echo strip -w -K library_* -K ar_core_* -K ar_uri_* -K test_* obj/libartemis.so
-strip -w -K library_* -K ar_core_* -K ar_uri_* -K test_* obj/libartemis.so
+echo strip -w -K library_* -K test_* obj/libartemis.so
+strip -w -K library_* -K test_* obj/libartemis.so
 readelf --symbols ./obj/libartemis.so
 fi
