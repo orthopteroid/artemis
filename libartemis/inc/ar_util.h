@@ -41,6 +41,11 @@ int ar_util_6BZto8BZ( byteptr buf, size_t bufsize, byteptr in );
 
 ////////
 
+int ar_util_strcat( byteptr dst, size_t dstsize, byteptr src );
+int ar_util_strncat( byteptr dst, size_t dstsize, byteptr src, size_t srcsize );
+
+////////
+
 word32 ar_util_rnd32();
 
 ////////

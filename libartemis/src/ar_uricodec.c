@@ -4,32 +4,16 @@
 #include <stdlib.h>
 
 #include "platform.h"
+
 #include "ar_uricodec.h"
 #include "ec_vlong.h"
 #include "ar_util.h"
 
-#include "ar_core.h" // for testing
+#if defined(_DEBUG)
+	#include "ar_core.h" // for testing
+#endif
 
 //////////////////////
-
-static int ar_strcat( byteptr dst, size_t dstsize, byteptr src )
-{
-	size_t len = 0;
-	while( *dst ) { dst++; if( ++len > dstsize-1 ) { return -1; } }
-	while( *src ) { *dst = *src; src++; dst++; if( ++len > dstsize-1 ) { return -1; } }
-	*dst = 0; 
-	return 0;
-}
-
-static int ar_strncat( byteptr dst, size_t dstsize, byteptr src, size_t srcsize )
-{
-	size_t len = 0;
-	size_t cpy = 0;
-	while( *dst ) { dst++; if( ++len > dstsize-1 ) { return -1; } }
-	while( *src ) { *dst = *src; src++; dst++; if( ++len > dstsize-1 ) { return -1; } if( ++cpy == srcsize ) { break; } }
-	*dst = 0; 
-	return 0;
-}
 
 static int txt_to_vl( vlPoint v, char* buf )
 {
