@@ -316,11 +316,12 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 	int rc = 0;
 
 	if( outbuflen == 0 ) { ASSERT(0); rc = -1; goto EXIT; }
-	if( outbuflen < pARecord->bufused ) { ASSERT(0); rc = -2; goto EXIT; }
 	if( numSRecords < pARecord->threshold ) { ASSERT(0); rc = -7; goto EXIT; }
 
 	byteptr cryptext = pARecord->buf + pARecord->loclen + pARecord->cluelen;
 	word16  cryptlen = pARecord->bufused - pARecord->loclen - pARecord->cluelen;
+
+	if( outbuflen < cryptlen ) { ASSERT(0); rc = -2; goto EXIT; }
 
 	///////////
 	// check topic consistiency between ARecord, cryptext and all SRecords
