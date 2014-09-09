@@ -84,7 +84,7 @@ static int ps_scan_item( parsestate *ps, byteptr prefix, int itemnum )
 		{
 			ps->seg_start += 1;
 			byte ch = *ps->seg_start;
-			if( ch == 0 || ch == '&' || ch == '?' )
+			if( ch == 0 || ch == '&' || ch == '?' || ch == '\n' )
 			{
 				if( itemnum == 0 ) { break; } // ok to hit token when looking for item 0
 				return -2; // missed item
@@ -100,7 +100,7 @@ static int ps_scan_item( parsestate *ps, byteptr prefix, int itemnum )
 	while( 1 )
 	{
 		byte ch = *ps->seg_end;
-		if( ch == '!' || ch == '&' || ch == '?' ) { ps->seg_end_char = ch; *ps->seg_end = 0; break; }
+		if( ch == '!' || ch == '&' || ch == '?' || ch == '\n' ) { ps->seg_end_char = ch; *ps->seg_end = 0; break; }
 		if( ch == 0 ) { ASSERT( ps->seg_end == ps->buf_end ); break; }
 		ps->seg_end += 1;
 	}
