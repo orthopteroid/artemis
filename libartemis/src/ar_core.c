@@ -127,13 +127,13 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	{
 		vlPoint vlTmp;
 		vlClear( vlTmp );
-#if AR_KEYLENGTH == 32
+#if AR_CRYPTKEYLENGTH == 32
 		vlSetWord32( vlTmp, ar_util_rnd32() );
-#elif AR_KEYLENGTH == 64
+#elif AR_CRYPTKEYLENGTH == 64
 		vlSetWord64( vlTmp, ar_util_rnd32(), ar_util_rnd32() );
-#elif AR_KEYLENGTH == 128
+#elif AR_CRYPTKEYLENGTH == 128
 		vlSetWord128( vlTmp, ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32() );
-#endif // AR_KEYLENGTH
+#endif // AR_CRYPTKEYLENGTH
 		gfUnpack( gfCryptCoefArr[t], vlTmp );
 		gfReduce( gfCryptCoefArr[t] );
 	}
@@ -177,13 +177,13 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 
 	vlPoint priSigningkey;
 	vlClear( priSigningkey );
-#if AR_KEYLENGTH == 32
+#if AR_SIGNKEYLENGTH == 32
 	vlSetWord32( priSigningkey, ar_util_rnd32() );
-#elif AR_KEYLENGTH == 64
+#elif AR_SIGNKEYLENGTH == 64
 	vlSetWord64( priSigningkey, ar_util_rnd32(), ar_util_rnd32() );
-#elif AR_KEYLENGTH == 128
+#elif AR_SIGNKEYLENGTH == 128
 	vlSetWord128( priSigningkey, ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32() );
-#endif // AR_KEYLENGTH
+#endif // AR_SIGNKEYLENGTH
 
 	vlPoint pubSigningkey;
 	vlClear( pubSigningkey );

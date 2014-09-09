@@ -97,7 +97,7 @@ word32 library_vminor()
 
 word32 library_keylength()
 {
-	return AR_KEYLENGTH;
+	return AR_CRYPTKEYLENGTH;
 }
 
 //////////////////
