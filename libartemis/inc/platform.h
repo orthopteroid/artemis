@@ -34,6 +34,8 @@
 		#define ASSERT(...) (0)
 	#endif // debug
 
+	#define _strdup strdup
+
 #else // win
 
     #if defined(__ANDROID__)

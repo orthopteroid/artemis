@@ -211,7 +211,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesN
 	size_t shareslen = sharesNLArr ? strlen( sharesNLArr ) : 0;
 	if( shareslen == 0 ) { ASSERT(0); rc=-1; goto FAILDECRYPT; }
 
-	sharesNLArr_copy = _strdup( sharesNLArr );
+	sharesNLArr_copy = strdup( sharesNLArr );
 	if( sharesNLArr_copy == 0 ) { ASSERT(0); rc=-1; goto FAILDECRYPT; }
 
 	byteptr end = sharesNLArr_copy + shareslen;
