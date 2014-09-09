@@ -10,6 +10,7 @@
 #include "ar_util.h"
 #include "ar_core.h"
 #include "test.h"
+#include "library.h"
 
 #include <stdio.h>
 
@@ -24,6 +25,7 @@ void test_all()
 	ar_util_test();
 	ar_core_test();
 	ar_uri_test();
+	library_test();
 	printf("# tests complete\n");
 
 #else // _DEBUG
