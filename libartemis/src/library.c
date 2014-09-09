@@ -196,6 +196,8 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesN
 {
 	int rc = 0;
 
+	*message_out = 0;
+
 	size_t messlen = 0;
 	size_t cluelen = 0;
 	word16 shares = 0;
@@ -294,7 +296,7 @@ FAILDECRYPT:
 	if( arecord ) free( arecord );
 	for( int i=0; i<sharenum; i++ ) { if( srecordArr[i] ) { free( srecordArr[i] ); srecordArr[i] = 0; } }
 	if( srecordArr ) free( srecordArr );
-	if( message ) free( message );
+	if( message ) *message_out = message;
 	if( sharesNLArr_copy ) free( sharesNLArr_copy);
 
 	return rc;
