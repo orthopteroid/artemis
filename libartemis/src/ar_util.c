@@ -149,15 +149,14 @@ int ar_util_6BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 	while( i != insize )
 	{
 		word32 char3 = 0;
-		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 18;
+		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 18;	if( i == insize ) { ASSERT(0); rc = -2; break; }
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 12;	if( i == insize ) { p=2; goto PAD; }
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) <<  6;	if( i == insize ) { p=1; goto PAD; }
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 );
 PAD:
-		if( j + 2 >= bufsize ) { ASSERT(0); rc = -2; break; }
-		buf[j++] = (byte)( char3 >> 16 );
-		if( p < 2 ) { buf[j++] = (byte)( char3 >>  8 ); }
-		if( p < 1 ) { buf[j++] = (byte)( char3 ); }
+						if( j < bufsize ) { buf[j++] = (byte)( char3 >> 16 ); } else { ASSERT(0); rc = -2; break; }
+						if( p < 2 ) {	if( j < bufsize ) { buf[j++] = (byte)( char3 >>  8 ); } else { ASSERT(0); rc = -2; break; } }
+		if( p < 1 ) {	if( j < bufsize ) { buf[j++] = (byte)( char3       ); } else { ASSERT(0); rc = -2; break; } }
 	}
 	*deltalen = j;
 	return rc;
