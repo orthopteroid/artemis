@@ -1,0 +1,165 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 20
+    buildToolsVersion '20.0.0'
+
+    ////////////////
+
+    defaultConfig {
+        applicationId 'com.tereslogica.droidartemis'
+        minSdkVersion 8
+        targetSdkVersion 8
+        versionCode 1
+        versionName '1.0'
+
+        // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
+        // http://tools.android.com/tech-docs/new-build-system/tips
+        //versionCode = 123
+
+        // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
+        ndk {
+            moduleName "myNDKModule"
+            cFlags "-std=c99 -I${project.buildDir}/../src/main/jni/libartemis-inc"
+        }
+    }
+
+    /////////////////
+
+    buildTypes {
+        release {
+            debuggable false
+            jniDebugBuild false
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //signingConfig signingConfigs.release
+
+            // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
+            ndk {
+                moduleName "myNDKModule"
+            }
+        }
+        debug {
+            // http://stackoverflow.com/questions/8674434/debugging-native-libraries-for-android-os
+            // https://vilimpoc.org/blog/2010/09/23/hello-gdbserver-a-debuggable-jni-example-for-android/
+
+            debuggable true
+            jniDebugBuild true
+            //signingConfig signingConfigs.debug
+
+            // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
+            ndk {
+                moduleName "myNDKModule"
+                ldLibs "log"
+                cFlags "-g -D_DEBUG"
+            }
+        }
+    }
+
+    ////////////////
+    // https://github.com/ex3ndr/telegram/blob/master/app/build.gradle
+
+    if (project.hasProperty("signStorage")) {
+        signingConfigs {
+            release {
+                storeFile file(project.signStorage)
+                storePassword project.signStPass
+                keyAlias project.signAlias
+                keyPassword project.signKePass
+            }
+        }
+        buildTypes {
+            debuggable.initWith(buildTypes.release)
+            debuggable {
+                signingConfig signingConfigs.release
+                debuggable true
+            }
+            release {
+                signingConfig signingConfigs.release
+            }
+            applicationVariants.all { variant ->
+                def file = variant.outputFile
+                variant.outputFile = new File(file.parent, file.name.replace(".apk", "-" + defaultConfig.versionName + ".apk"))
+            }
+        }
+    }
+
+    ///////////////
+    // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
+    // http://tools.android.com/tech-docs/new-build-system/tips
+
+    // 2 dimensions of flavors. API is more important than ABI.
+    flavorDimensions "abi"
+
+    productFlavors {
+        /*
+        x86 {
+            flavorDimensions "abi"
+            ndk {
+                abiFilter "x86"
+            }
+            // this is the flavor part of the version code.
+            // It must be higher than the arm one for devices supporting both, as x86 is preferred.
+            versionCode = 4
+        }
+        */
+        arm {
+            flavorDimensions "abi"
+            ndk {
+                abiFilter "armeabi"
+            }
+            versionCode = 3
+        }
+        /*
+        armv7 {
+            flavorDimensions "abi"
+            ndk {
+                abiFilter "armeabi-v7a"
+            }
+            versionCode = 2
+        }
+        mips {
+            flavorDimensions "abi"
+            ndk {
+                abiFilter "mips"
+            }
+            versionCode = 1
+        }
+        fat {
+            flavorDimensions "abi"
+            // fat binary, lowest version code to be the last option
+            versionCode = 0
+        }
+        */
+    }
+
+    // make per-variant version code
+    applicationVariants.all { variant ->
+        def abiVersion = variant.productFlavors.get(0).versionCode
+        variant.mergedFlavor.versionCode = abiVersion * 100000 + defaultConfig.versionCode
+    }
+
+    /////////////////
+    // http://stackoverflow.com/questions/19242442/how-to-build-only-single-buildtype-with-android-studio-and-or-gradle
+/*
+    signingConfigs {
+        debug {
+            storeFile file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+        release {
+            storeFile file("release.keystore")
+            keyAlias "alias"
+            storePassword "foo"
+            keyPassword "bar"
+        }
+    }
+*/
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:20.0.0'
+}

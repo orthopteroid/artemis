@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ArcanaShare</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="dialog_noscanner">Scanner app not found.</string>
+    <string name="reponse_ok">Ok</string>
+    <string name="reponse_yes">Yes</string>
+    <string name="reponse_no">No</string>
+
+</resources>
