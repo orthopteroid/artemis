@@ -3,6 +3,7 @@
 #ifndef _library_H_
 #define _library_H_
 
+#include "platform.h"
 #include "ec_types.h"
 
 DLLDECL word32 library_init();
