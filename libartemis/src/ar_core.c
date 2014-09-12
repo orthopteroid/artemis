@@ -316,7 +316,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 	int rc = 0;
 
 	if( outbuflen == 0 ) { ASSERT(0); rc = -1; goto EXIT; }
-	if( numSRecords < pARecord->threshold ) { ASSERT(0); rc = -7; goto EXIT; }
+	if( numSRecords < pARecord->threshold ) { rc = -7; goto EXIT; } // no assert
 
 	byteptr cryptext = pARecord->buf + pARecord->loclen + pARecord->cluelen;
 	word16  cryptlen = pARecord->bufused - pARecord->loclen - pARecord->cluelen;

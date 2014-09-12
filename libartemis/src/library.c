@@ -287,7 +287,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesN
 		s_record = e_record = e_record + 1; // +1 for char after \0
 	}
 
-	if( !arecord || !srecordArr ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
+	if( !arecord || !srecordArr ) { rc=-9; goto FAILDECRYPT; } // no assert here
 
 	rc = ar_core_decrypt( message, (word16)messlen, arecord, srecordArr, sharenum );
 
