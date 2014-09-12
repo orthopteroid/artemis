@@ -63,8 +63,12 @@
 
 	#define DLLDECL
 
-	#include <assert.h>
-	#define ASSERT(...) assert( __VA_ARGS__ )
+	#if defined(_DEBUG)
+		#include <assert.h>
+		#define ASSERT(...) assert( __VA_ARGS__ )
+	#else // debug
+		#define ASSERT(...) (0)
+	#endif // debug
 
 	#define max(a,b) ((a)>(b)?(a):(b))
 	#define memcpy_s(a,b,c,d) memcpy(a,c,d)
