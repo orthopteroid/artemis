@@ -7,6 +7,8 @@ import java.util.Random;
  */
 public class FakeScanner {
 
+    int i  = 0;
+
     String[] itemArr =
             {
                     "http://foo.bar?tp=szvNzIafmi8&ai=AF!AD!CI&vf=Hkb7QA&pk=AZoMKUOUDRZf_dB4okXV-YS4&as=cpWo8SblmAHxfXcziacj4Q!lx10akSXo9zf6MTCypAJ9g&mc=MA&mt=M0IaIYWH",
@@ -23,6 +25,7 @@ public class FakeScanner {
     }
 
     public String nextItem() {
-        return itemArr[ rnd.nextInt( itemArr.length ) ];
+        //return itemArr[ rnd.nextInt( itemArr.length ) ];
+        return itemArr[ i++ ];
     }
 }
