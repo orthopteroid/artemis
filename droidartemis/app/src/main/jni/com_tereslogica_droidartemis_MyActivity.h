@@ -43,13 +43,12 @@ extern "C" {
 #define com_tereslogica_droidartemis_MyActivity_DEFAULT_KEYS_SEARCH_LOCAL 3L
 #undef com_tereslogica_droidartemis_MyActivity_DEFAULT_KEYS_SEARCH_GLOBAL
 #define com_tereslogica_droidartemis_MyActivity_DEFAULT_KEYS_SEARCH_GLOBAL 4L
-/*
- * Class:     com_tereslogica_droidartemis_MyActivity
- * Method:    getStringFromNative
- * Signature: ()Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_getStringFromNative
-  (JNIEnv *, jobject);
+
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeGetString(JNIEnv *, jobject);
+
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeDecode(JNIEnv * env, jobject obj, jstring jSharesNLArr);
+
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeGetStatusOK(JNIEnv * env, jobject obj);
 
 #ifdef __cplusplus
 }

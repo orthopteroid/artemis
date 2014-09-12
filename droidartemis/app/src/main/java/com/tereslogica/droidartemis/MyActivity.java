@@ -23,10 +23,14 @@ public class MyActivity extends FragmentActivity implements DialogNoScanner.Dial
         System.loadLibrary("myNDKModule");
     }
 
-    public native String getStringFromNative();
+    public native String nativeGetString();
+    public native String nativeDecode( String data );
+    public native boolean nativeGetStatusOK();
+
+    ArrayList<String> sal = new ArrayList<String>();
 
     FakeScanner fs;
-    ArrayList<HomeListItem> al;
+    ArrayList<HomeListItem> al = new ArrayList<HomeListItem>();;
     HomeListAdapter hla;
     HomeListLoader hll;
 
@@ -34,7 +38,7 @@ public class MyActivity extends FragmentActivity implements DialogNoScanner.Dial
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String sss = getStringFromNative();
+        String sss = nativeGetString();
 
         setContentView(R.layout.activity_my);
 
@@ -43,7 +47,7 @@ public class MyActivity extends FragmentActivity implements DialogNoScanner.Dial
         {
             ListView lv = (ListView) findViewById(R.id.list_container);
 
-            al = new ArrayList<HomeListItem>();
+            //al = new ArrayList<HomeListItem>();
             hla = new HomeListAdapter(getApplicationContext(), R.layout.list_item, R.id.title, al);
             lv.setAdapter(hla);
 
@@ -125,10 +129,29 @@ public class MyActivity extends FragmentActivity implements DialogNoScanner.Dial
 
     ///////////////////////////
 
+    String zoo = new String();
+
     public void addScannedItem( String item ) {
         Log.d("libartemis", "add " + item);
         al.add( new HomeListItem( item, "descr" ) );
         hla.notifyDataSetChanged();
+        //
+        if( zoo.length() == 0 ) zoo = item; else zoo += "\n" + item;
+/*
+        String foo = new String();
+        sal.add( item );
+        int i = 0;
+        for( String s : sal ) {
+            if( i == 0 ) foo = s; else foo += "\n" + s;
+            i++;
+        }
+*/
+        // http://mhandroid.wordpress.com/2011/01/25/how-cc-debugging-works-on-android/
+        // ./adb root ; ./adb shell stop ; ./adb shell setprop log.redirect-stdio true ; ./adb shell start
+        String bar = nativeDecode( zoo );
+        boolean ok = nativeGetStatusOK();
+        if( ok == false ) bar = "*NODECODE*";
+        Log.d("libartemis", "returned " + bar);
     }
     public void removeScannedItem( String item ) {
         Log.d("libartemis", "remove " + item);
