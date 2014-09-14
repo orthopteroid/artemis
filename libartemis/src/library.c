@@ -304,22 +304,33 @@ FAILDECRYPT:
 
 int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, word16 uFieldNum )
 {
+	int rc = 0;
+	
 	if( !field_out ) { ASSERT(0); return -1; }
 	if( !szField ) { ASSERT(0); return -1; }
 	if( !szShare ) { ASSERT(0); return -1; }
+
+	char szFieldWithDelim[] = {0,0,0,0}; // +2 for '=' and \0
+	szFieldWithDelim[0] = szField[0];
+	szFieldWithDelim[1] = szField[1];
+	szFieldWithDelim[2] = '=';
+	
+	*field_out = 0;
 	
 	byteptr pFirst = 0;
 	byteptr pLast = 0;
 	
-	if( ar_uri_locate_field( &pFirst, &pLast, szShare, szField, uFieldNum ) ) { ASSERT(0); return -1; }
-	
+	if( ar_uri_locate_field( &pFirst, &pLast, szShare, szFieldWithDelim, uFieldNum ) ) { ASSERT(0); rc=-2; goto FAIL; }
+
 	if( pFirst != pLast )
 	{
 		*field_out = (unsigned char*)strndup( pFirst, pLast - pFirst );
-		if( !*field_out ) { ASSERT(0); return -9; }
+		if( !*field_out ) { ASSERT(0); rc=-9; goto FAIL; }
 	}
 	
-	return 0;
+FAIL:
+	
+	return rc;
 }
 
 void library_test()

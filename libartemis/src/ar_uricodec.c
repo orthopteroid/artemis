@@ -137,6 +137,8 @@ void ar_uri_bufsize_s( size_t* uribufsize, arShare* pSRecord )
 
 int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, byteptr szField, word16 uFieldNum )
 {
+	int rc = 0;
+	
 	if( !ppFirst || !ppLast || !szField || !szRecord ) { ASSERT(0); return -1; }
 	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
 
@@ -147,7 +149,10 @@ int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, by
 	ps_init( pss, szRecord );
 
 	if( rc = ps_scan_item( pss, szField, uFieldNum ) ) { goto FAIL; }
-	
+
+	ASSERT( ss.seg_start );
+	ASSERT( ss.seg_end > ss.seg_start );
+
 	*ppFirst = ss.seg_start;
 	*ppLast = ss.seg_end;
 
