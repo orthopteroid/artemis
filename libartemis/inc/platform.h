@@ -28,11 +28,13 @@
 	//#define DLLDECL __declspec(dllimport)
 	//#endif // WINDLL_EXPORTS
 
-	#if defined(_DEBUG)
-		#define ASSERT( c ) do { if( !(c) ) { __debugbreak(); } } while( 0 )
-	#else // debug
-		#define ASSERT(...) (0)
-	#endif // debug
+	#if !defined(ASSERT)
+		#if defined(_DEBUG)
+			#define ASSERT( c ) do { if( !(c) ) { __debugbreak(); } } while( 0 )
+		#else // debug
+			#define ASSERT(...) (0)
+		#endif // debug
+	#endif
 
 	#define _strdup strdup
 	#define _strndup strndup
@@ -41,7 +43,8 @@
 
     #if defined(__ANDROID__)
         #include <android/log.h>
-        #if(NDK_DEBUG)
+        
+        #if defined(NDK_DEBUG) && !defined(_DEBUG)
             #define _DEBUG
         #endif
 
@@ -64,12 +67,14 @@
 
 	#define DLLDECL
 
-	#if defined(_DEBUG)
-		#include <assert.h>
-		#define ASSERT(...) assert( __VA_ARGS__ )
-	#else // debug
-		#define ASSERT(...) (0)
-	#endif // debug
+	#if !defined(ASSERT)
+		#if defined(_DEBUG)
+			#include <assert.h>
+			#define ASSERT(...) assert( __VA_ARGS__ )
+		#else // debug
+			#define ASSERT(...) (0)
+		#endif // debug
+	#endif
 
 	#define max(a,b) ((a)>(b)?(a):(b))
 	#define memcpy_s(a,b,c,d) memcpy(a,c,d)
