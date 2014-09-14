@@ -14,7 +14,8 @@
         android:text="Scan"
         android:id="@+id/scan_button"
         android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true" />
+        android:layout_alignParentLeft="true"
+        android:onClick="onClickScan" />
 
     <Button
         android:layout_width="wrap_content"
@@ -22,7 +23,8 @@
         android:text="Sort"
         android:id="@+id/sort_button"
         android:layout_alignBottom="@+id/scan_button"
-        android:layout_toRightOf="@+id/scan_button" />
+        android:layout_toRightOf="@+id/scan_button"
+        android:onClick="onClickSort" />
 
     <ListView
         android:id="@+id/list_container"

@@ -24,15 +24,15 @@ public class MyActivity extends FragmentActivity implements DialogNoScanner.Dial
     }
 
     public native String nativeGetString();
-    public native String nativeDecode( String data );
     public native boolean nativeGetStatusOK();
+    public native String nativeDecode( String data );
+    public native String nativeShareField( String share, String field, Integer num );
 
     ArrayList<String> sal = new ArrayList<String>();
 
     FakeScanner fs;
-    ArrayList<HomeListItem> al = new ArrayList<HomeListItem>();;
+    ArrayList<HomeListItem> al = new ArrayList<HomeListItem>();
     HomeListAdapter hla;
-    HomeListLoader hll;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -42,20 +42,11 @@ public class MyActivity extends FragmentActivity implements DialogNoScanner.Dial
 
         setContentView(R.layout.activity_my);
 
-        //////////
-
         {
-            ListView lv = (ListView) findViewById(R.id.list_container);
-
-            //al = new ArrayList<HomeListItem>();
-            hla = new HomeListAdapter(getApplicationContext(), R.layout.list_item, R.id.title, al);
-            lv.setAdapter(hla);
-
-            hll = new HomeListLoader(getResources(), hla, al);
-            hll.execute("");
-
-            // listening to single list item on click
-            lv.setOnItemClickListener(new OnItemClickListener() {
+            hla = new HomeListAdapter( getApplicationContext(), R.layout.list_item, R.id.title, al );
+            ListView lv = (ListView) findViewById( R.id.list_container );
+            lv.setAdapter( hla );
+            lv.setOnItemClickListener( new OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     String product = ((TextView) view.findViewById(R.id.title)).getText().toString();
                     Intent i = new Intent(getApplicationContext(), SingleListItem.class);
@@ -63,10 +54,10 @@ public class MyActivity extends FragmentActivity implements DialogNoScanner.Dial
                     startActivity(i);
                 }
             });
+
+            HomeListLoader.RefreshAll( getResources(), hla, al );
         }
-
-        //////////
-
+/*
         {
             Button b = (Button) findViewById(R.id.scan_button);
             b.setOnClickListener( new View.OnClickListener() {
@@ -96,7 +87,7 @@ public class MyActivity extends FragmentActivity implements DialogNoScanner.Dial
 
             });
         }
-
+*/
     }
 
     @Override
@@ -129,10 +120,43 @@ public class MyActivity extends FragmentActivity implements DialogNoScanner.Dial
 
     ///////////////////////////
 
+    public void onClickSort(View v) {
+    }
+
+    public void onClickScan(View v) {
+
+        // http://stackoverflow.com/questions/3103196/android-os-build-data-examples-please
+        if (Build.BRAND.equalsIgnoreCase("generic")) {
+
+            if( fs == null) {
+                fs = new FakeScanner();
+            }
+            addScannedItem( fs.nextItem() );
+
+        } else {
+
+            // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
+            try {
+                Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+                intent.putExtra("SCAN_MODE", "QR_CODE_MODE"); // "PRODUCT_MODE for bar codes
+                startActivityForResult(intent, 0);
+            } catch (Exception e1) {
+                showDialogNoScanner();
+            }
+
+        }
+    }
+
+    ///////////////////////////
+
     String zoo = new String();
 
     public void addScannedItem( String item ) {
         Log.d("libartemis", "add " + item);
+        //
+        String tp = nativeShareField( item, "tp", 0 );
+        Log.d("libartemis", "topic " + tp);
+        //
         al.add( new HomeListItem( item, "descr" ) );
         hla.notifyDataSetChanged();
         //

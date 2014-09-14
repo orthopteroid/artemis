@@ -16,6 +16,10 @@ public class HomeListLoader extends AsyncTask<String,Void,Long> {
         arraylist = arrl;
     }
 
+    static void RefreshAll(android.content.res.Resources res, ArrayAdapter<HomeListItem> aa, ArrayList<HomeListItem> arrl) {
+        ( new HomeListLoader(res, aa, arrl) ).execute("");
+    }
+
     @Override
     protected void onPreExecute() { }
 
