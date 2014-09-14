@@ -25,6 +25,8 @@ void ar_uri_parse_cluelen( size_t* len, byteptr buf );
 void ar_uri_parse_sharecount( word16* shares, byteptr buf );
 	/* returns number of shares, if buf holds an arecord uri */
 
+int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, byteptr szField, word16 uFieldNum );
+
 int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord );
 
 int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord );

@@ -46,9 +46,11 @@ extern "C" {
 
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeGetString(JNIEnv *, jobject);
 
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeGetStatusOK(JNIEnv * env, jobject obj);
+
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeDecode(JNIEnv * env, jobject obj, jstring jSharesNLArr);
 
-JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeGetStatusOK(JNIEnv * env, jobject obj);
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeShareField(JNIEnv * env, jobject obj, jstring jShare, jstring jField, jint jFieldNum);
 
 #ifdef __cplusplus
 }

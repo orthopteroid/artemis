@@ -35,6 +35,7 @@
 	#endif // debug
 
 	#define _strdup strdup
+	#define _strndup strndup
 
 #else // win
 
@@ -76,6 +77,9 @@
 	#define strcat_s(a,b,c) strcat(a,c)
 	#define strncat_s(a,b,c,d) strncat(a,c,d)
 
+	char *strdup(const char *s);
+	char *strndup(const char *s, size_t n);
+	
 #endif // win
 
 #endif // _PLATFORM_H_

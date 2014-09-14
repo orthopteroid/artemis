@@ -302,6 +302,26 @@ FAILDECRYPT:
 	return rc;
 }
 
+int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, word16 uFieldNum )
+{
+	if( !field_out ) { ASSERT(0); return -1; }
+	if( !szField ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
+	
+	byteptr pFirst = 0;
+	byteptr pLast = 0;
+	
+	if( ar_uri_locate_field( &pFirst, &pLast, szShare, szField, uFieldNum ) ) { ASSERT(0); return -1; }
+	
+	if( pFirst != pLast )
+	{
+		*field_out = (unsigned char*)strndup( pFirst, pLast - pFirst );
+		if( !*field_out ) { ASSERT(0); return -9; }
+	}
+	
+	return 0;
+}
+
 void library_test()
 {
 }

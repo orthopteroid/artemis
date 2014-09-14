@@ -68,7 +68,7 @@ static void ps_cleanup( parsestate *ps )
 	ps->seg_end = 0;
 }
 
-static int ps_scan_item( parsestate *ps, byteptr prefix, int itemnum )
+static int ps_scan_item( parsestate *ps, byteptr prefix, word16 uNum )
 {
 	ps_cleanup( ps );
 
@@ -78,7 +78,7 @@ static int ps_scan_item( parsestate *ps, byteptr prefix, int itemnum )
 	ps->seg_start += strlen( prefix );
 
 	// jump to itemnum
-	while( itemnum )
+	while( uNum )
 	{
 		while( 1 )
 		{
@@ -86,13 +86,13 @@ static int ps_scan_item( parsestate *ps, byteptr prefix, int itemnum )
 			byte ch = *ps->seg_start;
 			if( ch == 0 || ch == '&' || ch == '?' || ch == '\n' )
 			{
-				if( itemnum == 0 ) { break; } // ok to hit token when looking for item 0
+				if( uNum == 0 ) { break; } // ok to hit token when looking for item 0
 				return -2; // missed item
 			}
 			if( ch == '!' ) { break; } // found item
 		}
 		ps->seg_start += 1;
-		itemnum--;
+		uNum--;
 	}
 
 	// find suffix
@@ -133,6 +133,28 @@ void ar_uri_bufsize_a( size_t* uribufsize, arAuth* pARecord )
 void ar_uri_bufsize_s( size_t* uribufsize, arShare* pSRecord )
 {
 	*uribufsize = ( sizeof(arShare) + pSRecord->bufused ) * 4 / 3; // b64 encoding
+}
+
+int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, byteptr szField, word16 uFieldNum )
+{
+	if( !ppFirst || !ppLast || !szField || !szRecord ) { ASSERT(0); return -1; }
+	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
+
+	*ppFirst = *ppLast = 0;
+	
+	parsestate ss;
+	parsestate* pss = &ss;
+	ps_init( pss, szRecord );
+
+	if( rc = ps_scan_item( pss, szField, uFieldNum ) ) { goto FAIL; }
+	
+	*ppFirst = ss.seg_start;
+	*ppLast = ss.seg_end;
+
+FAIL:
+	ps_cleanup( &ss );
+	
+	return 0;
 }
 
 void ar_uri_parse_messlen( size_t* len, byteptr buf )
@@ -282,6 +304,7 @@ DONE:
 
 	return rc;
 }
+
 
 int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 {

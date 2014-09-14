@@ -10,6 +10,7 @@ DLLDECL word32 library_init();
 
 DLLDECL int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, byteptr location, byteptr clueBarArr, byteptr message );
 DLLDECL int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesNLArr );
+DLLDECL int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, word16 uFieldNum );
 
 DLLDECL void library_free( byteptr* object );
 
