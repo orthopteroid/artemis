@@ -51,7 +51,7 @@ android {
             ndk {
                 moduleName "myNDKModule"
                 ldLibs "log"
-                cFlags "-g -D_DEBUG"
+                cFlags "-g -D_DEBUG -DNDK_DEBUG=1"
             }
         }
     }
