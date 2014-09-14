@@ -31,8 +31,8 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeDec
     rc = library_uri_decoder( &cMessage_out, szLocation, (byte*)cSharesNLArr );
 
 //http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
-#if(_DEBUG)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cMessage_out %X", cMessage_out );
+#if defined(_DEBUG)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cMessage_out %X", (unsigned int)cMessage_out );
     if( cMessage_out) {
         __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cMessage_out );
     }
@@ -56,28 +56,21 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeSha
 
     const char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
     const char *cField = (*env)->GetStringUTFChars(env, jField, 0);
+    word16 uFieldNum = (word16)jFieldNum;
 
-#if(_DEBUG)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShare %X", cShare );
-    if( cShare) {
-        __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cShare );
-    }
+#if defined(_DEBUG)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShare %X", (unsigned int)cShare );
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cField %X", (unsigned int)cField );
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "uFieldNum %u", uFieldNum );
 #endif
 
-#if(_DEBUG)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cField %X", cField );
-    if( cField) {
-        __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cField );
-    }
-#endif
-
-    rc = library_uri_field( &cField_out, cShare, cField, (word16)jFieldNum );
+    rc = library_uri_field( &cField_out, cShare, cField, uFieldNum );
 
 //http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
-#if(_DEBUG)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cField_out %X", cField_out );
+#if defined(_DEBUG)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cField_out %X", (unsigned int)cField_out );
     if( cField_out) {
-        __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cField_out );
+        __android_log_print(ANDROID_LOG_INFO, "libartemis", "cField_out %s", cField_out );
     }
 #endif
 
