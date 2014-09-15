@@ -1,0 +1,20 @@
+# http://mhandroid.wordpress.com/2011/01/25/how-cc-debugging-works-on-android/
+# https://code.google.com/p/android/issues/detail?id=73338
+# http://stackoverflow.com/questions/10534367/how-to-get-ndk-gdb-working-on-android
+
+# Add android:debuggable=”true” in your AndroidManifest.xml
+# Perhaps build with NDK_DEBUG=1
+# Consider obj/local/armeabi/gdb.setup file
+# Consider ndk-gdb script which make do some of this work
+
+# shell 1
+adb forward tcp:5039 tcp:5039
+adb shell
+ps
+gdbserver :5039 --attach <pid>
+
+# shell 2
+gdb app_process
+set solib-search-path obj/local/armeabi[:<otherpaths>]
+target remote :5039
+

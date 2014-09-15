@@ -1,4 +1,4 @@
-#include "com_tereslogica_droidartemis_MyActivity.h"
+#include "com_tereslogica_droidartemis_ArtemisLib.h"
 
 #include "library.h"
 
@@ -8,20 +8,20 @@ char* szLocation = "foo.bar";
 
 static int rc = 0;
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeGetString(JNIEnv * env, jobject obj)
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetString(JNIEnv * env, jobject obj)
 {
     library_init();
     library_test();
     return (*env)->NewStringUTF( env, "hello\nworld" );
 }
 
-JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeGetStatusOK(JNIEnv * env, jobject obj)
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetStatusOK(JNIEnv * env, jobject obj)
 {
     jboolean jok = rc ? JNI_FALSE : JNI_TRUE;
     return jok;
 }
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeDecode(JNIEnv * env, jobject obj, jstring jSharesNLArr)
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jSharesNLArr)
 {
     byte* cMessage_out = 0;
     jstring jMessage_out;
@@ -47,7 +47,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeDec
     return jMessage_out;
 }
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_MyActivity_nativeShareField(JNIEnv * env, jobject obj, jstring jShare, jstring jField, jint jFieldNum)
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareField(JNIEnv * env, jobject obj, jstring jShare, jstring jField, jint jFieldNum)
 {
     byte* cField_out = 0;
     jstring jField_out;

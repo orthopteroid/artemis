@@ -9,29 +9,24 @@
     tools:context=".MyActivity" >
 
     <TextView
-        android:id="@+id/title"
+        android:id="@+id/topic"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:padding="4sp"
-        android:textSize="10sp"
         android:textStyle="normal"
         android:textIsSelectable="false"
         android:typeface="monospace"
     />
 
     <TextView
-        android:id="@+id/description"
+        android:id="@+id/details"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="false"
-        android:padding="4sp"
-        android:textSize="8sp"
+        android:layout_below="@+id/topic"
         android:textStyle="normal"
         android:textIsSelectable="false"
         android:typeface="monospace"
-    />
+        android:layout_alignParentEnd="false" />
 
 </RelativeLayout>
