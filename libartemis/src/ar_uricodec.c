@@ -204,6 +204,33 @@ FAIL:
 	ps_cleanup( &ss );
 }
 
+int ar_uri_parse_shareinfo( word16* shares, word16* threshold, byteptr buf )
+{
+	int rc = 0;
+	
+	*shares = 0;
+	*threshold = 0;
+
+	parsestate ss;
+	ps_init( &ss, buf );
+
+	int stype = ar_uri_parse_type( buf );
+	if( stype < 0 ) { ASSERT(0); rc = stype; goto FAIL; }
+
+	char* tagArr[] = { "", "ai=", "si=" };
+
+	if( rc = ps_scan_item( &ss, tagArr[ stype ], 0 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( shares, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
+
+	if( rc = ps_scan_item( &ss, tagArr[ stype ], 1 ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( threshold, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
+
+FAIL:
+	ps_cleanup( &ss );
+	
+	return rc;
+}
+
 int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 {
 	size_t buflen = 0;

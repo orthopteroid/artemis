@@ -155,7 +155,7 @@ int ar_util_6BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 );
 PAD:
 						if( j < bufsize ) { buf[j++] = (byte)( char3 >> 16 ); } else { ASSERT(0); rc = -2; break; }
-						if( p < 2 ) {	if( j < bufsize ) { buf[j++] = (byte)( char3 >>  8 ); } else { ASSERT(0); rc = -2; break; } }
+		if( p < 2 ) {	if( j < bufsize ) { buf[j++] = (byte)( char3 >>  8 ); } else { ASSERT(0); rc = -2; break; } }
 		if( p < 1 ) {	if( j < bufsize ) { buf[j++] = (byte)( char3       ); } else { ASSERT(0); rc = -2; break; } }
 	}
 	*deltalen = j;

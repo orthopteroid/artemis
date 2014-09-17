@@ -50,6 +50,10 @@ JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGe
 
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jSharesNLArr);
 
+JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareInfo(JNIEnv * env, jobject obj, jstring jShare);
+
+//JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecodeB64(JNIEnv * env, jobject obj, jstring jString);
+
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareField(JNIEnv * env, jobject obj, jstring jShare, jstring jField, jint jFieldNum);
 
 #ifdef __cplusplus

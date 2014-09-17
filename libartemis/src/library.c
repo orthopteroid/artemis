@@ -296,12 +296,37 @@ FAILDECRYPT:
 	if( arecord ) free( arecord );
 	for( int i=0; i<sharenum; i++ ) { if( srecordArr[i] ) { free( srecordArr[i] ); srecordArr[i] = 0; } }
 	if( srecordArr ) free( srecordArr );
-	if( message ) *message_out = message;
+	if( message ) *message_out = message; // REVIEW: check rc ?
 	if( sharesNLArr_copy ) free( sharesNLArr_copy);
 
 	return rc;
 }
+/*
+int library_b64_decoder( byteptr* string_out, byteptr string )
+{
+	int rc = 0;
 
+__android_log_print(ANDROID_LOG_INFO, "libartemis", "string %s", string );
+
+	*string_out = 0;
+	
+	size_t slen = string ? strlen( string ) : 0;
+__android_log_print(ANDROID_LOG_INFO, "libartemis", "slen %d", slen );
+	if( slen == 0 ) { ASSERT(0); rc=-1; goto FAILED; }
+
+	*string_out = malloc( slen + 1 );
+__android_log_print(ANDROID_LOG_INFO, "libartemis", "*string_out %X", *string_out );
+	if( *string_out == 0 ) { ASSERT(0); rc=-1; goto FAILED; }
+
+	if( rc = ar_util_6BZto8BZ( *string_out, slen, string ) ) { ASSERT(0); goto FAILED; }
+
+FAILED:
+	
+	// REVIEW: check rc ?
+	
+	return rc;
+}
+*/
 int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, word16 uFieldNum )
 {
 	int rc = 0;
@@ -327,6 +352,23 @@ int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, wor
 		*field_out = (unsigned char*)strndup( pFirst, pLast - pFirst );
 		if( !*field_out ) { ASSERT(0); rc=-9; goto FAIL; }
 	}
+	
+FAIL:
+	
+	return rc;
+}
+
+int library_uri_shareinfo( word16* shares, word16* threshold, byteptr buf )
+{
+	int rc = 0;
+	
+	if( !shares ) { ASSERT(0); return -1; }
+	if( !threshold ) { ASSERT(0); return -1; }
+	if( !buf ) { ASSERT(0); return -1; }
+
+	*shares = *threshold = 0;
+
+	if( rc = ar_uri_parse_shareinfo( shares, threshold, buf ) ) { ASSERT(0); goto FAIL; }
 	
 FAIL:
 	
