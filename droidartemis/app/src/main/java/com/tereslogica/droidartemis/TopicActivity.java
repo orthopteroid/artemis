@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.widget.TextView;
 
 public class TopicActivity extends Activity {
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,4 +18,5 @@ public class TopicActivity extends Activity {
         String product = i.getStringExtra("product");
         txtProduct.setText(product);
     }
+
 }

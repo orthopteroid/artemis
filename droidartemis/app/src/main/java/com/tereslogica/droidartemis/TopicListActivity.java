@@ -1,7 +1,9 @@
 package com.tereslogica.droidartemis;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,69 +23,54 @@ import java.util.ArrayList;
 // http://www.androidhive.info/2011/10/android-listview-tutorial/
 public class TopicListActivity extends FragmentActivity {
 
-    static ArtemisLib artemisLib;
-    static ArtemisSQL artemisSql;
+    public static final int ACTIVITY_SCAN = 0;
 
+    ////////////////
+
+    ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
+
+    ArtemisLib artemisLib;
+    ArtemisSQL artemisSql;
     Notifier notifier;
     FakeScanner fs;
 
-    ArrayList<TLAItem> al = new ArrayList<TLAItem>();
-    //TopicListAdapter tla;
+    ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
     TLAAdapter tla;
 
     ////////////////////////////////////
 
-    public class TLAItem {
-
-        public String topic;
-        public String details;
-
-        public TLAItem(String _topic, String _details) {
-            super();
-            this.topic = _topic;
-            this.details = _details;
-        }
-    }
-
-    ///////////
-
-    public class TLALoader extends AsyncTask<String,Void,Long> {
-        private ArrayAdapter<TLAItem> adapter;
-        private ArrayList<TLAItem> arraylist;
+    private class TLALoader extends AsyncTask<Cursor,Void,Long> {
+        private ArrayAdapter<ArtemisTopic> adapter;
+        private ArrayList<ArtemisTopic> arraylist;
         private android.content.res.Resources resources;
 
-        TLALoader(android.content.res.Resources res, ArrayAdapter<TLAItem> aa, ArrayList<TLAItem> arrl) {
+        TLALoader(android.content.res.Resources res, ArrayAdapter<ArtemisTopic> aa, ArrayList<ArtemisTopic> arrl) {
             resources = res;
             adapter = aa;
             arraylist = arrl;
         }
 
         @Override
-        protected void onPreExecute() { }
-
-        @Override
-        protected Long doInBackground(String ... parms) {
-            int count = parms.length;
-            if( count == 1 ) {
-                if( parms[0].length() == 0 ) {
-                    String[] adobe_products = resources.getStringArray(R.array.adobe_products);
-                    arraylist.clear();
-                    for (String s : adobe_products) {
-                        arraylist.add(new TLAItem(s, "descr"));
-                        if( isCancelled() ) { break; }
-                        publishProgress();
-                    }
-                } else {
-                    arraylist.add(new TLAItem(parms[0], "descr"));
-                }
-            }
-            return null;
+        protected void onPreExecute() {
+            arraylist.clear();
+            adapter.notifyDataSetChanged();
         }
 
         @Override
-        protected void onProgressUpdate(Void ... values) {
-            // adapter update in bkgrnd thread illegal when using
-            // adapter.notifyDataSetChanged();
+        protected Long doInBackground(Cursor ... cursors) {
+            if( cursors == null ) return null;
+            if( cursors.length != 1 ) return null;
+            if( cursors[0] == null ) return null;
+
+            Cursor cursor = cursors[0];
+            if (cursor.moveToFirst()) {
+                do {
+                    arraylist.add( new ArtemisTopic( cursor ) );
+                    //if (isCancelled()) break;
+                } while( cursor.moveToNext() );
+            }
+            cursor.close();
+            return null;
         }
 
         @Override
@@ -92,21 +79,21 @@ public class TopicListActivity extends FragmentActivity {
         }
     }
 
-    /////////
+    ////////////////////////////////////
 
-    public class TLAAdapter extends ArrayAdapter<TLAItem> {
+    private class TLAAdapter extends ArrayAdapter<ArtemisTopic> {
         public TLAAdapter() {
             super( getApplicationContext(), R.layout.list_item, R.id.topic, al );
         }
+
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-
             LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View rowView = inflater.inflate( R.layout.list_item, parent, false); // optimize: use view recycling
             TextView labelView = (TextView) rowView.findViewById(R.id.topic);
             TextView valueView = (TextView) rowView.findViewById(R.id.details);
             labelView.setText(al.get(position).topic);
-            valueView.setText(al.get(position).details);
+            valueView.setText(al.get(position).message);
             return rowView;
         }
     }
@@ -119,82 +106,60 @@ public class TopicListActivity extends FragmentActivity {
 
         setContentView(R.layout.activity_my);
 
-        notifier = new Notifier(getApplicationContext(),getResources());
+        notifier = new Notifier( this );
+        artemisSql = new ArtemisSQL( this );
+        artemisLib = new ArtemisLib();
 
-        // init library
-        try {
-            artemisLib = new ArtemisLib();
-        } catch (Exception e1) {
-            notifier.show(R.string.notify_nonativelib);
-        }
+        ////////////////
 
-        {
-            //tla = new TopicListAdapter( getApplicationContext(), R.layout.list_item, R.id.topic, al );
-            tla = new TLAAdapter();
-            ListView lv = (ListView) findViewById( R.id.list_container );
-            lv.setAdapter(tla);
-            lv.setOnItemClickListener( new OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    String product = ((TextView) view.findViewById(R.id.topic)).getText().toString();
-                    Intent i = new Intent(getApplicationContext(), TopicActivity.class);
-                    i.putExtra("product", product);
-                    startActivity(i);
-                }
-            });
-
-            (new TLALoader( getResources(), tla, al)).execute("");
-        }
-/*
-        {
-            Button b = (Button) findViewById(R.id.scan_button);
-            b.setOnClickListener( new View.OnClickListener() {
-                public void onClick(View v) {
-
-                    // http://stackoverflow.com/questions/3103196/android-os-build-data-examples-please
-                    if (Build.BRAND.equalsIgnoreCase("generic")) {
-
-                        if( fs == null) {
-                            fs = new FakeScanner();
-                        }
-                        addScannedItem( fs.nextItem() );
-
-                    } else {
-
-                        // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
-                        try {
-                            Intent intent = new Intent("com.google.zxing.client.android.SCAN");
-                            intent.putExtra("SCAN_MODE", "QR_CODE_MODE"); // "PRODUCT_MODE for bar codes
-                            startActivityForResult(intent, 0);
-                        } catch (Exception e1) {
-                            showDialogNoScanner();
-                        }
-
-                    }
-                }
-
-            });
-        }
-*/
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
-        super.onActivityResult(requestCode, resultCode, data);
-        if( requestCode == 0 ) {
-
-            if( resultCode == RESULT_OK ) {
-                addScannedItem( data.getStringExtra("SCAN_RESULT") );
+        OnItemClickListener oicl = new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String product = ((TextView) view.findViewById(R.id.topic)).getText().toString();
+                Intent i = new Intent(getApplicationContext(), TopicActivity.class);
+                i.putExtra("product", product);
+                startActivity(i);
             }
-            if( resultCode == RESULT_CANCELED ) {
-                //handle cancel
-            }
+        };
+
+        tla = new TLAAdapter();
+        ListView lv = (ListView) findViewById( R.id.list_container );
+        lv.setAdapter(tla);
+        lv.setOnItemClickListener(oicl);
+
+        ////////////////
+
+        Cursor cursor = artemisSql.getTopicsCursor( sortOrder );
+        if( cursor != null ) {
+            (new TLALoader(getResources(), tla, al)).execute(cursor);
         }
     }
 
     ///////////////////////////
 
     public void onClickSort(View v) {
+        DialogInterface.OnClickListener ocl = new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int _which) {
+                ArtemisSQL.SortOrder orderings[] = {
+                        ArtemisSQL.SortOrder.MOSTRECENT,
+                        ArtemisSQL.SortOrder.LEASTRECENT,
+                        ArtemisSQL.SortOrder.MOSTCOMPLETE,
+                        ArtemisSQL.SortOrder.LEASTCOMPLETE
+                };
+                sortOrder = orderings[_which];
+            }
+        };
+        notifier.showOptions( R.array.dialog_sortshares, ocl);
+    }
+
+    public void onClickPurge(View v) {
+        artemisSql.reset();
+
+        ////////////////
+
+        Cursor cursor = artemisSql.getTopicsCursor( sortOrder );
+        if( cursor != null ) {
+            (new TLALoader(getResources(), tla, al)).execute(cursor);
+        }
     }
 
     public void onClickScan(View v) {
@@ -213,11 +178,28 @@ public class TopicListActivity extends FragmentActivity {
             try {
                 Intent intent = new Intent("com.google.zxing.client.android.SCAN");
                 intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-                startActivityForResult(intent, 0);
+                startActivityForResult( intent, ACTIVITY_SCAN );
             } catch (Exception e1) {
-                notifier.show(R.string.notify_noscanner);
+                notifier.showOk(R.string.dialog_noscanner);
             }
 
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
+        super.onActivityResult(requestCode, resultCode, data);
+        switch( requestCode ) {
+            case ACTIVITY_SCAN:
+                if (resultCode == RESULT_OK) {
+                    addScannedItem(data.getStringExtra("SCAN_RESULT"));
+                } else if (resultCode == RESULT_CANCELED) {
+                    //handle cancel
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -225,20 +207,30 @@ public class TopicListActivity extends FragmentActivity {
 
     String zoo = new String();
 
-    public void addScannedItem( String item ) {
-        Log.d("libartemis", "add " + item);
-        //
-        String topic = artemisLib.nativeShareField(item, "tp", 0);
+    public void addScannedItem( String share ) {
+        Log.d("libartemis", "add " + share);
+        String topic = artemisLib.nativeShareField(share, "tp", 0);
         Log.d("libartemis", "topic " + topic);
         //
-        TLAItem itemobj = new TLAItem( topic, item );
-        if( !al.contains( itemobj ) ) {
-            al.add(itemobj);
+        ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
+        if( oTopic == null ) {
+            int[] shareInfo = artemisLib.nativeShareInfo( share );
+            oTopic = new ArtemisTopic( topic, shareInfo[0], shareInfo[1] );
+        }
+        //
+        ArtemisShare oShare = artemisSql.getShareInfo( share );
+        if( oShare == null ) {
+            oShare = new ArtemisShare( share, topic ); // REVIEW: temporary object
+            artemisSql.addShare( oShare, oTopic );
+        }
+        //
+        if( !al.contains( oTopic ) ) {
+            al.add( oTopic );
             tla.notifyDataSetChanged();
         }
         //
-        if( zoo.length() == 0 ) zoo = item; else zoo += "\n" + item;
 /*
+        if( zoo.length() == 0 ) zoo = item; else zoo += "\n" + item;
         String foo = new String();
         sal.add( item );
         int i = 0;
@@ -246,13 +238,13 @@ public class TopicListActivity extends FragmentActivity {
             if( i == 0 ) foo = s; else foo += "\n" + s;
             i++;
         }
-*/
         // http://mhandroid.wordpress.com/2011/01/25/how-cc-debugging-works-on-android/
         // ./adb root ; ./adb shell stop ; ./adb shell setprop log.redirect-stdio true ; ./adb shell start
         String bar = artemisLib.nativeDecode(zoo);
         boolean ok = artemisLib.nativeGetStatusOK();
         if( ok == false ) bar = "*NODECODE*";
         Log.d("libartemis", "returned " + bar);
+*/
     }
     public void removeScannedItem( String item ) {
         Log.d("libartemis", "remove " + item);

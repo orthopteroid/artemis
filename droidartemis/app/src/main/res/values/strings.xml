@@ -4,8 +4,8 @@
     <string name="app_name">ArcanaShare</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="notify_noscanner">Scanner app not found.</string>
-    <string name="notify_nonativelib">Installation error: native library not found.</string>
+    <string name="dialog_noscanner">Scanner app not found.</string>
+    <string name="dialog_nonativelib">Installation error: native library not found.</string>
     <string name="reponse_ok">Ok</string>
     <string name="reponse_yes">Yes</string>
     <string name="reponse_no">No</string>

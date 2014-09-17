@@ -6,4 +6,14 @@
         <item>Adobe Dreamweaver</item>
         <item>Adobe Edge</item>
     </string-array>
+    <string-array name="dialog_sortshares">
+        <item>Most Recent</item>
+        <item>Least Recent</item>
+        <item>Most Complete</item>
+        <item>Least Complete</item>
+    </string-array>
+    <string-array name="dialog_sorttopics">
+        <item>Most Recent</item>
+        <item>Least Recent</item>
+    </string-array>
 </resources>

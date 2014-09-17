@@ -30,17 +30,19 @@
         android:id="@+id/list_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/scan_button">
+        android:layout_below="@+id/scan_button"
+        android:layout_alignParentRight="false"
+        android:layout_centerInParent="true">
     </ListView>
 
-    <CheckBox
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Auto Reveal"
-        android:id="@+id/autoreveal_check"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/sort_button" />
+        android:text="Purge"
+        android:id="@+id/button"
+        android:layout_above="@+id/list_container"
+        android:layout_alignRight="@+id/list_container"
+        android:layout_alignParentRight="false"
+        android:onClick="onClickPurge"/>
 
 </RelativeLayout>
