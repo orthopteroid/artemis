@@ -222,9 +222,9 @@ public class TopicListActivity extends FragmentActivity {
     String zoo = new String();
 
     public void addScannedItem( String share ) {
-        Log.d("libartemis", "add " + share);
-        String topic = artemisLib.nativeShareField(share, "tp", 0);
-        Log.d("libartemis", "topic " + topic);
+        String topic = artemisLib.nativeShareField( share, "tp", 0 );
+        String clue = artemisLib.nativeShareClue( share );
+        String location = artemisLib.nativeShareLocation( share );
         //
         ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
         if( oTopic == null ) {
