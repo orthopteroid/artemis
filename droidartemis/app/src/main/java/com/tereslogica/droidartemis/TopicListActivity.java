@@ -81,24 +81,34 @@ public class TopicListActivity extends FragmentActivity {
 
     ////////////////////////////////////
 
+    // http://lucasr.org/2012/04/05/performance-tips-for-androids-listview/
+
     private class TLAAdapter extends ArrayAdapter<ArtemisTopic> {
+        LayoutInflater inflater;
+
         public TLAAdapter() {
-            super( getApplicationContext(), R.layout.list_item, R.id.topic, al );
+            super( getApplicationContext(), R.layout.list_item, R.id.loctopic, al );
+            inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View rowView = inflater.inflate( R.layout.list_item, parent, false); // optimize: use view recycling
-            TextView labelView = (TextView) rowView.findViewById(R.id.topic);
-            TextView valueView = (TextView) rowView.findViewById(R.id.details);
-            labelView.setText(al.get(position).topic);
-            valueView.setText(al.get(position).message);
+            View rowView;
+            if( convertView == null ) { // view recycling and view holder pattern
+                rowView = inflater.inflate(R.layout.list_item, parent, false);
+                rowView.setTag( R.id.loctopic, ((TextView) rowView.findViewById( R.id.loctopic )) );
+                rowView.setTag( R.id.details, ((TextView) rowView.findViewById( R.id.details )) );
+                rowView.setTag( R.id.message, ((TextView) rowView.findViewById( R.id.message )) );
+            } else {
+                rowView = convertView;
+            }
+            al.get( position ).configureView( rowView );
             return rowView;
         }
     }
 
     //////////////////////
+    // http://developer.android.com/reference/android/app/Activity.html#ActivityLifecycle
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

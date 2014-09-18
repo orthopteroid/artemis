@@ -1,6 +1,8 @@
 package com.tereslogica.droidartemis;
 
 import android.database.Cursor;
+import android.view.View;
+import android.widget.TextView;
 
 import java.util.Arrays;
 
@@ -37,6 +39,12 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
         ssize = cursor.getInt( ArtemisSQL.SSIZE_COL );
         tsize = cursor.getInt( ArtemisSQL.TSIZE_COL );
         message = cursor.getString( ArtemisSQL.MESSAGE_COL );
+    }
+
+    public void configureView(View listItem) {
+        ((TextView) listItem.getTag( R.id.loctopic )).setText( topic );
+        ((TextView) listItem.getTag( R.id.details )).setText( Integer.toString( scount )+"/"+Integer.toString( tsize )+" ("+Integer.toString( ssize )+")" );
+        ((TextView) listItem.getTag( R.id.message )).setText( message );
     }
 
     @Override
