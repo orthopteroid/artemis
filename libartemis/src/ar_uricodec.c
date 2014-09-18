@@ -150,8 +150,53 @@ int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, by
 
 	if( rc = ps_scan_item( pss, szField, uFieldNum ) ) { goto FAIL; }
 
-	ASSERT( ss.seg_start );
-	ASSERT( ss.seg_end > ss.seg_start );
+	*ppFirst = ss.seg_start;
+	*ppLast = ss.seg_end;
+
+FAIL:
+	ps_cleanup( &ss );
+	
+	return rc;
+}
+
+int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
+{
+	int rc = 0;
+	
+	*ppFirst = *ppLast = 0;
+	
+	parsestate ss;
+	parsestate* pss = &ss;
+	ps_init( pss, szRecord );
+
+	if( rc = ps_scan_item( pss, "mc=", 0 ) )
+	{
+		if( rc = ps_scan_item( pss, "sc=", 0 ) ) { goto FAIL; }
+	}
+	
+	*ppFirst = ss.seg_start;
+	*ppLast = ss.seg_end;
+	
+FAIL:
+	ps_cleanup( &ss );
+
+	return rc;	
+}
+
+int ar_uri_locate_location( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
+{
+	int rc = 0;
+	
+	if( !ppFirst || !ppLast || !szRecord ) { ASSERT(0); return -1; }
+	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
+
+	*ppFirst = *ppLast = 0;
+	
+	parsestate ss;
+	parsestate* pss = &ss;
+	ps_init( pss, szRecord );
+
+	if( rc = ps_scan_item( pss, "http://", 0 ) ) { goto FAIL; }
 
 	*ppFirst = ss.seg_start;
 	*ppLast = ss.seg_end;
@@ -159,7 +204,7 @@ int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, by
 FAIL:
 	ps_cleanup( &ss );
 	
-	return 0;
+	return rc;
 }
 
 void ar_uri_parse_messlen( size_t* len, byteptr buf )

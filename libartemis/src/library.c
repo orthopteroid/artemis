@@ -358,6 +358,60 @@ FAIL:
 	return rc;
 }
 
+int library_uri_clue( byteptr* clue_out, byteptr szShare )
+{
+	int rc = 0;
+	
+	if( !clue_out ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
+
+	*clue_out = 0;
+	
+	byteptr pFirst = 0;
+	byteptr pLast = 0;
+	
+	if( rc = ar_uri_locate_clue( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
+
+	size_t clen = pLast - pFirst;
+	if( clen > 0 )
+	{
+		*clue_out = malloc( clen + 5 ); // +5 for safe keeping
+		if( *clue_out == 0 ) { ASSERT(0); rc=-1; goto FAIL; }
+
+		size_t mclen = 0;
+		if( rc = ar_util_6BAto8BA( &mclen, *clue_out, clen + 5, pFirst, clen ) ) { ASSERT(0); goto FAIL; }
+	}
+	
+FAIL:
+	
+	return rc;
+}
+
+int library_uri_location( byteptr* location_out, byteptr szShare )
+{
+	int rc = 0;
+	
+	if( !location_out ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
+
+	*location_out = 0;
+	
+	byteptr pFirst = 0;
+	byteptr pLast = 0;
+	
+	if( rc = ar_uri_locate_location( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
+
+	if( pFirst != pLast )
+	{
+		*location_out = (unsigned char*)strndup( pFirst, pLast - pFirst );
+		if( !*location_out ) { ASSERT(0); rc=-9; goto FAIL; }
+	}
+	
+FAIL:
+	
+	return rc;
+}
+
 int library_uri_shareinfo( word16* shares, word16* threshold, byteptr buf )
 {
 	int rc = 0;

@@ -75,10 +75,10 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
 
 JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareInfo(JNIEnv * env, jobject obj, jstring jShare)
 {
-    char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
+    const char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
 
     word16 shares, threshold;
-    rc = library_uri_shareinfo( &shares, &threshold, cShare );
+    rc = library_uri_shareinfo( &shares, &threshold, (byteptr)cShare );
 
     (*env)->ReleaseStringUTFChars( env, jShare, cShare );
 
@@ -88,7 +88,8 @@ JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeS
     shareInfoData[0] = shares;
     shareInfoData[1] = threshold;
 
-    (*env)->ReleaseIntArrayElements( env, shareInfo, shareInfoData, NULL);
+    // http://publib.boulder.ibm.com/infocenter/javasdk/v1r4m2/index.jsp?topic=%2Fcom.ibm.java.doc.diagnostics.142j9%2Fhtml%2Fusemodeflag.html
+    (*env)->ReleaseIntArrayElements( env, shareInfo, shareInfoData, JNI_COMMIT );
 
     return shareInfo;
 }
@@ -110,7 +111,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeSha
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "uFieldNum %u", uFieldNum );
 #endif
 */
-    rc = library_uri_field( &cField_out, cShare, cField, uFieldNum );
+    rc = library_uri_field( &cField_out, (byteptr)cShare, (byteptr)cField, uFieldNum );
 /*
 //http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
 #if defined(_DEBUG)
@@ -130,3 +131,65 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeSha
     return jField_out;
 }
 
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareClue(JNIEnv * env, jobject obj, jstring jShare)
+{
+    byte* cClue_out = 0;
+    jstring jClue_out;
+
+    const char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
+/*
+#if defined(_DEBUG)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShare %X", (unsigned int)cShare );
+#endif
+*/
+    rc = library_uri_clue( &cClue_out, (byteptr)cShare );
+/*
+//http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
+#if defined(_DEBUG)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cClue_out %X", (unsigned int)cClue_out );
+    if( cClue_out) {
+        __android_log_print(ANDROID_LOG_INFO, "libartemis", "cClue_out %s", cClue_out );
+    }
+#endif
+*/
+    jClue_out = (*env)->NewStringUTF( env, cClue_out );
+
+    library_free( &cClue_out );
+
+    (*env)->ReleaseStringUTFChars( env, jShare, cShare );
+
+    return jClue_out;
+}
+
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareLocation(JNIEnv * env, jobject obj, jstring jShare)
+{
+    byte* cLocation_out = 0;
+    jstring jLocation_out;
+
+    const char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
+
+#if defined(_DEBUG)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShare %X", (unsigned int)cShare );
+    if( cShare) {
+        __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShare %s", cShare );
+    }
+#endif
+
+    rc = library_uri_location( &cLocation_out, (byteptr)cShare );
+
+//http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
+#if defined(_DEBUG)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cLocation_out %X", (unsigned int)cLocation_out );
+    if( cLocation_out) {
+        __android_log_print(ANDROID_LOG_INFO, "libartemis", "cLocation_out %s", cLocation_out );
+    }
+#endif
+
+    jLocation_out = (*env)->NewStringUTF( env, cLocation_out );
+
+    library_free( &cLocation_out );
+
+    (*env)->ReleaseStringUTFChars( env, jShare, cShare );
+
+    return jLocation_out;
+}
