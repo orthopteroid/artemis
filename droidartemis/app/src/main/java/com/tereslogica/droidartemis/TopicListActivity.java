@@ -28,15 +28,16 @@ public class TopicListActivity extends FragmentActivity {
     ////////////////
 
     private static final boolean forceFakeScanner = true;
-    ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
 
-    ArtemisLib artemisLib;
-    ArtemisSQL artemisSql;
-    Notifier notifier;
-    FakeScanner fs;
+    private ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
 
-    ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
-    TLAAdapter tla;
+    private ArtemisLib artemisLib;
+    private ArtemisSQL artemisSql;
+    private Notifier notifier;
+    private FakeScanner fs;
+
+    private ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
+    private TLAAdapter tla;
 
     ////////////////////////////////////
 
@@ -125,7 +126,7 @@ public class TopicListActivity extends FragmentActivity {
 
         OnItemClickListener oicl = new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String product = ((TextView) view.findViewById(R.id.topic)).getText().toString();
+                String product = ((TextView) view.findViewById( R.id.loctopic ) ).getText().toString();
                 Intent i = new Intent(getApplicationContext(), TopicActivity.class);
                 i.putExtra("product", product);
                 startActivity(i);
@@ -233,7 +234,7 @@ public class TopicListActivity extends FragmentActivity {
         //
         ArtemisShare oShare = artemisSql.getShareInfo( share );
         if( oShare == null ) {
-            oShare = new ArtemisShare( share, topic ); // REVIEW: temporary object
+            oShare = new ArtemisShare( share, topic ); // TODO: remove temporary object
             artemisSql.addShare( oShare, oTopic );
         }
         //
