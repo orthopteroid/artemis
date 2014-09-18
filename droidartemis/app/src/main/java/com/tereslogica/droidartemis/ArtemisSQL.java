@@ -22,6 +22,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final String SHARES = "shares";
 
     private static final String KEY             = "_id";
+    private static final String KEY_DEFAULT     = "NULL";
     private static final String KEY_TYPE        = "INTEGER PRIMARY KEY";
     private static final String KEY_DECL        = KEY+" "+KEY_TYPE;
     public  static final int    KEY_COL         = 0;
@@ -136,18 +137,20 @@ public class ArtemisSQL extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
 
-        Cursor cursor = db.rawQuery( "SELECT * FROM "+SHARES+" WHERE "+TOPIC+" = '"+topic+"' ;", null);
-        int count = cursor.getCount();
+        int count = 0;
+        Cursor cursor = db.rawQuery( "SELECT * FROM "+SHARES+" WHERE "+TOPIC+" = '"+topic+"' ;", null); // TODO: use aggregate function
+        boolean nonZeroCollection = cursor.moveToFirst();
+        if( nonZeroCollection ) count = cursor.getCount();
         cursor.close();
 
         db.execSQL("BEGIN;");
-        db.execSQL("INSERT INTO "+SHARES+" VALUES ( NULL , '"+topic+"' , '"+share+"' );"); // null for KEY
-        if( count < 1 ) {
+        db.execSQL("INSERT INTO "+SHARES+" VALUES ( "+KEY_DEFAULT+" , '"+topic+"' , '"+share+"' );"); // null for KEY
+        if( nonZeroCollection ) {
+            db.execSQL("UPDATE "+TOPICS+" SET "+SCOUNT+" = "+Integer.toString( 1 + count )+" WHERE "+TOPIC+" = '"+topic+"' ;");
+        } else {
             // http://www.sqlite.org/autoinc.html
             // NULL will meet the INTEGER PRIMARY KEY requirement of KEY
-            db.execSQL("INSERT INTO "+TOPICS+" VALUES ( NULL, '"+topic+"' , 1 , "+ssize.toString()+" , "+tsize.toString()+", ''  );");
-        } else {
-            db.execSQL("UPDATE "+TOPICS+" SET "+SCOUNT+" = "+Integer.toString(1+cursor.getCount())+" ;");
+            db.execSQL("INSERT INTO "+TOPICS+" VALUES ( "+KEY_DEFAULT+", '"+topic+"' , 1 , "+ssize.toString()+" , "+tsize.toString()+", ''  );");
         }
         db.execSQL("COMMIT;");
         db.close();
