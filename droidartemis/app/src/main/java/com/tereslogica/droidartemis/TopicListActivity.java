@@ -27,6 +27,7 @@ public class TopicListActivity extends FragmentActivity {
 
     ////////////////
 
+    private static final boolean forceFakeScanner = true;
     ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
 
     ArtemisLib artemisLib;
@@ -146,6 +147,13 @@ public class TopicListActivity extends FragmentActivity {
 
     ///////////////////////////
 
+    public void refreshListView() {
+        Cursor cursor = artemisSql.getTopicsCursor( sortOrder );
+        if( cursor != null ) {
+            (new TLALoader(getResources(), tla, al)).execute(cursor);
+        }
+    }
+
     public void onClickSort(View v) {
         DialogInterface.OnClickListener ocl = new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int _which) {
@@ -156,6 +164,7 @@ public class TopicListActivity extends FragmentActivity {
                         ArtemisSQL.SortOrder.LEASTCOMPLETE
                 };
                 sortOrder = orderings[_which];
+                refreshListView();
             }
         };
         notifier.showOptions( R.array.dialog_sortshares, ocl);
@@ -163,19 +172,13 @@ public class TopicListActivity extends FragmentActivity {
 
     public void onClickPurge(View v) {
         artemisSql.reset();
-
-        ////////////////
-
-        Cursor cursor = artemisSql.getTopicsCursor( sortOrder );
-        if( cursor != null ) {
-            (new TLALoader(getResources(), tla, al)).execute(cursor);
-        }
+        refreshListView();
     }
 
     public void onClickScan(View v) {
 
         // http://stackoverflow.com/questions/3103196/android-os-build-data-examples-please
-        if (Build.BRAND.equalsIgnoreCase("generic")) {
+        if( forceFakeScanner || Build.BRAND.equalsIgnoreCase("generic") ) {
 
             if( fs == null) {
                 fs = new FakeScanner();
@@ -203,7 +206,7 @@ public class TopicListActivity extends FragmentActivity {
         switch( requestCode ) {
             case ACTIVITY_SCAN:
                 if (resultCode == RESULT_OK) {
-                    addScannedItem(data.getStringExtra("SCAN_RESULT"));
+                    addScannedItem( data.getStringExtra("SCAN_RESULT") );
                 } else if (resultCode == RESULT_CANCELED) {
                     //handle cancel
                 }
@@ -234,10 +237,13 @@ public class TopicListActivity extends FragmentActivity {
             artemisSql.addShare( oShare, oTopic );
         }
         //
+        refreshListView();
+        /*
         if( !al.contains( oTopic ) ) {
             al.add( oTopic );
             tla.notifyDataSetChanged();
         }
+        */
         //
 /*
         if( zoo.length() == 0 ) zoo = item; else zoo += "\n" + item;
