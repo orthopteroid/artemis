@@ -186,7 +186,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         db.close();
         return cursor;
     }
-
+/*
     public List<ArtemisTopic> getTopics( SortOrder so ) {
         SQLiteDatabase db = this.getReadableDatabase();
         List<ArtemisTopic> topicList = new ArrayList<ArtemisTopic>();
@@ -222,7 +222,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         cursor.close();
         return shareList;
     }
-
+*/
     public void reset() {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("BEGIN;");
