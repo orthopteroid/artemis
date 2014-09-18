@@ -49,6 +49,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final String MESSAGE_TYPE    = "TEXT NOT NULL";
     private static final String MESSAGE_DECL    = MESSAGE+" "+MESSAGE_TYPE;
     public  static final int    MESSAGE_COL     = 5;
+    private static final String CALC_COMPLETE   = "complete";
 
     private void getTopicQueryParms( StringBuilder col, StringBuilder ord, SortOrder so ) {
         col.delete(0,ord.length());
@@ -64,11 +65,11 @@ public class ArtemisSQL extends SQLiteOpenHelper {
                 ord.append("ASC");
                 break;
             case MOSTCOMPLETE:
-                col.append(SCOUNT);
+                col.append(CALC_COMPLETE);
                 ord.append("DESC");
                 break;
             case LEASTCOMPLETE:
-                col.append(SCOUNT);
+                col.append(CALC_COMPLETE);
                 ord.append("ASC");
                 break;
         }
@@ -180,8 +181,8 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         StringBuilder col = new StringBuilder();
         StringBuilder ord = new StringBuilder();
         getTopicQueryParms(col, ord, so);
-        Cursor cursor = db.rawQuery( "SELECT * FROM "+TOPICS+" ORDER BY "+col.toString()+" "+ord.toString()+";", null);
-        boolean bFirst = cursor.moveToFirst();
+        Cursor cursor = db.rawQuery( "SELECT *, ROUND( "+SCOUNT+" / "+TSIZE+" , 2 ) AS '"+CALC_COMPLETE+"' FROM "+TOPICS+" ORDER BY "+col.toString()+" "+ord.toString()+";", null);
+        boolean nonZeroCollection = cursor.moveToFirst();
         db.close();
         return cursor;
     }
