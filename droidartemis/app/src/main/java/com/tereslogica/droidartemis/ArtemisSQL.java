@@ -238,10 +238,10 @@ public class ArtemisSQL extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("BEGIN;");
+        //db.execSQL("BEGIN;");
         db.execSQL("CREATE TABLE "+SHARES+" ( "+KEY_DECL+" , "+TOPIC_DECL+" , "+SHARE_DECL+" );");
         db.execSQL("CREATE TABLE "+TOPICS+" ( "+KEY_DECL+" , "+TOPIC_DECL+" , "+SCOUNT_DECL+" , "+SSIZE_DECL+" , "+TSIZE_DECL+" , "+MESSAGE_DECL+" );");
-        db.execSQL("COMMIT;");
+        //db.execSQL("COMMIT;");
     }
 
     @Override
