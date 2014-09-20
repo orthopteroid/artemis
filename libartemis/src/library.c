@@ -189,6 +189,8 @@ FAILCRYPT:
 	if( srecordArr ) free( srecordArr );
 	if( clueArr ) free( clueArr );
 
+	if( rc && *sharesBarArr_out ) free( *sharesBarArr_out );
+	
 	return rc;
 }
 
@@ -204,7 +206,6 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesN
 	word16 sharenum = 0;
 	arShareptr* srecordArr = 0;
 	arAuth* arecord = 0;
-	byteptr message = 0;
 	byteptr sharesNLArr_copy = 0;
 
 	size_t loclen = location ? strlen( location ) : 0;
@@ -238,9 +239,9 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesN
 				ar_uri_parse_messlen( &messlen, inbuf );
 				if( !messlen ) { return 1; }
 
-				message = malloc( messlen );
-				if( !message ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
-				memset( message, 0, messlen );
+				*message_out = malloc( messlen );
+				if( !*message_out ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
+				memset( *message_out, 0, messlen );
 
 				size_t buflen = cluelen + messlen + loclen + 1; // +1 for \0
 				size_t structlen = sizeof(arAuth) + buflen;
@@ -289,14 +290,15 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesN
 
 	if( !arecord || !srecordArr ) { rc=-9; goto FAILDECRYPT; } // no assert here
 
-	rc = ar_core_decrypt( message, (word16)messlen, arecord, srecordArr, sharenum );
+	rc = ar_core_decrypt( *message_out, (word16)messlen, arecord, srecordArr, sharenum );
 
 FAILDECRYPT:
 
+	if( rc && *message_out ) { free( *message_out ); *message_out = 0; }
+	
 	if( arecord ) free( arecord );
 	for( int i=0; i<sharenum; i++ ) { if( srecordArr[i] ) { free( srecordArr[i] ); srecordArr[i] = 0; } }
 	if( srecordArr ) free( srecordArr );
-	if( message ) *message_out = message; // REVIEW: check rc ?
 	if( sharesNLArr_copy ) free( sharesNLArr_copy);
 
 	return rc;
@@ -354,6 +356,8 @@ int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, wor
 	}
 	
 FAIL:
+
+	if( rc && *field_out ) { free( *field_out ); *field_out = 0; }
 	
 	return rc;
 }
@@ -383,6 +387,8 @@ int library_uri_clue( byteptr* clue_out, byteptr szShare )
 	}
 	
 FAIL:
+
+	if( rc && *clue_out ) { free( *clue_out ); *clue_out = 0; }
 	
 	return rc;
 }
@@ -408,6 +414,8 @@ int library_uri_location( byteptr* location_out, byteptr szShare )
 	}
 	
 FAIL:
+	
+	if( rc && *location_out ) { free( *location_out ); *location_out = 0; }
 	
 	return rc;
 }
