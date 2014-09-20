@@ -10,27 +10,25 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
 
     // in schema order
     public String topic;
+    public String clues;
+    public String location;
     public int scount;
     public int ssize;
     public int tsize;
     public String message;
 
-    public ArtemisTopic() {}
-
-    public ArtemisTopic( String _topic, int _scount, int _ssize, int _tsize, String _message ) {
-        topic = _topic;
-        scount = _scount;
-        ssize = _ssize;
-        tsize = _tsize;
-        message = _message;
+    public boolean readyToSetMessage() {
+        return message.length() == 0 && scount >= tsize;
     }
 
-    public ArtemisTopic( String _topic, int _ssize, int _tsize ) {
+    public ArtemisTopic( String _topic, int _ssize, int _tsize, String _clue, String _location ) {
         topic = _topic;
-        scount = 0;
+        scount = 1;
         ssize = _ssize;
         tsize = _tsize;
         message = "";
+        clues = _clue;
+        location = _location;
     }
 
     public ArtemisTopic(Cursor cursor) {
@@ -39,12 +37,23 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
         ssize = cursor.getInt( ArtemisSQL.SSIZE_COL );
         tsize = cursor.getInt( ArtemisSQL.TSIZE_COL );
         message = cursor.getString( ArtemisSQL.MESSAGE_COL );
+        clues = cursor.getString( ArtemisSQL.CLUES_COL );
+        location = cursor.getString( ArtemisSQL.LOCATION_COL );
+    }
+
+    public void addClue( String clue ) {
+        clues = clues+", "+clue;
+    }
+
+    public void incCount() {
+        scount++;
     }
 
     public void configureView(View listItem) {
-        ((TextView) listItem.getTag( R.id.loctopic )).setText( topic );
+        ((TextView) listItem.getTag( R.id.loctopic )).setText( location+"/"+topic );
         ((TextView) listItem.getTag( R.id.details )).setText( Integer.toString( scount )+"/"+Integer.toString( tsize )+" ("+Integer.toString( ssize )+")" );
         ((TextView) listItem.getTag( R.id.message )).setText( message );
+        ((TextView) listItem.getTag( R.id.clues )).setText( clues );
     }
 
     @Override

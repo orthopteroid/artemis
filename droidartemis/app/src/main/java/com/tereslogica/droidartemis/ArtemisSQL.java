@@ -18,9 +18,6 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final int VERSION = 1;
     private static final String NAME = "db";
 
-    private static final String TOPICS = "topics";
-    private static final String SHARES = "shares";
-
     private static final String KEY             = "_id";
     private static final String KEY_DEFAULT     = "NULL";
     private static final String KEY_TYPE        = "INTEGER PRIMARY KEY";
@@ -47,10 +44,26 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final String TSIZE_DECL      = TSIZE+" "+TSIZE_TYPE;
     public  static final int    TSIZE_COL       = 4;
     private static final String MESSAGE         = "message";
+    private static final String MESSAGE_DEFAULT = "''";
     private static final String MESSAGE_TYPE    = "TEXT NOT NULL";
     private static final String MESSAGE_DECL    = MESSAGE+" "+MESSAGE_TYPE;
     public  static final int    MESSAGE_COL     = 5;
+    private static final String CLUES           = "clues";
+    private static final String CLUES_DEFAULT   = "''";
+    private static final String CLUES_TYPE      = "TEXT NOT NULL";
+    private static final String CLUES_DECL      = CLUES+" "+CLUES_TYPE;
+    public  static final int    CLUES_COL       = 6;
+    private static final String LOCATION        = "location";
+    private static final String LOCATION_TYPE   = "TEXT NOT NULL";
+    private static final String LOCATION_DECL   = LOCATION+" "+LOCATION_TYPE;
+    public  static final int    LOCATION_COL    = 7;
     private static final String CALC_COMPLETE   = "complete";
+
+    private static final String TOPICS = "topics";
+    private static final String SHARES = "shares";
+    private static final String SHARES_SCHEMA = KEY_DECL+" , "+TOPIC_DECL+" , "+SHARE_DECL;
+    private static final String TOPICS_SCHEMA = KEY_DECL+" , "+TOPIC_DECL+" , "+SCOUNT_DECL+" , "
+            +SSIZE_DECL+" , "+TSIZE_DECL+" , "+MESSAGE_DECL+" , "+CLUES_DECL+" , "+LOCATION_DECL;
 
     private void getTopicQueryParms( StringBuilder col, StringBuilder ord, SortOrder so ) {
         col.delete(0,ord.length());
@@ -102,24 +115,18 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         super(context, NAME, null, VERSION);
     }
 
-    public ArtemisShare getShareInfo( String share ) {
-        ArtemisShare oShare = null;
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery( "SELECT * FROM "+SHARES+" WHERE "+SHARE+" = '"+share+"' ;", null);
-        if( cursor.moveToFirst() ) {
-            oShare = new ArtemisShare();
-            oShare.topic = cursor.getString(TOPIC_COL);
-            oShare.share = cursor.getString(SHARE_COL);
-        }
-        cursor.close();
-        db.close();
-        return oShare;
-    }
+    /////////////////
 
     public ArtemisTopic getTopicInfo( String topic ) {
         ArtemisTopic oTopic = null;
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery( "SELECT * FROM "+TOPICS+" WHERE "+TOPIC+" = '"+topic+"' ;", null);
+        Cursor cursor = db.rawQuery(
+            "SELECT * FROM "
+                +TOPICS+" "
+            +" WHERE "
+                +TOPIC+" = '"+topic+"' "
+            +";", null
+        );
         if( cursor.moveToFirst() ) {
             oTopic = new ArtemisTopic( cursor );
         }
@@ -128,36 +135,118 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         return oTopic;
     }
 
-    public void addShare( ArtemisShare oShare, ArtemisTopic oTopic ) {
-
+    public void updateTopic( ArtemisTopic oTopic ) {
         String topic = oTopic.topic;
-        String share = oShare.share;
-        Integer ssize = oTopic.ssize;
-        Integer tsize = oTopic.tsize;
-
+        String clues = oTopic.clues;
+        String message = oTopic.message;
+        String count = Integer.toString( oTopic.scount );
         SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL(
+            "UPDATE "+TOPICS+" SET "
+                +SCOUNT+" = "+count+", "
+                +CLUES+" = '"+clues+"', "
+                +MESSAGE+" = '"+message+"' "
+            +"WHERE "
+                +TOPIC+" = '"+topic+"' "
+            +";"
+        );
+        db.close();
+    }
 
-        int count = 0;
-        Cursor cursor = db.rawQuery( "SELECT * FROM "+SHARES+" WHERE "+TOPIC+" = '"+topic+"' ;", null); // TODO: use aggregate function
+    public Cursor getTopicsCursor( SortOrder so ) {
+        StringBuilder col = new StringBuilder();
+        StringBuilder ord = new StringBuilder();
+        getTopicQueryParms(col, ord, so);
+        //
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+            "SELECT *, ROUND( "+SCOUNT+" / "+TSIZE+" , 2 ) AS "
+                +" '"+CALC_COMPLETE+"' "+
+            "FROM "
+                +TOPICS+" "
+            +"ORDER BY "
+                +col.toString()+" "+ord.toString()
+            +";", null
+        );
         boolean nonZeroCollection = cursor.moveToFirst();
-        if( nonZeroCollection ) count = cursor.getCount();
-        cursor.close();
+        db.close();
+        return cursor;
+    }
 
-        db.execSQL("BEGIN;");
-        db.execSQL("INSERT INTO "+SHARES+" VALUES ( "+KEY_DEFAULT+" , '"+topic+"' , '"+share+"' );"); // null for KEY
-        if( nonZeroCollection ) {
-            db.execSQL("UPDATE "+TOPICS+" SET "+SCOUNT+" = "+Integer.toString( 1 + count )+" WHERE "+TOPIC+" = '"+topic+"' ;");
-        } else {
-            // http://www.sqlite.org/autoinc.html
-            // NULL will meet the INTEGER PRIMARY KEY requirement of KEY
-            db.execSQL("INSERT INTO "+TOPICS+" VALUES ( "+KEY_DEFAULT+", '"+topic+"' , 1 , "+ssize.toString()+" , "+tsize.toString()+", ''  );");
+    /////
+
+    public Cursor getShareTopicCursor( String topic ) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+            "SELECT * FROM "
+                +SHARES+" "
+            +"WHERE "
+                +TOPIC+" = '"+topic+"' "
+            +";", null
+        );
+        boolean nonZeroCollection = cursor.moveToFirst();
+        db.close();
+        return cursor;
+    }
+
+    //////
+
+    public ArtemisShare getShareInfo( String share ) {
+        ArtemisShare oShare = null;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery( "SELECT * FROM "+SHARES+" WHERE "+SHARE+" = '"+share+"' ;", null);
+        if( cursor.moveToFirst() ) {
+            oShare = new ArtemisShare( cursor );
         }
+        cursor.close();
+        db.close();
+        return oShare;
+    }
+
+    public void addShareAndTopic( ArtemisShare oShare, ArtemisTopic oTopic ) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("BEGIN;");
+        db.execSQL(
+            "INSERT INTO "
+                +SHARES+" "
+            +"VALUES ( "
+                +KEY_DEFAULT+", "
+                +"'"+oShare.topic+"', "
+                +"'"+oShare.share+"' "
+            +");"
+        );
+        db.execSQL(
+            "INSERT INTO "+TOPICS+" VALUES ( "
+                +KEY_DEFAULT+" , "
+                +"'"+oTopic.topic+"', "
+                +Integer.toString( oTopic.scount )+", "
+                +Integer.toString( oTopic.ssize )+", "
+                +Integer.toString( oTopic.tsize )+", "
+                +MESSAGE_DEFAULT+", "
+                +"'"+oTopic.clues+"', "
+                +"'"+oTopic.location+"' "
+            +");"
+        );
+        db.execSQL("COMMIT;");
+        db.close();
+    }
+
+    //////////////
+
+    public void delAll() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("BEGIN;");
+        db.execSQL("DROP TABLE IF EXISTS "+SHARES+" ;");
+        db.execSQL("DROP TABLE IF EXISTS "+TOPICS+" ;");
+        db.execSQL("COMMIT;");
+        db.execSQL("BEGIN;");
+        db.execSQL("CREATE TABLE "+SHARES+" ( "+SHARES_SCHEMA+" );");
+        db.execSQL("CREATE TABLE "+TOPICS+" ( "+TOPICS_SCHEMA+" );");
         db.execSQL("COMMIT;");
         db.close();
     }
 
     public void delTopic( ArtemisTopic oTopic ) {
-
         String topic = oTopic.topic;
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -168,83 +257,12 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void updateMessage( ArtemisTopic oTopic ) {
-
-        String topic = oTopic.topic;
-        String message = oTopic.message;
-
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("UPDATE "+TOPICS+" SET "+MESSAGE+" = '"+message+"' WHERE "+TOPIC+" = '"+topic+"';");
-        db.close();
-    }
-
-    public Cursor getTopicsCursor( SortOrder so ) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        List<ArtemisTopic> topicList = new ArrayList<ArtemisTopic>();
-        StringBuilder col = new StringBuilder();
-        StringBuilder ord = new StringBuilder();
-        getTopicQueryParms(col, ord, so);
-        Cursor cursor = db.rawQuery( "SELECT *, ROUND( "+SCOUNT+" / "+TSIZE+" , 2 ) AS '"+CALC_COMPLETE+"' FROM "+TOPICS+" ORDER BY "+col.toString()+" "+ord.toString()+";", null);
-        boolean nonZeroCollection = cursor.moveToFirst();
-        db.close();
-        return cursor;
-    }
-/*
-    public List<ArtemisTopic> getTopics( SortOrder so ) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        List<ArtemisTopic> topicList = new ArrayList<ArtemisTopic>();
-        StringBuilder col = new StringBuilder();
-        StringBuilder ord = new StringBuilder();
-        getTopicQueryParms( col, ord, so );
-        Cursor cursor = db.rawQuery( "SELECT * FROM "+TOPICS+" ORDER BY "+col.toString()+" "+ord.toString()+";", null);
-        if( cursor.moveToFirst() ) {
-            do {
-                ArtemisTopic oTopic = new ArtemisTopic( cursor );
-                topicList.add(oTopic);
-            } while (cursor.moveToNext());
-        }
-        db.close();
-        cursor.close();
-        return topicList;
-    }
-
-    public List<ArtemisShare> getShares( String topic, SortOrder so ) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        List<ArtemisShare> shareList = new ArrayList<ArtemisShare>();
-        StringBuilder col = new StringBuilder();
-        StringBuilder ord = new StringBuilder();
-        getShareQueryParms( col, ord, so );
-        Cursor cursor = db.rawQuery( "SELECT * FROM "+SHARES+" WHERE "+TOPIC+" = '"+topic+"' ORDER BY "+col.toString()+" "+ord.toString()+";", null);
-        if (cursor.moveToFirst()) {
-            do {
-                ArtemisShare share = new ArtemisShare( cursor );
-                shareList.add(share);
-            } while (cursor.moveToNext());
-        }
-        db.close();
-        cursor.close();
-        return shareList;
-    }
-*/
-    public void reset() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("BEGIN;");
-        db.execSQL("DROP TABLE IF EXISTS "+SHARES+" ;");
-        db.execSQL("DROP TABLE IF EXISTS "+TOPICS+" ;");
-        db.execSQL("COMMIT;");
-        db.execSQL("BEGIN;");
-        db.execSQL("CREATE TABLE "+SHARES+" ( "+KEY_DECL+" , "+TOPIC_DECL+" , "+SHARE_DECL+" );");
-        db.execSQL("CREATE TABLE "+TOPICS+" ( "+KEY_DECL+" , "+TOPIC_DECL+" , "+SCOUNT_DECL+" , "+SSIZE_DECL+" , "+TSIZE_DECL+" , "+MESSAGE_DECL+" );");
-        db.execSQL("COMMIT;");
-        db.close();
-    }
+    ////////////////
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        //db.execSQL("BEGIN;");
-        db.execSQL("CREATE TABLE "+SHARES+" ( "+KEY_DECL+" , "+TOPIC_DECL+" , "+SHARE_DECL+" );");
-        db.execSQL("CREATE TABLE "+TOPICS+" ( "+KEY_DECL+" , "+TOPIC_DECL+" , "+SCOUNT_DECL+" , "+SSIZE_DECL+" , "+TSIZE_DECL+" , "+MESSAGE_DECL+" );");
-        //db.execSQL("COMMIT;");
+        db.execSQL("CREATE TABLE "+SHARES+" ( "+SHARES_SCHEMA+" );");
+        db.execSQL("CREATE TABLE "+TOPICS+" ( "+TOPICS_SCHEMA+" );");
     }
 
     @Override

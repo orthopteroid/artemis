@@ -100,6 +100,7 @@ public class TopicListActivity extends FragmentActivity {
                 rowView = inflater.inflate(R.layout.list_item, parent, false);
                 rowView.setTag( R.id.loctopic, ((TextView) rowView.findViewById( R.id.loctopic )) );
                 rowView.setTag( R.id.details, ((TextView) rowView.findViewById( R.id.details )) );
+                rowView.setTag( R.id.clues, ((TextView) rowView.findViewById( R.id.clues )) );
                 rowView.setTag( R.id.message, ((TextView) rowView.findViewById( R.id.message )) );
             } else {
                 rowView = convertView;
@@ -140,15 +141,12 @@ public class TopicListActivity extends FragmentActivity {
 
         ////////////////
 
-        Cursor cursor = artemisSql.getTopicsCursor( sortOrder );
-        if( cursor != null ) {
-            (new TLALoader(getResources(), tla, al)).execute(cursor);
-        }
+        refreshListView();
     }
 
     ///////////////////////////
 
-    public void refreshListView() {
+    public synchronized void refreshListView() {
         Cursor cursor = artemisSql.getTopicsCursor( sortOrder );
         if( cursor != null ) {
             (new TLALoader(getResources(), tla, al)).execute(cursor);
@@ -172,7 +170,7 @@ public class TopicListActivity extends FragmentActivity {
     }
 
     public void onClickPurge(View v) {
-        artemisSql.reset();
+        artemisSql.delAll();
         refreshListView();
     }
 
@@ -222,46 +220,48 @@ public class TopicListActivity extends FragmentActivity {
     String zoo = new String();
 
     public void addScannedItem( String share ) {
-        String topic = artemisLib.nativeShareField( share, "tp", 0 );
-        String clue = artemisLib.nativeShareClue( share );
-        String location = artemisLib.nativeShareLocation( share );
-        //
-        ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
-        if( oTopic == null ) {
-            int[] shareInfo = artemisLib.nativeShareInfo( share );
-            oTopic = new ArtemisTopic( topic, shareInfo[0], shareInfo[1] );
-        }
-        //
+        Log.d("libartemis", "share " + share );
         ArtemisShare oShare = artemisSql.getShareInfo( share );
-        if( oShare == null ) {
-            oShare = new ArtemisShare( share, topic ); // TODO: remove temporary object
-            artemisSql.addShare( oShare, oTopic );
+        if( oShare != null ) return;
+        //
+        String topic = artemisLib.nativeShareField(share, "tp", 0);
+        Log.d("libartemis", "topic " + topic );
+        String clue = artemisLib.nativeShareClue(share);
+        Log.d("libartemis", "clue " + clue );
+        //
+        ArtemisTopic oTopic = artemisSql.getTopicInfo(topic);
+        if( oTopic == null ) {
+            if( oShare != null ) throw new AssertionError("Expected null object");
+            //
+            String location = artemisLib.nativeShareLocation( share );
+            Log.d("libartemis", "location " + share );
+            int[] shareInfo = artemisLib.nativeShareInfo( share );
+            Log.d("libartemis", "shareInfo " + shareInfo.toString() );
+            oTopic = new ArtemisTopic( topic, shareInfo[0], shareInfo[1], clue, location );
+            oShare = new ArtemisShare( share, topic );
+            artemisSql.addShareAndTopic( oShare, oTopic );
+        } else {
+            oTopic.addClue( clue );
+            oTopic.incCount();
+            Log.d("libartemis", "clue " + oTopic.clues );
+            if( false && oTopic.readyToSetMessage() ) {
+                String foo = new String();
+                Cursor cursor = artemisSql.getShareTopicCursor( topic );
+                if (cursor.moveToFirst()) {
+                    do {
+                        if( foo.length() > 0 ) foo += "\n";
+                        foo += cursor.getString( ArtemisSQL.SHARE_COL );
+                    } while( cursor.moveToNext() );
+                }
+                cursor.close();
+                Log.d("libartemis", "foo " + foo );
+                oTopic.message = "msg";//artemisLib.nativeDecode( foo );
+                Log.d("libartemis", "oTopic.message " + oTopic.message );
+            }
+            artemisSql.updateTopic(oTopic);
         }
         //
         refreshListView();
-        /*
-        if( !al.contains( oTopic ) ) {
-            al.add( oTopic );
-            tla.notifyDataSetChanged();
-        }
-        */
-        //
-/*
-        if( zoo.length() == 0 ) zoo = item; else zoo += "\n" + item;
-        String foo = new String();
-        sal.add( item );
-        int i = 0;
-        for( String s : sal ) {
-            if( i == 0 ) foo = s; else foo += "\n" + s;
-            i++;
-        }
-        // http://mhandroid.wordpress.com/2011/01/25/how-cc-debugging-works-on-android/
-        // ./adb root ; ./adb shell stop ; ./adb shell setprop log.redirect-stdio true ; ./adb shell start
-        String bar = artemisLib.nativeDecode(zoo);
-        boolean ok = artemisLib.nativeGetStatusOK();
-        if( ok == false ) bar = "*NODECODE*";
-        Log.d("libartemis", "returned " + bar);
-*/
     }
     public void removeScannedItem( String item ) {
         Log.d("libartemis", "remove " + item);
