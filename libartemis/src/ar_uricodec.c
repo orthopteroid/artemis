@@ -169,14 +169,15 @@ int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 	parsestate* pss = &ss;
 	ps_init( pss, szRecord );
 
-	if( rc = ps_scan_item( pss, "mc=", 0 ) )
-	{
-		if( rc = ps_scan_item( pss, "sc=", 0 ) ) { goto FAIL; }
-	}
+	int type = ar_uri_parse_type( szRecord );
+	if( type == 0 ) { ASSERT(0); goto FAIL; }
+	
+	if( type == 2 && (rc = ps_scan_item( pss, "sc=", 0 )) ) { goto FAIL; }
+	if( type == 1 && (rc = ps_scan_item( pss, "mc=", 0 )) ) { goto FAIL; }
 	
 	*ppFirst = ss.seg_start;
-	*ppLast = ss.seg_end;
-	
+	*ppLast = ss.seg_end - 1;
+
 FAIL:
 	ps_cleanup( &ss );
 

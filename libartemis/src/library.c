@@ -320,6 +320,7 @@ __android_log_print(ANDROID_LOG_INFO, "libartemis", "slen %d", slen );
 __android_log_print(ANDROID_LOG_INFO, "libartemis", "*string_out %X", *string_out );
 	if( *string_out == 0 ) { ASSERT(0); rc=-1; goto FAILED; }
 
+	memset( *string_out, 0, slen + 1 );
 	if( rc = ar_util_6BZto8BZ( *string_out, slen, string ) ) { ASSERT(0); goto FAILED; }
 
 FAILED:
@@ -376,14 +377,15 @@ int library_uri_clue( byteptr* clue_out, byteptr szShare )
 	
 	if( rc = ar_uri_locate_clue( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
 
-	size_t clen = pLast - pFirst;
+	size_t clen = pLast - pFirst + 1; // but, overestimates because of b64 encoding
 	if( clen > 0 )
 	{
-		*clue_out = malloc( clen + 5 ); // +5 for safe keeping
+		*clue_out = malloc( clen + 1 ); // +1 for \0
 		if( *clue_out == 0 ) { ASSERT(0); rc=-1; goto FAIL; }
-
-		size_t mclen = 0;
-		if( rc = ar_util_6BAto8BA( &mclen, *clue_out, clen + 5, pFirst, clen ) ) { ASSERT(0); goto FAIL; }
+		
+		size_t deltalen = 0;
+		if( rc = ar_util_6BAto8BA( &deltalen, *clue_out, clen, pFirst, clen ) ) { ASSERT(0); goto FAIL; }
+		if( rc == 0 ) { (*clue_out)[ deltalen ] = 0; }
 	}
 	
 FAIL:

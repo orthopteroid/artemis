@@ -167,16 +167,16 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeSha
     jstring jLocation_out;
 
     const char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
-
+/*
 #if defined(_DEBUG)
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShare %X", (unsigned int)cShare );
     if( cShare) {
         __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShare %s", cShare );
     }
 #endif
-
+*/
     rc = library_uri_location( &cLocation_out, (byteptr)cShare );
-
+/*
 //http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
 #if defined(_DEBUG)
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "cLocation_out %X", (unsigned int)cLocation_out );
@@ -184,7 +184,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeSha
         __android_log_print(ANDROID_LOG_INFO, "libartemis", "cLocation_out %s", cLocation_out );
     }
 #endif
-
+*/
     jLocation_out = (*env)->NewStringUTF( env, cLocation_out );
 
     library_free( &cLocation_out );
