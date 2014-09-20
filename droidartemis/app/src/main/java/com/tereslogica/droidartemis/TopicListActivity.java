@@ -19,6 +19,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 
 // http://www.androidhive.info/2011/10/android-listview-tutorial/
 public class TopicListActivity extends FragmentActivity {
@@ -37,25 +38,16 @@ public class TopicListActivity extends FragmentActivity {
     private FakeScanner fs;
 
     private ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
-    private TLAAdapter tla;
+    private TLAAdapter tlaa;
+    private final Semaphore loading = new Semaphore( 1, true );
 
     ////////////////////////////////////
 
     private class TLALoader extends AsyncTask<Cursor,Void,Long> {
-        private ArrayAdapter<ArtemisTopic> adapter;
-        private ArrayList<ArtemisTopic> arraylist;
-        private android.content.res.Resources resources;
-
-        TLALoader(android.content.res.Resources res, ArrayAdapter<ArtemisTopic> aa, ArrayList<ArtemisTopic> arrl) {
-            resources = res;
-            adapter = aa;
-            arraylist = arrl;
-        }
-
         @Override
         protected void onPreExecute() {
-            arraylist.clear();
-            adapter.notifyDataSetChanged();
+            loading.acquireUninterruptibly();
+            al.clear();
         }
 
         @Override
@@ -67,8 +59,8 @@ public class TopicListActivity extends FragmentActivity {
             Cursor cursor = cursors[0];
             if (cursor.moveToFirst()) {
                 do {
-                    arraylist.add( new ArtemisTopic( cursor ) );
-                    //if (isCancelled()) break;
+                    al.add( new ArtemisTopic( cursor ) );
+                    if( isCancelled() ) break;
                 } while( cursor.moveToNext() );
             }
             cursor.close();
@@ -77,7 +69,8 @@ public class TopicListActivity extends FragmentActivity {
 
         @Override
         protected void onPostExecute(Long result) {
-            adapter.notifyDataSetChanged();
+            tlaa.notifyDataSetChanged();
+            loading.release();
         }
     }
 
@@ -88,8 +81,8 @@ public class TopicListActivity extends FragmentActivity {
     private class TLAAdapter extends ArrayAdapter<ArtemisTopic> {
         LayoutInflater inflater;
 
-        public TLAAdapter() {
-            super( getApplicationContext(), R.layout.list_item, R.id.loctopic, al );
+        public TLAAdapter( Context cxt ) {
+            super( cxt, R.layout.list_item, R.id.loctopic, al );
             inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
@@ -134,9 +127,9 @@ public class TopicListActivity extends FragmentActivity {
             }
         };
 
-        tla = new TLAAdapter();
+        tlaa = new TLAAdapter( getApplicationContext() );
         ListView lv = (ListView) findViewById( R.id.list_container );
-        lv.setAdapter(tla);
+        lv.setAdapter(tlaa);
         lv.setOnItemClickListener(oicl);
 
         ////////////////
@@ -146,10 +139,10 @@ public class TopicListActivity extends FragmentActivity {
 
     ///////////////////////////
 
-    public synchronized void refreshListView() {
+    public void refreshListView() {
         Cursor cursor = artemisSql.getTopicsCursor( sortOrder );
         if( cursor != null ) {
-            (new TLALoader(getResources(), tla, al)).execute(cursor);
+            (new TLALoader()).execute(cursor);
         }
     }
 
