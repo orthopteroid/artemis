@@ -9,11 +9,11 @@ public class FakeScanner {
     String[] itemArr =
             {
 "http://foo.bar?tp=szvNzIafmi8&ai=AF!AD!CI&vf=Hkb7QA&pk=AZoMKUOUDRZf_dB4okXV-YS4&as=cpWo8SblmAHxfXcziacj4Q!lx10akSXo9zf6MTCypAJ9g&mc=MA&mt=M0IaIYWH",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AF&sh=cOPgvA&ss=FvbcqF0UpwCLF9DmtrKFoQ!sdtd67e6beSBe3LKN0dIDA&sc=NQ",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AE&sh=5MHyPw&ss=Y0iA3bz-ed9XbUKuAyGfcw!vy5AyYGqaqEMgxcitU_dfA&sc=NA",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AD&sh=y_R3Iw&ss=qlPcizBzy0rNQ32eARfePw!N94a5vkb_X9h63fmMA5qzg&sc=Mw",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AC&sh=X9ZloA&ss=HJs4lVQgij0f81DfQYTBrg!JmDkFL37lMhIuhxr__nKyg&sc=Mg",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AB&sh=DEt2vw&ss=forhBEj5J5laWcPM0YKlzw!nhcAAet2mUeYee8pbMLAVw&sc=MQ",
+"http://foo.bar?tp=szvNzIafmi8&si=AF!AF&sh=cOPgvA&sc=NQ&ss=FvbcqF0UpwCLF9DmtrKFoQ!sdtd67e6beSBe3LKN0dIDA",
+"http://foo.bar?tp=szvNzIafmi8&si=AF!AE&sh=5MHyPw&sc=NA&ss=Y0iA3bz-ed9XbUKuAyGfcw!vy5AyYGqaqEMgxcitU_dfA",
+"http://foo.bar?tp=szvNzIafmi8&si=AF!AD&sh=y_R3Iw&sc=Mw&ss=qlPcizBzy0rNQ32eARfePw!N94a5vkb_X9h63fmMA5qzg",
+"http://foo.bar?tp=szvNzIafmi8&si=AF!AC&sh=X9ZloA&sc=Mg&ss=HJs4lVQgij0f81DfQYTBrg!JmDkFL37lMhIuhxr__nKyg",
+"http://foo.bar?tp=szvNzIafmi8&si=AF!AB&sh=DEt2vw&sc=MQ&ss=forhBEj5J5laWcPM0YKlzw!nhcAAet2mUeYee8pbMLAVw",
 "http://foo.bar?tp=qISsySoncGY&ai=AD!AC!CI&vf=SnBrcA&pk=AAOeox92LcLIQLgCUWobPJGz&as=5zYwGCFraz0Ik84HekoTYw!NvmT2GFMCUT5adoVURi4_w&mc=MDAw&mt=OkYZMITiinA",
 "http://foo.bar?tp=qISsySoncGY&si=AD!AB&sh=0BoCDw&ss=bPva6xusL82O4eflw-OICw!o3s7QyGdaUlMxDo6uG4i7A&sc=MTEx",
 "http://foo.bar?tp=qISsySoncGY&si=AD!AC&sh=CI-oWg&ss=AtNEqwik0ktfC8obg5B3Qg!pYOBvb3yGYvKpNVFgAc_OA&sc=MjIy",
