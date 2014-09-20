@@ -220,30 +220,30 @@ public class TopicListActivity extends FragmentActivity {
     String zoo = new String();
 
     public void addScannedItem( String share ) {
-        Log.d("libartemis", "share " + share );
+//        Log.d("libartemis", "share " + share );
         ArtemisShare oShare = artemisSql.getShareInfo( share );
         if( oShare != null ) return;
         //
         String topic = artemisLib.nativeShareField(share, "tp", 0);
-        Log.d("libartemis", "topic " + topic );
+//        Log.d("libartemis", "topic " + topic );
         String clue = artemisLib.nativeShareClue(share);
-        Log.d("libartemis", "clue " + clue );
+//        Log.d("libartemis", "clue " + clue );
         //
         ArtemisTopic oTopic = artemisSql.getTopicInfo(topic);
         if( oTopic == null ) {
             if( oShare != null ) throw new AssertionError("Expected null object");
             //
             String location = artemisLib.nativeShareLocation( share );
-            Log.d("libartemis", "location " + share );
+//            Log.d("libartemis", "location " + share );
             int[] shareInfo = artemisLib.nativeShareInfo( share );
-            Log.d("libartemis", "shareInfo " + shareInfo.toString() );
+//            Log.d("libartemis", "shareInfo " + shareInfo.toString() );
             oTopic = new ArtemisTopic( topic, shareInfo[0], shareInfo[1], clue, location );
             oShare = new ArtemisShare( share, topic );
             artemisSql.addShareAndTopic( oShare, oTopic );
         } else {
             oTopic.addClue( clue );
             oTopic.incCount();
-            Log.d("libartemis", "clue " + oTopic.clues );
+//            Log.d("libartemis", "clue " + oTopic.clues );
             if( false && oTopic.readyToSetMessage() ) {
                 String foo = new String();
                 Cursor cursor = artemisSql.getShareTopicCursor( topic );
@@ -254,9 +254,9 @@ public class TopicListActivity extends FragmentActivity {
                     } while( cursor.moveToNext() );
                 }
                 cursor.close();
-                Log.d("libartemis", "foo " + foo );
+//                Log.d("libartemis", "foo " + foo );
                 oTopic.message = "msg";//artemisLib.nativeDecode( foo );
-                Log.d("libartemis", "oTopic.message " + oTopic.message );
+//                Log.d("libartemis", "oTopic.message " + oTopic.message );
             }
             artemisSql.updateTopic(oTopic);
         }
