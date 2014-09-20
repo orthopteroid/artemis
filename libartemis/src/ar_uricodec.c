@@ -65,7 +65,7 @@ static void ps_cleanup( parsestate *ps )
 {
 	if( ps->seg_end == 0 ) { return; }
 	if( ps->seg_end != ps->buf_end ) { *ps->seg_end = ps->seg_end_char; }
-	ps->seg_end = 0;
+	ps->seg_start = ps->seg_end = 0;
 }
 
 static int ps_scan_item( parsestate *ps, byteptr prefix, word16 uNum )
