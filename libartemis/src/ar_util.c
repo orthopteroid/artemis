@@ -132,7 +132,7 @@ int ar_util_8BAto6BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 		char3 |= (word32)( in[i++] ) <<  8;	if( i == insize ) { p=1; goto PAD; }
 		char3 |= (word32)( in[i++] );
 PAD:
-		if( j + 3 >= bufsize ) { ASSERT(0); rc = -2; break; }
+		if( j + 4 - p >= bufsize ) { ASSERT(0); rc = -2; break; } // = for buf[0,bufsize)
 		buf[j++] = b64charout[ ( char3 >> 18 ) & 63 ];
 		buf[j++] = b64charout[ ( char3 >> 12 ) & 63 ];
 		if( p < 2 ) { buf[j++] = b64charout[ ( char3 >>  6 ) & 63 ]; }
@@ -149,14 +149,15 @@ int ar_util_6BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 	while( i != insize )
 	{
 		word32 char3 = 0;
-		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 18;	if( i == insize ) { ASSERT(0); rc = -2; break; }
-		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 12;	if( i == insize ) { p=2; goto PAD; }
-		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) <<  6;	if( i == insize ) { p=1; goto PAD; }
+		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 18; if( i == insize ) { ASSERT(0); rc = -2; break; }
+		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 12; if( i == insize ) { p=2; goto PAD; }
+		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) <<  6; if( i == insize ) { p=1; goto PAD; }
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 );
 PAD:
-						if( j < bufsize ) { buf[j++] = (byte)( char3 >> 16 ); } else { ASSERT(0); rc = -2; break; }
-		if( p < 2 ) {	if( j < bufsize ) { buf[j++] = (byte)( char3 >>  8 ); } else { ASSERT(0); rc = -2; break; } }
-		if( p < 1 ) {	if( j < bufsize ) { buf[j++] = (byte)( char3       ); } else { ASSERT(0); rc = -2; break; } }
+		if( j + 3 - p >= bufsize ) { ASSERT(0); rc = -2; break; } // = for buf[0,bufsize)
+		buf[j++] = (byte)( ( char3 >> 16 ) & 255 );
+		if( p < 2 ) { buf[j++] = (byte)( ( char3 >>  8 ) & 255 ); }
+		if( p < 1 ) { buf[j++] = (byte)( ( char3       ) & 255 ); }
 	}
 	*deltalen = j;
 	return rc;
