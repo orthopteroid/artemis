@@ -39,15 +39,16 @@ public class TopicListActivity extends FragmentActivity {
 
     private ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
     private TLAAdapter tlaa;
-    private final Semaphore loading = new Semaphore( 1, true );
 
     ////////////////////////////////////
 
     private class TLALoader extends AsyncTask<Cursor,Void,Long> {
+
+        private ArrayList<ArtemisTopic> tlal_al = new ArrayList<ArtemisTopic>();
+
         @Override
         protected void onPreExecute() {
-            loading.acquireUninterruptibly();
-            al.clear();
+            tlal_al.clear();
         }
 
         @Override
@@ -59,8 +60,7 @@ public class TopicListActivity extends FragmentActivity {
             Cursor cursor = cursors[0];
             if (cursor.moveToFirst()) {
                 do {
-                    al.add( new ArtemisTopic( cursor ) );
-                    if( isCancelled() ) break;
+                    tlal_al.add( new ArtemisTopic( cursor ) );
                 } while( cursor.moveToNext() );
             }
             cursor.close();
@@ -69,8 +69,9 @@ public class TopicListActivity extends FragmentActivity {
 
         @Override
         protected void onPostExecute(Long result) {
+            al.clear();
+            for( ArtemisTopic at : tlal_al ) al.add( at ); // addAll
             tlaa.notifyDataSetChanged();
-            loading.release();
         }
     }
 
