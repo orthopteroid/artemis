@@ -14,21 +14,31 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:textAppearance="?android:attr/textAppearanceSmall"
         android:textIsSelectable="false"
-        android:typeface="monospace"
-        android:text="loc &amp; topic" />
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="loc &amp; topic"
+        android:typeface="monospace" />
+
+    <TextView
+        android:id="@+id/details"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:textIsSelectable="false"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="2 / 5"
+        android:typeface="monospace" />
 
     <TextView
         android:id="@+id/clues"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/loctopic"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textIsSelectable="false"
-        android:typeface="monospace"
-        android:layout_alignParentEnd="false"
         android:layout_alignParentLeft="true"
+        android:textIsSelectable="false"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:typeface="monospace"
         android:text="clue, clue, clue, clue, ....." />
 
     <TextView
@@ -36,21 +46,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/clues"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textIsSelectable="false"
-        android:typeface="monospace"
-        android:layout_alignParentEnd="false"
         android:layout_alignParentLeft="true"
-        android:text="decoded message" />
-
-    <TextView
-        android:id="@+id/details"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="2 / 5"
+        android:textIsSelectable="false"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:typeface="monospace"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true" />
+        android:text="decoded message" />
 
 </RelativeLayout>

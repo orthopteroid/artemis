@@ -26,7 +26,7 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
         scount = 1;
         ssize = _ssize;
         tsize = _tsize;
-        message = "";
+        message = "? ? ? ?";
         clues = _clue;
         location = _location;
     }
@@ -52,8 +52,8 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
     public void configureView(View listItem) {
         ((TextView) listItem.getTag( R.id.loctopic )).setText( location+"/"+topic );
         ((TextView) listItem.getTag( R.id.details )).setText( Integer.toString( scount )+"/"+Integer.toString( tsize )+" ("+Integer.toString( ssize )+")" );
-        ((TextView) listItem.getTag( R.id.message )).setText( message );
         ((TextView) listItem.getTag( R.id.clues )).setText( clues );
+        ((TextView) listItem.getTag( R.id.message )).setText( message );
     }
 
     @Override

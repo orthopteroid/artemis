@@ -120,13 +120,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     public ArtemisTopic getTopicInfo( String topic ) {
         ArtemisTopic oTopic = null;
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(
-            "SELECT * FROM "
-                +TOPICS+" "
-            +" WHERE "
-                +TOPIC+" = '"+topic+"' "
-            +";", null
-        );
+        Cursor cursor = db.rawQuery("SELECT * FROM "+TOPICS+" "+" WHERE "+TOPIC+" = '"+topic+"' ;", null);
         if( cursor.moveToFirst() ) {
             oTopic = new ArtemisTopic( cursor );
         }
@@ -135,14 +129,26 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         return oTopic;
     }
 
-    public void updateTopic( ArtemisTopic oTopic ) {
+    public void addShareUpdateTopic( ArtemisShare oShare, ArtemisTopic oTopic) {
         String topic = oTopic.topic;
         String clues = oTopic.clues;
         String message = oTopic.message;
         String count = Integer.toString( oTopic.scount );
         SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("BEGIN;");
         db.execSQL(
-            "UPDATE "+TOPICS+" SET "
+            "INSERT INTO "
+                +SHARES+" "
+            +"VALUES ( "
+                +KEY_DEFAULT+", "
+                +"'"+oShare.topic+"', "
+                +"'"+oShare.share+"' "
+            +");"
+        );
+        db.execSQL(
+            "UPDATE "
+                +TOPICS
+            +" SET "
                 +SCOUNT+" = "+count+", "
                 +CLUES+" = '"+clues+"', "
                 +MESSAGE+" = '"+message+"' "
@@ -150,6 +156,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
                 +TOPIC+" = '"+topic+"' "
             +";"
         );
+        db.execSQL("COMMIT;");
         db.close();
     }
 
@@ -177,13 +184,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
 
     public Cursor getShareTopicCursor( String topic ) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(
-            "SELECT * FROM "
-                +SHARES+" "
-            +"WHERE "
-                +TOPIC+" = '"+topic+"' "
-            +";", null
-        );
+        Cursor cursor = db.rawQuery("SELECT * FROM "+SHARES+" "+"WHERE "+TOPIC+" = '"+topic+"' ;", null);
         boolean nonZeroCollection = cursor.moveToFirst();
         db.close();
         return cursor;
