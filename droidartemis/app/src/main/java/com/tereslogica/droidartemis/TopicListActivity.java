@@ -91,10 +91,7 @@ public class TopicListActivity extends FragmentActivity {
             View rowView;
             if( convertView == null ) { // view recycling and view holder pattern
                 rowView = inflater.inflate(R.layout.list_item, parent, false);
-                rowView.setTag( R.id.loctopic, ((TextView) rowView.findViewById( R.id.loctopic )) );
-                rowView.setTag( R.id.details, ((TextView) rowView.findViewById( R.id.details )) );
-                rowView.setTag( R.id.clues, ((TextView) rowView.findViewById( R.id.clues )) );
-                rowView.setTag( R.id.message, ((TextView) rowView.findViewById( R.id.message )) );
+                ArtemisTopic.configureTags( rowView );
             } else {
                 rowView = convertView;
             }
@@ -230,18 +227,18 @@ public class TopicListActivity extends FragmentActivity {
         } else {
             oTopic.addClue( clue );
             oTopic.incCount();
-            if( oTopic.readyToSetMessage() ) {
-                String foo = new String();
-                Cursor cursor = artemisSql.getShareTopicCursor( topic );
-                if (cursor.moveToFirst()) {
-                    do {
-                        if( foo.length() > 0 ) foo += "\n";
-                        foo += cursor.getString( ArtemisSQL.SHARE_COL );
-                    } while( cursor.moveToNext() );
-                }
-                cursor.close();
-                oTopic.message = "msg";//artemisLib.nativeDecode( foo );
+            //
+            String foo = new String();
+            Cursor cursor = artemisSql.getShareTopicCursor( topic );
+            if (cursor.moveToFirst()) {
+                do {
+                    if( foo.length() > 0 ) foo += "\n";
+                    foo += cursor.getString( ArtemisSQL.SHARE_COL );
+                } while( cursor.moveToNext() );
             }
+            cursor.close();
+            oTopic.message = "foo!";//artemisLib.nativeDecode( foo );
+            //
             artemisSql.addShareUpdateTopic( oShare, oTopic );
         }
         //

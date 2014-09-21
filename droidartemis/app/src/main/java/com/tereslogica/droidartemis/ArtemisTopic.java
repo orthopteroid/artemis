@@ -17,16 +17,12 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
     public int tsize;
     public String message;
 
-    public boolean readyToSetMessage() {
-        return message.length() == 0 && scount >= tsize;
-    }
-
     public ArtemisTopic( String _topic, int _ssize, int _tsize, String _clue, String _location ) {
         topic = _topic;
         scount = 1;
         ssize = _ssize;
         tsize = _tsize;
-        message = "? ? ? ?";
+        message = "???";
         clues = _clue;
         location = _location;
     }
@@ -47,6 +43,15 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
 
     public void incCount() {
         scount++;
+    }
+
+    ///////////
+
+    public static void configureTags( View rowView) {
+        rowView.setTag( R.id.loctopic, ((TextView) rowView.findViewById( R.id.loctopic )) );
+        rowView.setTag( R.id.details, ((TextView) rowView.findViewById( R.id.details )) );
+        rowView.setTag( R.id.clues, ((TextView) rowView.findViewById( R.id.clues )) );
+        rowView.setTag( R.id.message, ((TextView) rowView.findViewById( R.id.message )) );
     }
 
     public void configureView(View listItem) {

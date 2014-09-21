@@ -48,7 +48,7 @@
         android:layout_below="@+id/clues"
         android:layout_alignParentLeft="true"
         android:textIsSelectable="false"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:typeface="monospace"
         android:text="decoded message" />
 
