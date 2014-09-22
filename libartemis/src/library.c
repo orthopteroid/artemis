@@ -102,7 +102,7 @@ word32 library_keylength()
 
 //////////////////
 
-int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, byteptr location, byteptr clueBarArr, byteptr message )
+int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, byteptr szLocation, byteptr clueBarArr, byteptr message )
 {
 	int rc = 0;
 
@@ -131,7 +131,7 @@ int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, b
 	}
 	if( clueDelimCount != shares ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
 
-	size_t loclen = location ? strlen( location ) : 0;
+	size_t loclen = szLocation ? strlen( szLocation ) : 0;
 	if( loclen == 0 ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
 
 	size_t messlen = message ? strlen( message ) : 0;
@@ -159,7 +159,7 @@ int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, b
 	}
 
 	// +1 to include \0
-	rc = ar_core_create( arecord, srecordArr, shares, threshold, message, (word16)messlen+1, clueArr, location );
+	rc = ar_core_create( arecord, srecordArr, shares, threshold, message, (word16)messlen+1, clueArr, szLocation );
 	if( rc ) { ASSERT(0); goto FAILCRYPT; }
 
 	//////////////
@@ -194,7 +194,7 @@ FAILCRYPT:
 	return rc;
 }
 
-int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesNLArr )
+int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr sharesNLArr )
 {
 	int rc = 0;
 
@@ -208,7 +208,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesN
 	arAuth* arecord = 0;
 	byteptr sharesNLArr_copy = 0;
 
-	size_t loclen = location ? strlen( location ) : 0;
+	size_t loclen = szLocation ? strlen( szLocation ) : 0;
 	if( loclen == 0 ) { ASSERT(0); rc=-1; goto FAIL; }
 
 	size_t shareslen = sharesNLArr ? strlen( sharesNLArr ) : 0;
@@ -253,7 +253,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesN
 				arecord->bufmax = (word16)buflen;
 			}
 
-			if( ar_uri_parse_a( arecord, inbuf, location ) ) { ASSERT(0); rc=-9; goto FAIL; }
+			if( ar_uri_parse_a( arecord, inbuf, szLocation ) ) { ASSERT(0); rc=-9; goto FAIL; }
 		}
 		else
 		{
@@ -282,7 +282,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesN
 
 			srecordArr[sharenum++] = pShare;
 
-			if( ar_uri_parse_s( pShare, inbuf, location ) ) { ASSERT(0); rc=-9; goto FAIL; }
+			if( ar_uri_parse_s( pShare, inbuf, szLocation ) ) { ASSERT(0); rc=-9; goto FAIL; }
 		}
 
 		s_record = e_record = e_record + 1; // +1 for char after \0
@@ -422,17 +422,17 @@ FAIL:
 	return rc;
 }
 
-int library_uri_shareinfo( word16* shares, word16* threshold, byteptr buf )
+int library_uri_shareinfo( word16* pShares, word16* pThreshold, byteptr szShare )
 {
 	int rc = 0;
 	
-	if( !shares ) { ASSERT(0); return -1; }
-	if( !threshold ) { ASSERT(0); return -1; }
-	if( !buf ) { ASSERT(0); return -1; }
+	if( !pShares ) { ASSERT(0); return -1; }
+	if( !pThreshold ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
 
-	*shares = *threshold = 0;
+	*pShares = *pThreshold = 0;
 
-	if( rc = ar_uri_parse_shareinfo( shares, threshold, buf ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_uri_parse_shareinfo( pShares, pThreshold, szShare ) ) { ASSERT(0); goto FAIL; }
 	
 FAIL:
 	

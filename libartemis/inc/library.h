@@ -8,12 +8,12 @@
 
 DLLDECL word32 library_init();
 
-DLLDECL int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, byteptr location, byteptr clueBarArr, byteptr message );
-DLLDECL int library_uri_decoder( byteptr* message_out, byteptr location, byteptr sharesNLArr );
+DLLDECL int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, byteptr szLocation, byteptr clueBarArr, byteptr message );
+DLLDECL int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr sharesNLArr );
 DLLDECL int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, word16 uFieldNum );
 DLLDECL int library_uri_clue( byteptr* clue_out, byteptr szShare );
 DLLDECL int library_uri_location( byteptr* location_out, byteptr szShare );
-DLLDECL int library_uri_shareinfo( word16* shares, word16* threshold, byteptr buf );
+DLLDECL int library_uri_shareinfo( word16* pShares, word16* pThreshold, byteptr szShare );
 
 //DLLDECL int library_b64_decoder( byteptr* string_out, byteptr string );
 
