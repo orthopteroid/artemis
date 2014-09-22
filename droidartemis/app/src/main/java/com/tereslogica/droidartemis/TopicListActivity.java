@@ -240,7 +240,7 @@ public class TopicListActivity extends FragmentActivity {
             Cursor cursor = artemisSql.getShareTopicCursor( topic );
             if (cursor.moveToFirst()) {
                 do {
-                    shareArrNL += cursor.getString( ArtemisSQL.SHARE_COL ) + "\n";
+                    shareArrNL += "\n" + cursor.getString( ArtemisSQL.SHARE_COL );
                 } while( cursor.moveToNext() );
             }
             cursor.close();
