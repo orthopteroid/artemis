@@ -207,17 +207,15 @@ public class TopicListActivity extends FragmentActivity {
 
     ///////////////////////////
 
-    String zoo = new String();
-
     public void addScannedItem( String share ) {
         ArtemisShare oShare = artemisSql.getShareInfo( share );
         if( oShare != null ) return; // got it already
-        Log.d("libartemis", "share " + share );
         //
         String topic = artemisLib.nativeShareField(share, "tp", 0);
         String clue = artemisLib.nativeShareClue(share);
         //
-        oShare = new ArtemisShare( share, topic );
+        oShare = new ArtemisShare( share, topic ); // sql api uses these
+        //
         ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
         if( oTopic == null ) {
             String location = artemisLib.nativeShareLocation( share );
@@ -240,6 +238,7 @@ public class TopicListActivity extends FragmentActivity {
             oTopic.message = "foo!";//artemisLib.nativeDecode( foo );
             //
             artemisSql.addShareUpdateTopic( oShare, oTopic );
+            //
         }
         //
         refreshListView();
