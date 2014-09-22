@@ -54,33 +54,6 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
     (*env)->ReleaseStringUTFChars( env, jSharesNLArr, cSharesNLArr );
     return jMessage_out;
 }
-/*
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecodeB64(JNIEnv * env, jobject obj, jstring jString)
-{
-    byte* cString_out = 0;
-    jstring jString_out;
-
-    const char *cString = (*env)->GetStringUTFChars(env, jString, 0);
-
-    rc = library_b64_decoder( &cString_out, cString );
-
-//http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
-#if defined(_DEBUG)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cString_out %X", (unsigned int)cString_out );
-    if( cString_out) {
-        __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cString_out );
-    }
-#endif
-
-    jString_out = (*env)->NewStringUTF( env, cString_out );
-
-    library_free( &cString_out );
-
-    (*env)->ReleaseStringUTFChars( env, jString, cString );
-
-    return jString_out;
-}
-*/
 
 JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareInfo(JNIEnv * env, jobject obj, jstring jShare)
 {
@@ -102,42 +75,14 @@ JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeS
 
     return shareInfo;
 }
-
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareField(JNIEnv * env, jobject obj, jstring jShare, jstring jField, jint jFieldNum)
 {
-    byte* cField_out = 0;
-    jstring jField_out;
 
-    if( jFieldNum < 0 ) { rc=-1; return 0; }
 
     const char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
-    const char *cField = (*env)->GetStringUTFChars(env, jField, 0);
-    word16 uFieldNum = (word16)jFieldNum;
-/*
-#if defined(_DEBUG)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShare %X", (unsigned int)cShare );
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cField %X", (unsigned int)cField );
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "uFieldNum %u", uFieldNum );
-#endif
-*/
-    rc = library_uri_field( &cField_out, (byteptr)cShare, (byteptr)cField, uFieldNum );
-/*
-//http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
-#if defined(_DEBUG)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cField_out %X", (unsigned int)cField_out );
-    if( cField_out) {
-        __android_log_print(ANDROID_LOG_INFO, "libartemis", "cField_out %s", cField_out );
-    }
-#endif
-*/
-    jField_out = (*env)->NewStringUTF( env, cField_out );
 
-    library_free( &cField_out );
 
     (*env)->ReleaseStringUTFChars( env, jShare, cShare );
-    (*env)->ReleaseStringUTFChars( env, jField, cField );
 
-    return jField_out;
 }
 
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareClue(JNIEnv * env, jobject obj, jstring jShare)
@@ -202,3 +147,56 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeSha
 
     return jLocation_out;
 }
+
+//////////////////////////////
+
+/*
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecodeB64(JNIEnv * env, jobject obj, jstring jString)
+{
+    byte* cString_out = 0;
+    jstring jString_out;
+
+    const char *cString = (*env)->GetStringUTFChars(env, jString, 0);
+
+    rc = library_b64_decoder( &cString_out, cString );
+
+//http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
+#if defined(_DEBUG)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cString_out %X", (unsigned int)cString_out );
+    if( cString_out) {
+        __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cString_out );
+    }
+#endif
+
+    jString_out = (*env)->NewStringUTF( env, cString_out );
+
+    library_free( &cString_out );
+
+    (*env)->ReleaseStringUTFChars( env, jString, cString );
+
+    return jString_out;
+}
+
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareField(JNIEnv * env, jobject obj, jstring jShare, jstring jField, jint jFieldNum)
+{
+    byte* cField_out = 0;
+    jstring jField_out;
+
+    if( jFieldNum < 0 ) { rc=-1; return 0; }
+
+    const char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
+    const char *cField = (*env)->GetStringUTFChars(env, jField, 0);
+    word16 uFieldNum = (word16)jFieldNum;
+
+    rc = library_uri_field( &cField_out, (byteptr)cShare, (byteptr)cField, uFieldNum );
+
+    jField_out = (*env)->NewStringUTF( env, cField_out );
+
+    library_free( &cField_out );
+
+    (*env)->ReleaseStringUTFChars( env, jShare, cShare );
+    (*env)->ReleaseStringUTFChars( env, jField, cField );
+
+    return jField_out;
+}
+*/
