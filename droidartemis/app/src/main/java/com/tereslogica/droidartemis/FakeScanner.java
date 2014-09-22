@@ -51,12 +51,24 @@ public class FakeScanner {
             };
 
     Random rnd = new Random();
+    int ordering[] = new int[ itemArr.length ];
 
     public FakeScanner() {
+        for (int j = 0; j < itemArr.length; j++) {
+            ordering[j] = j;
+        }
+        for (int j = 0; j < itemArr.length; j++) {
+            int a = rnd.nextInt( itemArr.length );
+            int b = rnd.nextInt( itemArr.length );
+            int swap = ordering[a];
+            ordering[a] = ordering[b];
+            ordering[b] = swap;
+        }
     }
 
     public String nextItem() {
-        return itemArr[ rnd.nextInt( itemArr.length ) ];
-        //return itemArr[ i++ ];
+        String s = itemArr[ ordering[ i++ ] ];
+        if( i == itemArr.length ) i = 0;
+        return s;
     }
 }
