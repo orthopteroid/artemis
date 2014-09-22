@@ -36,8 +36,8 @@
 		#endif // debug
 	#endif
 
-	#define _strdup strdup
-	#define _strndup strndup
+	#define strdup _strdup
+	char *strndup(const char *s, size_t n);
 
 #else // win
 
