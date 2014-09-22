@@ -216,7 +216,7 @@ void ar_uri_parse_messlen( size_t* pLen, byteptr buf )
 void ar_uri_parse_cluelen( size_t* pLen, byteptr buf )
 {
 	ar_uri_arglen( pLen, "mc=", buf );
-	if( !pLen ) { ar_uri_arglen( pLen, "sc=", buf ); }
+	if( !*pLen ) { ar_uri_arglen( pLen, "sc=", buf ); }
 }
 
 int ar_uri_parse_type( byteptr buf )
