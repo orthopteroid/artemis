@@ -4,6 +4,7 @@
 
 // adb logcat
 
+char* szUnknown = "?? ?? ??";
 char* szLocation = "foo.bar";
 
 static int rc = 0;
@@ -27,8 +28,13 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
 
     const char *cSharesNLArr = (*env)->GetStringUTFChars(env, jSharesNLArr, 0);
 
+#if defined(_DEBUG)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cSharesNLArr %s", cSharesNLArr );
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "szLocation %s", szLocation );
+#endif
+
     rc = library_uri_decoder( &cMessage_out, szLocation, (byte*)cSharesNLArr );
-/*
+
 //http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
 #if defined(_DEBUG)
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "cMessage_out %X", (unsigned int)cMessage_out );
@@ -36,13 +42,16 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
         __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cMessage_out );
     }
 #endif
-*/
-    jMessage_out = (*env)->NewStringUTF( env, cMessage_out );
 
-    library_free( &cMessage_out );
+    if( cMessage_out )
+    {
+        jMessage_out = (*env)->NewStringUTF( env, cMessage_out );
+        library_free( &cMessage_out );
+    } else {
+        jMessage_out = (*env)->NewStringUTF( env, szUnknown );
+    }
 
     (*env)->ReleaseStringUTFChars( env, jSharesNLArr, cSharesNLArr );
-
     return jMessage_out;
 }
 /*
