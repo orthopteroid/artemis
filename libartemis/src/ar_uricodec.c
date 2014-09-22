@@ -109,9 +109,9 @@ static int ps_scan_item( parsestate *ps, byteptr prefix, word16 uNum )
 
 ///////////////////
 
-static void ar_uri_arglen( size_t* arglen, byteptr arg, byteptr buf )
+static void ar_uri_arglen( size_t* pArglen, byteptr arg, byteptr buf )
 {
-	*arglen = 0;
+	*pArglen = 0;
 
 	byteptr s = strstr( buf, arg );
 	if( !s ) { return; }
@@ -120,19 +120,19 @@ static void ar_uri_arglen( size_t* arglen, byteptr arg, byteptr buf )
 	byteptr e=s;
 	while( *e != '\0' && *e != '!' && *e != '&' && *e != '?' ) { e++; }
 
-	*arglen = e - s - 1; // -1 for /0
+	*pArglen = e - s - 1; // -1 for /0
 }
 
 ///////////////////
 
-void ar_uri_bufsize_a( size_t* uribufsize, arAuth* pARecord )
+void ar_uri_bufsize_a( size_t* pUribufsize, arAuth* pARecord )
 {
-	*uribufsize = ( sizeof(arAuth) + pARecord->bufused ) * 4 / 3; // b64 encoding
+	*pUribufsize = ( sizeof(arAuth) + pARecord->bufused ) * 4 / 3; // b64 encoding
 }
 
-void ar_uri_bufsize_s( size_t* uribufsize, arShare* pSRecord )
+void ar_uri_bufsize_s( size_t* pUribufsize, arShare* pSRecord )
 {
-	*uribufsize = ( sizeof(arShare) + pSRecord->bufused ) * 4 / 3; // b64 encoding
+	*pUribufsize = ( sizeof(arShare) + pSRecord->bufused ) * 4 / 3; // b64 encoding
 }
 
 int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, byteptr szField, word16 uFieldNum )
@@ -208,15 +208,15 @@ FAIL:
 	return rc;
 }
 
-void ar_uri_parse_messlen( size_t* len, byteptr buf )
+void ar_uri_parse_messlen( size_t* pLen, byteptr buf )
 {
-	ar_uri_arglen( len, "mt=", buf );
+	ar_uri_arglen( pLen, "mt=", buf );
 }
 
-void ar_uri_parse_cluelen( size_t* len, byteptr buf )
+void ar_uri_parse_cluelen( size_t* pLen, byteptr buf )
 {
-	ar_uri_arglen( len, "mc=", buf );
-	if( !len ) { ar_uri_arglen( len, "sc=", buf ); }
+	ar_uri_arglen( pLen, "mc=", buf );
+	if( !pLen ) { ar_uri_arglen( pLen, "sc=", buf ); }
 }
 
 int ar_uri_parse_type( byteptr buf )
@@ -226,10 +226,10 @@ int ar_uri_parse_type( byteptr buf )
 	return -1;
 }
 
-void ar_uri_parse_sharecount( word16* shares, byteptr buf )
+void ar_uri_parse_sharecount( word16* pShares, byteptr buf )
 {
 	int rc = 0;
-	*shares = 0;
+	*pShares = 0;
 
 	parsestate ss;
 	ps_init( &ss, buf );
@@ -244,18 +244,18 @@ void ar_uri_parse_sharecount( word16* shares, byteptr buf )
 	}
 	else { ASSERT(0); goto FAIL; }
 
-	if( rc = ar_util_6Bto12B( shares, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( pShares, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
 
 FAIL:
 	ps_cleanup( &ss );
 }
 
-int ar_uri_parse_shareinfo( word16* shares, word16* threshold, byteptr buf )
+int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr buf )
 {
 	int rc = 0;
 	
-	*shares = 0;
-	*threshold = 0;
+	*pShares = 0;
+	*pThreshold = 0;
 
 	parsestate ss;
 	ps_init( &ss, buf );
@@ -266,10 +266,10 @@ int ar_uri_parse_shareinfo( word16* shares, word16* threshold, byteptr buf )
 	char* tagArr[] = { "", "ai=", "si=" };
 
 	if( rc = ps_scan_item( &ss, tagArr[ stype ], 0 ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( shares, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( pShares, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
 
 	if( rc = ps_scan_item( &ss, tagArr[ stype ], 1 ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( threshold, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( pThreshold, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
 
 FAIL:
 	ps_cleanup( &ss );

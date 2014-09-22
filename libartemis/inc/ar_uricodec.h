@@ -10,22 +10,22 @@
 
 // The arg 'si' is a triplet made from shares, threshold and fieldsize, which only have their lower 12 bits encoded in the uri scheme.
 
-void ar_uri_bufsize_a( size_t* uribufsize, arAuth* pARecord );
+void ar_uri_bufsize_a( size_t* pUribufsize, arAuth* pARecord );
 	/* returns number of bytes needed for uri compose buffer */
 
-void ar_uri_bufsize_s( size_t* uribufsize, arShare* pASecord );
+void ar_uri_bufsize_s( size_t* pUribufsize, arShare* pASecord );
 	/* returns number of bytes needed for uri compose buffer */
 
-void ar_uri_parse_messlen( size_t* len, byteptr buf );
+void ar_uri_parse_messlen( size_t* pLen, byteptr buf );
 	/* returns num of bytes in message arg, if buf holds an arecord uri */
 
-void ar_uri_parse_cluelen( size_t* len, byteptr buf );
+void ar_uri_parse_cluelen( size_t* pLen, byteptr buf );
 	/* returns num of bytes in clue arg, if buf holds an arecord uri */
 
-void ar_uri_parse_sharecount( word16* shares, byteptr buf );
+void ar_uri_parse_sharecount( word16* pShares, byteptr buf );
 	/* returns number of shares, if buf holds an arecord uri */
 	
-int ar_uri_parse_shareinfo( word16* shares, word16* threshold, byteptr buf );
+int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr buf );
 
 int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, byteptr szField, word16 uFieldNum );
 int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord );
