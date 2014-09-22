@@ -22,7 +22,7 @@ void ar_uri_parse_messlen( size_t* pLen, byteptr buf );
 void ar_uri_parse_cluelen( size_t* pLen, byteptr buf );
 	/* returns num of bytes in clue arg, if buf holds an arecord uri */
 
-void ar_uri_parse_sharecount( word16* pShares, byteptr buf );
+//void ar_uri_parse_sharecount( word16* pShares, byteptr buf );
 	/* returns number of shares, if buf holds an arecord uri */
 	
 int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr buf );
