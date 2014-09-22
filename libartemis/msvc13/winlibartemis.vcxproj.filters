@@ -128,5 +128,8 @@
     <ClCompile Include="..\src\library.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="platform.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
