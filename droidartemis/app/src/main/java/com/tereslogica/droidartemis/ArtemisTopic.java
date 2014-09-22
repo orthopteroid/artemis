@@ -19,10 +19,10 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
 
     public ArtemisTopic( String _topic, int _ssize, int _tsize, String _clue, String _location ) {
         topic = _topic;
-        scount = 1;
+        scount = 0; // might be zero, if this share is an arecord
         ssize = _ssize;
         tsize = _tsize;
-        message = "???";
+        message = "?";
         clues = _clue;
         location = _location;
     }

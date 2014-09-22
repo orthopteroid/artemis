@@ -211,32 +211,40 @@ public class TopicListActivity extends FragmentActivity {
         ArtemisShare oShare = artemisSql.getShareInfo( share );
         if( oShare != null ) return; // got it already
         //
-        String topic = artemisLib.nativeShareField(share, "tp", 0);
+        String topic = artemisLib.nativeShareTopic(share);
         String clue = artemisLib.nativeShareClue(share);
         //
         oShare = new ArtemisShare( share, topic ); // sql api uses these
         //
         ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
         if( oTopic == null ) {
+            // if topic not found in db, then create new topic and share objects for db
+            //
             String location = artemisLib.nativeShareLocation( share );
             int[] shareInfo = artemisLib.nativeShareInfo( share );
             oTopic = new ArtemisTopic( topic, shareInfo[0], shareInfo[1], clue, location );
+            //
+            if( artemisLib.nativeShareType( share ) == artemisLib.URI_B ) {
+                oTopic.incCount(); // only B Types contribute towards the count
+            }
+            //
             artemisSql.addShareAndTopic( oShare, oTopic );
         } else {
             oTopic.addClue( clue );
-            oTopic.incCount();
             //
-            String foo = new String();
+            if( artemisLib.nativeShareType( share ) == artemisLib.URI_B ) {
+                oTopic.incCount(); // only B Types contribute towards the count
+            }
+            //
+            String shareArrNL = share;
             Cursor cursor = artemisSql.getShareTopicCursor( topic );
             if (cursor.moveToFirst()) {
                 do {
-                    if( foo.length() > 0 ) foo += "\n";
-                    foo += cursor.getString( ArtemisSQL.SHARE_COL );
+                    shareArrNL += cursor.getString( ArtemisSQL.SHARE_COL ) + "\n";
                 } while( cursor.moveToNext() );
             }
             cursor.close();
-            oTopic.message = "foo!";//artemisLib.nativeDecode( foo );
-            //
+            oTopic.message = artemisLib.nativeDecode( shareArrNL ); // szLocation baked into library
             artemisSql.addShareUpdateTopic( oShare, oTopic );
             //
         }

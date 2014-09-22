@@ -14,6 +14,7 @@ DLLDECL int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szFi
 DLLDECL int library_uri_clue( byteptr* clue_out, byteptr szShare );
 DLLDECL int library_uri_location( byteptr* location_out, byteptr szShare );
 DLLDECL int library_uri_shareinfo( word16* pShares, word16* pThreshold, byteptr szShare );
+DLLDECL int library_uri_sharetype( word16* pType, byteptr szShare );
 
 //DLLDECL int library_b64_decoder( byteptr* string_out, byteptr string );
 

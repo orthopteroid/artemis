@@ -52,7 +52,9 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
 
 JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareInfo(JNIEnv * env, jobject obj, jstring jShare);
 
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareTopic(JNIEnv * env, jobject obj, jstring jShare);
 
+JNIEXPORT jint JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareType(JNIEnv * env, jobject obj, jstring jShare);
 
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareClue(JNIEnv * env, jobject obj, jstring jShare);
 

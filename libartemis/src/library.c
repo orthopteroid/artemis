@@ -202,6 +202,7 @@ int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr share
 
 	size_t messlen = 0;
 	size_t cluelen = 0;
+	word16 threshold = 0;
 	word16 shares = 0;
 	word16 sharenum = 0;
 	arShareptr* srecordArr = 0;
@@ -259,7 +260,7 @@ int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr share
 		{
 			if( !srecordArr )
 			{
-				ar_uri_parse_sharecount( &shares, inbuf );
+				if( rc = ar_uri_parse_shareinfo( &shares, &threshold, inbuf ) ) { ASSERT(0); goto FAIL;}
 				if( !shares ) { return 1; }
 
 				size_t arrlen = sizeof(arShareptr) * shares;
@@ -438,6 +439,22 @@ FAIL:
 	
 	return rc;
 }
+
+int library_uri_sharetype( word16* pType, byteptr szShare )
+{
+	int rc = 0;
+	
+	if( !pType ) { ASSERT(0); return -1; }
+
+	*pType = 0;
+	
+	if( (*pType = ar_uri_parse_type( szShare )) == -1 ) { ASSERT(0); rc=-1; goto FAIL; }
+	
+FAIL:
+	
+	return rc;
+}
+
 
 void library_test()
 {

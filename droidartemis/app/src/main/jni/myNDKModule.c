@@ -75,14 +75,38 @@ JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeS
 
     return shareInfo;
 }
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareTopic(JNIEnv * env, jobject obj, jstring jShare)
 {
-
+    byte* cTopic_out = 0;
+    jstring jTopic_out;
 
     const char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
 
+    rc = library_uri_field( &cTopic_out, (byteptr)cShare, "tp", 0 );
+
+    jTopic_out = (*env)->NewStringUTF( env, cTopic_out );
+
+    library_free( &cTopic_out );
 
     (*env)->ReleaseStringUTFChars( env, jShare, cShare );
 
+    return jTopic_out;
+}
+
+JNIEXPORT jint JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareType(JNIEnv * env, jobject obj, jstring jShare)
+{
+    jint jType = 0;
+    word16 cType = 0;
+
+    const char *cShare = (*env)->GetStringUTFChars(env, jShare, 0);
+
+    rc = library_uri_sharetype( &cType, (byteptr)cShare );
+
+    (*env)->ReleaseStringUTFChars( env, jShare, cShare );
+
+    if( rc == 0 ) { jType = cType; }
+
+    return jType;
 }
 
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareClue(JNIEnv * env, jobject obj, jstring jShare)
