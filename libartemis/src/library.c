@@ -261,7 +261,6 @@ int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr share
 			if( !srecordArr )
 			{
 				if( rc = ar_uri_parse_shareinfo( &shares, &threshold, inbuf ) ) { ASSERT(0); goto FAIL;}
-				if( !shares ) { return 1; }
 
 				size_t arrlen = sizeof(arShareptr) * shares;
 

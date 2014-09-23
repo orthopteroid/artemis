@@ -225,32 +225,8 @@ int ar_uri_parse_type( byteptr buf )
 	else if( strstr( buf, "si=" ) )		{ return 2; }
 	return -1;
 }
-/*
-void ar_uri_parse_sharecount( word16* pShares, byteptr buf )
-{
-	int rc = 0;
-	*pShares = 0;
 
-	parsestate ss;
-	ps_init( &ss, buf );
-
-	if( strstr( buf, "ai=" ) )
-	{
-		if( rc = ps_scan_item( &ss, "&ai=", 0 ) ) { ASSERT(0); goto FAIL; }
-	}
-	else if( strstr( buf, "si=" ) )
-	{
-		if( rc = ps_scan_item( &ss, "&si=", 0 ) ) { ASSERT(0); goto FAIL; }
-	}
-	else { ASSERT(0); goto FAIL; }
-
-	if( rc = ar_util_6Bto12B( pShares, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
-
-FAIL:
-	ps_cleanup( &ss );
-}
-*/
-int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr buf )
+int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr szRecord )
 {
 	int rc = 0;
 	
@@ -258,9 +234,9 @@ int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr buf )
 	*pThreshold = 0;
 
 	parsestate ss;
-	ps_init( &ss, buf );
+	ps_init( &ss, szRecord );
 
-	int stype = ar_uri_parse_type( buf );
+	int stype = ar_uri_parse_type( szRecord );
 	if( stype < 0 ) { ASSERT(0); rc = stype; goto FAIL; }
 
 	char* tagArr[] = { "", "ai=", "si=" };
@@ -353,6 +329,9 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 	if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
 	if( rc = ar_util_strcat( buf, bufsize, "si=" ) ) { ASSERT(0); goto FAIL; }
 	if( rc = ar_util_12Bto6B( sz, pSRecord->shares ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_12Bto6B( sz, pSRecord->threshold ) ) { ASSERT(0); goto FAIL; }
 	if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
 	if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
 	if( rc = ar_util_12Bto6B( sz, pSRecord->shareid ) ) { ASSERT(0); goto FAIL; }
@@ -471,6 +450,8 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 	if( rc = ps_scan_item( pss, "si=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
 	if( rc = ar_util_6Bto12B( &pSRecord->shares, pss->seg_start ) ) 	{ ASSERT(0); goto FAIL; }
 	if( rc = ps_scan_item( pss, "si=", 1 ) ) 							{ ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6Bto12B( &pSRecord->threshold, pss->seg_start ) ) 	{ ASSERT(0); goto FAIL; }
+	if( rc = ps_scan_item( pss, "si=", 2 ) ) 							{ ASSERT(0); goto FAIL; }
 	if( rc = ar_util_6Bto12B( &pSRecord->shareid, pss->seg_start ) ) 	{ ASSERT(0); goto FAIL; }
 
 	if( rc = ps_scan_item( pss, "sh=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
@@ -556,6 +537,7 @@ void ar_uri_test()
 	typedef byte byte2048[2048];
 
 	byte2048 bufa, bufs0, bufs1;
+	word16 shares, threshold;
 
 	int numtests = 100;
 	for( int i=0; i<numtests; i++ )
@@ -590,11 +572,26 @@ void ar_uri_test()
 		rc = ar_uri_parse_a( &arecord_.x, bufa, location );
 		ASSERT( rc == 0 );
 
+		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufa );
+		ASSERT( rc == 0 );
+		ASSERT( shares == 2 );
+		ASSERT( threshold == 2 );
+
 		rc = ar_uri_parse_s( &srecords_[0].x, bufs0, location );
 		ASSERT( rc == 0 );
 
+		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufs0 );
+		ASSERT( rc == 0 );
+		ASSERT( shares == 2 );
+		ASSERT( threshold == 2 );
+
 		rc = ar_uri_parse_s( &srecords_[1].x, bufs1, location );
 		ASSERT( rc == 0 );
+
+		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufs1 );
+		ASSERT( rc == 0 );
+		ASSERT( shares == 2 );
+		ASSERT( threshold == 2 );
 
 		cleartextout[0]=0;
 		rc = ar_core_decrypt( cleartextout, 80, &arecord_.x, (arShareptr*)srecordarr_, 2 );

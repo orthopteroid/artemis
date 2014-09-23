@@ -20,7 +20,7 @@
 //
 // Artemis S uri is http://<location>?tp=<topic>&si=<shareinfo>&sh=<share>&ss=<sharesig>&sc=<shareclue>
 // where:
-// <shareinfo> == <shares|<shareid>
+// <shareinfo> == <shares|<threshold>|<shareid>
 //
 
 // artemis
@@ -240,8 +240,9 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		vlClear( pSRecordArr[i]->topic );
 		vlCopy( pSRecordArr[i]->topic, topic );
 
-		pSRecordArr[i]->shareid = shareIDArr[i];
 		pSRecordArr[i]->shares = numShares;
+		pSRecordArr[i]->threshold = numThres;
+		pSRecordArr[i]->shareid = shareIDArr[i];
 
 		vlPoint vlShare;
 		{
