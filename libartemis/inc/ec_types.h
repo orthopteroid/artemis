@@ -7,6 +7,7 @@ typedef unsigned int		word32;	/* 32 bit */
 
 typedef byte*		byteptr;
 typedef const byte*	constbyteptr;
+typedef word32*		word32ptr;
 typedef word16*		word16ptr;
 
 #endif // PW_TYPES_H
