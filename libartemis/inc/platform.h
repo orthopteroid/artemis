@@ -39,6 +39,8 @@
 	#define strdup _strdup
 	char *strndup(const char *s, size_t n);
 
+	#define DEPRECATED __declspec(deprecated)
+
 #else // win
 
     #if defined(__ANDROID__)
@@ -85,6 +87,8 @@
 	char *strdup(const char *s);
 	char *strndup(const char *s, size_t n);
 	
+	#define DEPRECATED __attribute__((deprecated))
+
 #endif // win
 
 #endif // _PLATFORM_H_
