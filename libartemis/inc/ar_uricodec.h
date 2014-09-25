@@ -24,8 +24,8 @@ void ar_uri_parse_cluelen( size_t* pLen, byteptr buf );
 
 int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr szRecord );
 
-int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, byteptr szField, word16 uFieldNum );
 int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord );
+
 int ar_uri_locate_location( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord );
 
 int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord );

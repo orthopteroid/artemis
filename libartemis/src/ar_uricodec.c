@@ -13,18 +13,16 @@
 	#include "ar_core.h" // for testing
 #endif
 
-//#define _ENABLE_ALT_PARSER
-
 //////////////////////
 
-static int txt_to_vl( vlPoint v, char* buf )
+static int txt_to_vl( vlPoint v, char* buf, size_t bufsize )
 {
 	int rc=0;
 	word16 words = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
 	vlClear( v );
 	size_t deltalen = 0;
 	char tmp[ sizeof(vlPoint) + 2 ] = {0};
-	rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, strlen(buf) );
+	rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, bufsize );
 	if( !rc ) { rc = ar_util_8BAto16BA( &deltalen, &v[1], words, tmp, deltalen ); }
 	if( rc == 0 ) { v[0] = (word16)deltalen; }
 	return rc;
@@ -42,74 +40,6 @@ static int vl_to_txt_cat( char* buf, size_t bufsize, vlPoint v )
 	if( !rc ) { buf[ buflen + deltalen ] = 0; }
 	return rc;
 }
-
-//////////////////////
-
-// in-place attribute-value scanner using temporary \0 markers. split tokens is '&'
-// scanner can split values by ordinal as well, as long as they are deliminated by '!'
-// assumes parse string is \0 terminated but no assumptions about attribute order
-
-typedef struct 
-{
-	byteptr buf_start /* 1st byte */, buf_end /* ending null */;
-	byteptr seg_start, seg_end;
-	char seg_end_char;
-} parsestate;
-
-static void ps_init( parsestate *ps, byteptr uribuf )
-{
-	ps->buf_start = uribuf;
-	ps->buf_end = uribuf + strlen( uribuf );
-	ps->seg_start = ps->seg_end = 0;
-}
-
-static void ps_cleanup( parsestate *ps )
-{
-	if( ps->seg_end == 0 ) { return; }
-	if( ps->seg_end != ps->buf_end ) { *ps->seg_end = ps->seg_end_char; }
-	ps->seg_start = ps->seg_end = 0;
-}
-
-static int ps_scan_item( parsestate *ps, byteptr prefix, word16 uNum )
-{
-	ps_cleanup( ps );
-
-	// find prefix
-	ps->seg_start = strstr( ps->buf_start, prefix );
-	if( ps->seg_start == 0 ) { return -1; }
-	ps->seg_start += strlen( prefix );
-
-	// jump to itemnum
-	while( uNum )
-	{
-		while( 1 )
-		{
-			ps->seg_start += 1;
-			byte ch = *ps->seg_start;
-			if( ch == 0 || ch == '&' || ch == '?' || ch == '\n' )
-			{
-				if( uNum == 0 ) { break; } // ok to hit token when looking for item 0
-				return -2; // missed item
-			}
-			if( ch == '!' ) { break; } // found item
-		}
-		ps->seg_start += 1;
-		uNum--;
-	}
-
-	// find suffix
-	ps->seg_end = ps->seg_start;
-	while( 1 )
-	{
-		byte ch = *ps->seg_end;
-		if( ch == '!' || ch == '&' || ch == '?' || ch == '\n' ) { ps->seg_end_char = ch; *ps->seg_end = 0; break; }
-		if( ch == 0 ) { ASSERT( ps->seg_end == ps->buf_end ); break; }
-		ps->seg_end += 1;
-	}
-	return 0;
-}
-
-///////////////////
 
 typedef struct
 {
@@ -214,8 +144,8 @@ static word32 ps2_token( ps2ptr pps )
 		pps->data_first = pps->curr;
 		ps2_scan_private( pps ); // find data for tag
 		pps->data_last = pps->curr - 1; // data ends prior to stopping char (or buf end)
-		pps->data_len = pps->data_last - pps->data_first + 1;
 	}
+	pps->data_len = pps->data_last - pps->data_first + 1;
 
 	///////////////////////
 	// set the return tag
@@ -248,9 +178,9 @@ static void ar_uri_arglen( size_t* pArglen, byteptr arg, byteptr buf )
 	s += strlen(arg);
 
 	byteptr e=s;
-	while( *e != '\0' && *e != '!' && *e != '&' && *e != '?' ) { e++; }
+	while( *e != '\n' && *e != '\0' && *e != '!' && *e != '&' && *e != '?' ) { e++; }
 
-	*pArglen = e - s - 1; // -1 for /0
+	*pArglen = e - s;
 }
 
 ///////////////////
@@ -265,51 +195,22 @@ void ar_uri_bufsize_s( size_t* pUribufsize, arShare* pSRecord )
 	*pUribufsize = ( sizeof(arShare) + pSRecord->bufused ) * 4 / 3; // b64 encoding
 }
 
-int ar_uri_locate_field( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord, byteptr szField, word16 uFieldNum )
-{
-	int rc = 0;
-	
-	if( !ppFirst || !ppLast || !szField || !szRecord ) { ASSERT(0); return -1; }
-	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
-
-	*ppFirst = *ppLast = 0;
-	
-	parsestate ss;
-	parsestate* pss = &ss;
-	ps_init( pss, szRecord );
-
-	if( rc = ps_scan_item( pss, szField, uFieldNum ) ) { goto FAIL; }
-
-	*ppFirst = ss.seg_start;
-	*ppLast = ss.seg_end;
-
-FAIL:
-	ps_cleanup( &ss );
-	
-	return rc;
-}
-
 int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 {
 	int rc = 0;
 	
 	*ppFirst = *ppLast = 0;
 	
-	parsestate ss;
-	parsestate* pss = &ss;
-	ps_init( pss, szRecord );
+	parsestate2 ss;
+	parsestate2* pss = &ss;
+	ps2_init( pss, szRecord, strlen( szRecord ) );
 
-	int type = ar_uri_parse_type( szRecord );
-	if( type == 0 ) { ASSERT(0); goto FAIL; }
-	
-	if( type == 2 && (rc = ps_scan_item( pss, "sc=", 0 )) ) { goto FAIL; }
-	if( type == 1 && (rc = ps_scan_item( pss, "mc=", 0 )) ) { goto FAIL; }
-	
-	*ppFirst = ss.seg_start;
-	*ppLast = ss.seg_end - 1;
-
-FAIL:
-	ps_cleanup( &ss );
+	word32 token;
+	while( token = ps2_token( pss ) )
+	{
+		if( token == 'mc0\0' || token == 'sc0\0' )
+		{ *ppFirst = ss.data_first; *ppLast = ss.data_last; break; }
+	}
 
 	return rc;	
 }
@@ -322,19 +223,21 @@ int ar_uri_locate_location( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord 
 	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
 
 	*ppFirst = *ppLast = 0;
-	
-	parsestate ss;
-	parsestate* pss = &ss;
-	ps_init( pss, szRecord );
 
-	if( rc = ps_scan_item( pss, "http://", 0 ) ) { goto FAIL; }
+	byteptr s, e;
+	s = e = 0;
+	s = strstr( szRecord, "http://" );
+	if( s == 0 ) { ASSERT(0); return -1; }
+	s += 7;
+	e = strchr( s, '?' );
+	if( e == 0 ) { ASSERT(0); return -1; }
+	e--;
 
-	*ppFirst = ss.seg_start;
-	*ppLast = ss.seg_end;
+	if( s > e ) { ASSERT(0); return -1; }
 
-FAIL:
-	ps_cleanup( &ss );
-	
+	*ppFirst = s;
+	*ppLast = e;
+
 	return rc;
 }
 
@@ -359,27 +262,29 @@ int ar_uri_parse_type( byteptr buf )
 int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr szRecord )
 {
 	int rc = 0;
-	
-	*pShares = 0;
-	*pThreshold = 0;
 
-	parsestate ss;
-	ps_init( &ss, szRecord );
+	*pShares = *pThreshold = 0;
 
-	int stype = ar_uri_parse_type( szRecord );
-	if( stype < 0 ) { ASSERT(0); rc = stype; goto FAIL; }
+	byteptr pShare_start, pThreshold_start;
+	pShare_start = pThreshold_start = 0;
 
-	char* tagArr[] = { "", "ai=", "si=" };
+	parsestate2 ss;
+	parsestate2* pss = &ss;
+	ps2_init( pss, szRecord, strlen( szRecord ) );
 
-	if( rc = ps_scan_item( &ss, tagArr[ stype ], 0 ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( pShares, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
+	word32 token;
+	while( token = ps2_token( pss ) )
+	{
+		if( token == 'ai0\0' )			{ pShare_start = ss.data_first; }
+		else if( token == 'ai1\0' )	{ pThreshold_start = ss.data_first; }
+		else if( token == 'si0\0' )	{ pShare_start = ss.data_first; }
+		else if( token == 'si1\0' )	{ pThreshold_start = ss.data_first; }
+		if( pShare_start != 0 && pThreshold_start != 0 ) { break; }
+	}
+	if( pShare_start == 0 && pThreshold_start == 0 ) { ASSERT(0); return -1; }
+	if( rc = ar_util_6Bto12B( pShares, pShare_start ) ) { ASSERT(0); return -1; }
+	if( rc = ar_util_6Bto12B( pThreshold, pThreshold_start ) ) { ASSERT(0); return -1; }
 
-	if( rc = ps_scan_item( &ss, tagArr[ stype ], 1 ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( pThreshold, ss.seg_start ) ) { ASSERT(0); goto FAIL; }
-
-FAIL:
-	ps_cleanup( &ss );
-	
 	return rc;
 }
 
@@ -500,11 +405,11 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 	if( !pARecord || !szRecord ) { ASSERT(0); return -1; }
 	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
 
-#if defined(_ENABLE_ALT_PARSER)
+	// cached, as order is important when bundling
+	size_t uLocation = 0, uClue = 0, uMessage = 0;
+	byteptr pLocation = 0, pClue = 0, pMessage = 0;
 
-	printf( "%s\n", szRecord );
-
-	// vl convertion vars
+	// vl conversion vars
 	size_t deltalen = 0;
 	char tmp[ sizeof(vlPoint) + 2 ] = {0};
 	const word16 VL_WORD_COUNT = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
@@ -516,154 +421,86 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 	word32 token = 0;
 	while( token = ps2_token( pss ) )
 	{
-		deltalen = 0;
-		tmp[0] = 0;
+		if( token == '\n\0\0\0' ) { break; }
 
-		char* szinfo = "unknown";
+		// reset temps
+		deltalen = 0; tmp[0] = 0;
+
 		switch( token )
 		{
-		default: break; // unrecognized token
-		case '\n\0\0\0': // newline
-szinfo = "newline";
-			break; 
+		default: // unrecognized token
+			break;
 		case 'ht0\0': // http psuedotoken
-szinfo = "http";
+			if( pss->data_len <= 7 ) { ASSERT(0); goto FAIL; }
+			pLocation = pss->data_first + 7; // 7 to remove 'http://'
+			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
 		case 'tp0\0': // topic
-szinfo = "topic";
-			vlClear( pARecord->topic );
-			if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
-			if( rc = ar_util_8BAto16BA( &deltalen, &(pARecord->topic)[1], VL_WORD_COUNT, tmp, deltalen ) ) { ASSERT(0); goto FAIL; }
-			pARecord->topic[0] = (word16)deltalen;
+			if( rc = txt_to_vl( pARecord->topic, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'ai0\0': // arecord info - shares
-szinfo = "info-sh";
-// FIXME
-//			if( rc = ar_util_6BAto8BA( &deltalen, &pARecord->shares, 2, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_6Bto12B( &pARecord->shares, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'ai1\0': // arecord info - threshold
-szinfo = "info-tr";
-// FIXME
-//			if( rc = ar_util_6BAto8BA( &deltalen, &pARecord->threshold, 2, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_6Bto12B( &pARecord->threshold, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'ai2\0': // arecord info - fieldsize
-szinfo = "info-fs";
-// FIXME
-//			if( rc = ar_util_6BAto8BA( &deltalen, &pARecord->fieldsize, 2, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_6Bto12B( &pARecord->fieldsize, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'vf0\0': // <verify>
-szinfo = "verify";
-			vlClear( pARecord->verify );
-			if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
-			if( rc = ar_util_8BAto16BA( &deltalen, &(pARecord->verify)[1], VL_WORD_COUNT, tmp, deltalen ) ) { ASSERT(0); goto FAIL; }
-			pARecord->verify[0] = (word16)deltalen;
+			if( rc = txt_to_vl( pARecord->verify, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'pk0\0': // <pubkey>
-szinfo = "pubkey";
-			vlClear( pARecord->pubkey );
-			if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
-			if( rc = ar_util_8BAto16BA( &deltalen, &(pARecord->pubkey)[1], VL_WORD_COUNT, tmp, deltalen ) ) { ASSERT(0); goto FAIL; }
-			pARecord->pubkey[0] = (word16)deltalen;
+			if( rc = txt_to_vl( pARecord->pubkey, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'as0\0': // <authsig> - r
-szinfo = "authsig-r";
-			vlClear( pARecord->authsig.r );
-			if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
-			if( rc = ar_util_8BAto16BA( &deltalen, &(pARecord->authsig.r)[1], VL_WORD_COUNT, tmp, deltalen ) ) { ASSERT(0); goto FAIL; }
-			pARecord->authsig.r[0] = (word16)deltalen;
+			if( rc = txt_to_vl( pARecord->authsig.r, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'as1\0': // <authsig> - s
-szinfo = "authsig-s";
-			vlClear( pARecord->authsig.s );
-			if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
-			if( rc = ar_util_8BAto16BA( &deltalen, &(pARecord->authsig.s)[1], VL_WORD_COUNT, tmp, deltalen ) ) { ASSERT(0); goto FAIL; }
-			pARecord->authsig.s[0] = (word16)deltalen;
+			if( rc = txt_to_vl( pARecord->authsig.s, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'mt0\0': // <messagetext>
-szinfo = "messagetext";
+			pMessage = pss->data_first;
+			uMessage = pss->data_len;
 			break;
 		case 'mc0\0': // <messageclue>
-szinfo = "messageclue";
+			pClue = pss->data_first;
+			uClue = pss->data_len;
 			break;
-		}
-
-		if( 1 )
-		{
-			char* nodata = "NODATA";
-			char* dup = nodata;
-			size_t len = pss->data_last - pss->data_first + 1;
-			if( len > 0 ) { dup = strndup( pss->data_first, len ); }
-			printf( "%s %s\n", szinfo, dup );
-			if( dup != nodata ) free( dup );
 		}
 	}
 
-FAIL:
+	// assemble order-dependent text body
 
-#else // _ENABLE_ALT_PARSER
-
-	parsestate ss;
-	parsestate* pss = &ss;
-	ps_init( pss, szRecord );
-
-	size_t cryptlen = 0;
-	ar_uri_arglen( &cryptlen, "mt=", szRecord );
-	if( cryptlen >= pARecord->bufmax ) { ASSERT(0); rc=-2; goto FAIL; }
-
-	if( rc = ps_scan_item( pss, "tp=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = txt_to_vl( pARecord->topic, pss->seg_start ) ) 			{ ASSERT(0); goto FAIL; }
-
-	if( rc = ps_scan_item( pss, "vf=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = txt_to_vl( pARecord->verify, pss->seg_start ) ) 			{ ASSERT(0); goto FAIL; }
-
-	if( rc = ps_scan_item( pss, "ai=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( &pARecord->shares, pss->seg_start ) ) 	{ ASSERT(0); goto FAIL; }
-	if( rc = ps_scan_item( pss, "ai=", 1 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( &pARecord->threshold, pss->seg_start ) ) 	{ ASSERT(0); goto FAIL; }
-	if( rc = ps_scan_item( pss, "ai=", 2 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( &pARecord->fieldsize, pss->seg_start ) ) 	{ ASSERT(0); goto FAIL; }
-
-	if( rc = ps_scan_item( pss, "pk=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = txt_to_vl( pARecord->pubkey, pss->seg_start ) ) 			{ ASSERT(0); goto FAIL; }
-
-	if( rc = ps_scan_item( pss, "as=", 0 ) )							{ ASSERT(0); goto FAIL; }
-	if( rc = txt_to_vl( pARecord->authsig.r, pss->seg_start ) ) 		{ ASSERT(0); goto FAIL; }
-	if( rc = ps_scan_item( pss, "as=", 1 ) )							{ ASSERT(0); goto FAIL; }
-	if( rc = txt_to_vl( pARecord->authsig.s, pss->seg_start ) ) 		{ ASSERT(0); goto FAIL; }
+	if( uLocation + uClue + uMessage > pARecord->bufmax ) { ASSERT(0); goto FAIL; }
 
 	byteptr bufloc = pARecord->buf;
 	size_t buflen = 0;
 
-	size_t loclen = 0;
-	if( rc = ps_scan_item( pss, location, 0 ) )							{ ASSERT(0); goto FAIL; }
-	loclen = strlen( location );
-	strcpy_s( bufloc, pARecord->bufmax, location );
-	bufloc += loclen;
-	buflen += loclen;
+	pARecord->bufused = (word16)(buflen);
 
-	size_t mclen = 0;
-	if( ps_scan_item( pss, "mc=", 0 ) ) { /* optional */ } else
+	if( uLocation == 0 ) { ASSERT(0); goto FAIL; }
+	strncpy_s( bufloc, pARecord->bufmax, pLocation, uLocation );
+	pARecord->loclen = (word16)(uLocation);
+	bufloc += uLocation;
+	buflen += uLocation;
+
+	if( uClue > 0 ) // optional
 	{
-		if( rc = ar_util_6BAto8BA( &mclen, bufloc, pARecord->bufmax - buflen, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
-		bufloc += mclen;
-		buflen += mclen;
+		if( rc = ar_util_6BAto8BA( &deltalen, bufloc, pARecord->bufmax - buflen, pClue, uClue ) ) { ASSERT(0); goto FAIL; }
+		pARecord->cluelen = (word16)(deltalen);
+		bufloc += deltalen;
+		buflen += deltalen;
 	}
 
-	size_t mtlen = 0;
-	if( rc = ps_scan_item( pss, "mt=", 0 ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6BAto8BA( &mtlen, bufloc, pARecord->bufmax - buflen, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
-	bufloc += mtlen;
-	buflen += mtlen;
+	if( uMessage == 0 ) { ASSERT(0); goto FAIL; }
+	if( rc = ar_util_6BAto8BA( &deltalen, bufloc, pARecord->bufmax - buflen, pMessage, uMessage ) ) { ASSERT(0); goto FAIL; }
+	bufloc += deltalen;
+	buflen += deltalen;
 
-	pARecord->loclen = (word16)(loclen);
-	pARecord->cluelen = (word16)(mclen);
 	pARecord->bufused = (word16)(buflen);
 
 FAIL:
-
-	ps_cleanup( pss );
-
-#endif // _ENABLE_ALT_PARSER
 
 	return rc;
 }
@@ -675,52 +512,90 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 	if( !pSRecord || !szRecord ) { ASSERT(0); return -1; }
 	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
 
-	parsestate ss;
-	parsestate* pss = &ss;
-	ps_init( pss, szRecord );
+	// cached, as order is important when bundling
+	size_t uLocation = 0, uClue = 0;
+	byteptr pLocation = 0, pClue = 0;
 
-	if( rc = ps_scan_item( pss, "tp=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = txt_to_vl( pSRecord->topic, pss->seg_start ) ) 			{ ASSERT(0); goto FAIL; }
+	// vl conversion vars
+	size_t deltalen = 0;
+	char tmp[ sizeof(vlPoint) + 2 ] = {0};
+	const word16 VL_WORD_COUNT = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
 
-	if( rc = ps_scan_item( pss, "si=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( &pSRecord->shares, pss->seg_start ) ) 	{ ASSERT(0); goto FAIL; }
-	if( rc = ps_scan_item( pss, "si=", 1 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( &pSRecord->threshold, pss->seg_start ) ) 	{ ASSERT(0); goto FAIL; }
-	if( rc = ps_scan_item( pss, "si=", 2 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6Bto12B( &pSRecord->shareid, pss->seg_start ) ) 	{ ASSERT(0); goto FAIL; }
+	parsestate2 ss;
+	ps2ptr pss = &ss;
+	ps2_init( pss, szRecord, strlen(szRecord) );
 
-	if( rc = ps_scan_item( pss, "sh=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = txt_to_vl( pSRecord->share, pss->seg_start ) ) 			{ ASSERT(0); goto FAIL; }
+	word32 token = 0;
+	while( token = ps2_token( pss ) )
+	{
+		if( token == '\n\0\0\0' ) { break; }
 
-	if( rc = ps_scan_item( pss, "ss=", 0 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = txt_to_vl( pSRecord->sharesig.r, pss->seg_start ) ) 		{ ASSERT(0); goto FAIL; }
-	if( rc = ps_scan_item( pss, "ss=", 1 ) ) 							{ ASSERT(0); goto FAIL; }
-	if( rc = txt_to_vl( pSRecord->sharesig.s, pss->seg_start ) ) 		{ ASSERT(0); goto FAIL; }
+		// reset temps
+		deltalen = 0; tmp[0] = 0;
+
+		switch( token )
+		{
+		default: // unrecognized token
+			break;
+		case 'ht0\0': // http psuedotoken
+			if( pss->data_len <= 7 ) { ASSERT(0); goto FAIL; }
+			pLocation = pss->data_first + 7; // 7 to remove 'http://'
+			uLocation = pss->data_len - 7; // 7 to remove 'http://'
+			break;
+		case 'tp0\0': // topic
+			if( rc = txt_to_vl( pSRecord->topic, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'si0\0': // srecord info - shares
+			if( rc = ar_util_6Bto12B( &pSRecord->shares, pss->data_first ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'si1\0': // srecord info - threshold
+			if( rc = ar_util_6Bto12B( &pSRecord->threshold, pss->data_first ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'si2\0': // srecord info - shareid
+			if( rc = ar_util_6Bto12B( &pSRecord->shareid, pss->data_first ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'sh0\0': // share
+			if( rc = txt_to_vl( pSRecord->share, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'ss0\0': // <asharesig> - r
+			if( rc = txt_to_vl( pSRecord->sharesig.r, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'ss1\0': // <sharesig> - s
+			if( rc = txt_to_vl( pSRecord->sharesig.s, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'sc0\0': // <messageclue>
+			pClue = pss->data_first;
+			uClue = pss->data_len;
+			break;
+		}
+	}
+
+	// assemble order-dependent text body
+
+	if( uLocation + uClue > pSRecord->bufmax ) { ASSERT(0); goto FAIL; }
 
 	byteptr bufloc = pSRecord->buf;
 	size_t buflen = 0;
 
-	size_t loclen = 0;
-	if( rc = ps_scan_item( pss, location, 0 ) )							{ ASSERT(0); goto FAIL; }
-	loclen = strlen( location );
-	strcpy_s( bufloc, pSRecord->bufmax, location );
-	bufloc += loclen;
-	buflen += loclen;
+	pSRecord->bufused = (word16)(buflen);
 
-	size_t sclen = 0;
-	if( ps_scan_item( pss, "sc=", 0 ) ) { /* optional */ } else
+	if( uLocation == 0 ) { ASSERT(0); goto FAIL; }
+	strncpy_s( bufloc, pSRecord->bufmax, pLocation, uLocation );
+	pSRecord->loclen = (word16)(uLocation);
+	bufloc += uLocation;
+	buflen += uLocation;
+
+	if( uClue > 0 ) // optional
 	{
-		if( rc = ar_util_6BAto8BA( &sclen, bufloc, pSRecord->bufmax - buflen, pss->seg_start, strlen( pss->seg_start ) ) ) { ASSERT(0); goto FAIL; }
-		bufloc += sclen;
-		buflen += sclen;
+		if( rc = ar_util_6BAto8BA( &deltalen, bufloc, pSRecord->bufmax - buflen, pClue, uClue ) ) { ASSERT(0); goto FAIL; }
+		bufloc += deltalen;
+		buflen += deltalen;
 	}
 
-	pSRecord->loclen = (word16)(loclen);
 	pSRecord->bufused = (word16)(buflen);
 
 FAIL:
 
-	ps_cleanup( pss );
 	return rc;
 }
 
@@ -789,13 +664,76 @@ void ar_uri_test()
 		rc = ar_uri_create_a( bufa, 2048, &arecord.x );
 		ASSERT( rc == 0 );
 
+		{
+			byteptr s, e;
+			rc = ar_uri_locate_location( &s, &e, bufa );
+			ASSERT( rc == 0 );
+			ASSERT( strncmp( s, location, e-s+1 ) == 0 );
+		}
+
+		{
+			byteptr s, e;
+			rc = ar_uri_locate_clue( &s, &e, bufa );
+			ASSERT( rc == 0 );
+
+			char clue[80];
+			size_t cluelen = 0;
+			rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
+			ASSERT( rc == 0 );
+
+			clue[ cluelen ] = 0;
+			ASSERT( strcmp( clue, clues[0] ) == 0 );
+		}
+
 		bufs0[0] = 0;
 		rc = ar_uri_create_s( bufs0, 2048, &srecords[0].x );
 		ASSERT( rc == 0 );
 
+		{
+			byteptr s, e;
+			rc = ar_uri_locate_location( &s, &e, bufs0 );
+			ASSERT( rc == 0 );
+			ASSERT( strncmp( s, location, e-s+1 ) == 0 );
+		}
+
+		{
+			byteptr s, e;
+			rc = ar_uri_locate_clue( &s, &e, bufs0 );
+			ASSERT( rc == 0 );
+
+			char clue[80];
+			size_t cluelen = 0;
+			rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
+			ASSERT( rc == 0 );
+
+			clue[ cluelen ] = 0;
+			ASSERT( strcmp( clue, clues[1] ) == 0 );
+		}
+
 		bufs1[0] = 0;
 		rc = ar_uri_create_s( bufs1, 2048, &srecords[1].x );
 		ASSERT( rc == 0 );
+
+		{
+			byteptr s, e;
+			rc = ar_uri_locate_location( &s, &e, bufs1 );
+			ASSERT( rc == 0 );
+			ASSERT( strncmp( s, location, e-s+1 ) == 0 );
+		}
+
+		{
+			byteptr s, e;
+			rc = ar_uri_locate_clue( &s, &e, bufs1 );
+			ASSERT( rc == 0 );
+
+			char clue[80];
+			size_t cluelen = 0;
+			rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
+			ASSERT( rc == 0 );
+
+			clue[ cluelen ] = 0;
+			ASSERT( strcmp( clue, clues[2] ) == 0 );
+		}
 
 		if(0)
 		{
