@@ -6,26 +6,29 @@
 #include "platform.h"
 #include "ec_types.h"
 
-DLLDECL word32 library_init();
+// nonzero function return values indicate an error
 
-DLLDECL int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, byteptr szLocation, byteptr clueBarArr, byteptr message );
-DLLDECL int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr sharesNLArr );
-DLLDECL int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, word16 uFieldNum );
-DLLDECL int library_uri_clue( byteptr* clue_out, byteptr szShare );
-DLLDECL int library_uri_location( byteptr* location_out, byteptr szShare );
+DLLDECL word32 library_init();
+DLLDECL void library_cleanup();
+
 DLLDECL int library_uri_shareinfo( word16* pShares, word16* pThreshold, byteptr szShare );
 DLLDECL int library_uri_sharetype( word16* pType, byteptr szShare );
 
-//DLLDECL int library_b64_decoder( byteptr* string_out, byteptr string );
+// functions that return values through _out args those args to be passed to library_free(...) to prevent a memory leak
+// Arr args are '\n' delimited strings
+
+DLLDECL int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byteptr szLocation, byteptr clueArr, size_t clueArrLen, byteptr message );
+DLLDECL int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr shareArr, size_t shareArrLen );
+DLLDECL int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, word16 uFieldNum );
+DLLDECL int library_uri_clue( byteptr* clue_out, byteptr szShare );
+DLLDECL int library_uri_location( byteptr* location_out, byteptr szShare );
 
 DLLDECL void library_free( byteptr* object );
 
-DLLDECL void library_cleanup();
+// status functions
 
 DLLDECL int library_isdebug();
-
 DLLDECL int library_isdemo();
-
 DLLDECL word32 library_vmajor();
 DLLDECL word32 library_vminor();
 DLLDECL word32 library_keylength();

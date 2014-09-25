@@ -17,6 +17,8 @@
 	#define printf(...) __android_log_print(ANDROID_LOG_DEBUG, "TAG", __VA_ARGS__);
 #endif
 
+/////////////////////////
+
 static word32 testendianness()
 {
 	static byte x[4] = {1,2,3,4};
@@ -45,7 +47,26 @@ static word32 testendianness()
 	return 0;
 }
 
-//////////////////
+typedef byteptr* byteptrarr;
+
+static int buildArrayTable( byteptrarr* table_out, byteptr arr, size_t len )
+{
+	if( !table_out ) { ASSERT(0); return -1; }
+
+	size_t numentries = 2; // +1 first entry, +1 0 (last) entry
+	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) numentries++; } // interior \0 only, not terminating one
+
+	*table_out = malloc( numentries * sizeof(byteptr) );
+	memset( *table_out, 0, numentries * sizeof(byteptr) );
+
+	size_t j = 0;
+	(*table_out)[j++] = arr;
+	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) (*table_out)[j++] = &arr[i-1]; }
+
+	return 0;
+}
+
+/////////////////////////
 
 word32 library_init()
 {
@@ -102,34 +123,39 @@ word32 library_keylength()
 
 //////////////////
 
-int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, byteptr szLocation, byteptr clueBarArr, byteptr message )
+int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byteptr szLocation, byteptr clueArr, size_t cluePtrArrLen, byteptr message )
 {
 	int rc = 0;
 
-	*sharesBarArr_out = 0;
+	*sharesArr_out = 0;
 	arAuth* arecord = 0;
 	arShareptr* srecordArr = 0;
-	byteptr* clueArr = 0;
+	byteptr* cluePtrArr = 0;
 
 	if( threshold == 0 || shares == 0 || threshold > shares ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
 
-	size_t clueDataLen = clueBarArr ? strlen( clueBarArr ) : 0;
+#if 1
+	for( size_t i = 0; i < cluePtrArrLen; i++ ) { if( clueArr[i]=='\n' ) { clueArr[i]='\0'; } }
+	if( rc = buildArrayTable( &cluePtrArr, clueArr, cluePtrArrLen ) ) { ASSERT(0); goto FAILCRYPT; }
+#else
+	size_t clueDataLen = clueArr ? strlen( clueArr ) : 0;
 	if( clueDataLen == 0 ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
 
 	int clueDelimCount = 0;
 	int clueIndex = 0;
-	clueArr = malloc( sizeof(byteptr) * ( shares + 1 ) );
-	clueArr[clueIndex++] = clueBarArr;							// index 0 is topiclue
+	cluePtrArr = malloc( sizeof(byteptr) * ( shares + 1 ) );
+	cluePtrArr[clueIndex++] = clueArr;							// index 0 is topiclue
 	for( size_t i=0; i<clueDataLen; i++ )
 	{
-		if( clueBarArr[i] == '|' )
+		if( clueArr[i] == '|' )
 		{
-			clueArr[clueIndex++] = &clueBarArr[i] + 1;
-			clueBarArr[i] = 0;
+			cluePtrArr[clueIndex++] = &clueArr[i] + 1;
+			clueArr[i] = 0;
 			clueDelimCount++;
 		}
 	}
 	if( clueDelimCount != shares ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
+#endif
 
 	size_t loclen = szLocation ? strlen( szLocation ) : 0;
 	if( loclen == 0 ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
@@ -138,7 +164,7 @@ int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, b
 	if( messlen == 0 ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
 
 	// alloc arecord
-	size_t acluelen = ( clueArr && clueArr[0] ) ? strlen( clueArr[0] ) : 0;
+	size_t acluelen = ( cluePtrArr && cluePtrArr[0] ) ? strlen( cluePtrArr[0] ) : 0;
 	size_t abuflen = ( loclen + acluelen + messlen + 1 /* +1 for \0 */ );
 	size_t astructlen = sizeof(arAuth) + abuflen;
 	if( !(arecord = malloc( astructlen ) ) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
@@ -150,7 +176,7 @@ int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, b
 	memset( srecordArr, 0, sizeof(arShareptr) * shares );
 	for( word16 i=0; i<shares; i++ )
 	{
-		size_t scluelen = ( clueArr && clueArr[i] ) ? ( strlen( clueArr[i] ) + 1 /* +1 for \0 */ ) : 0;
+		size_t scluelen = ( cluePtrArr && cluePtrArr[i] ) ? ( strlen( cluePtrArr[i] ) + 1 /* +1 for \0 */ ) : 0;
 		size_t sbuflen = loclen + scluelen;
 		size_t sstructlen = sizeof(arShare) + sbuflen;
 		if( !(srecordArr[i] = malloc( sstructlen ) ) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
@@ -159,7 +185,7 @@ int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, b
 	}
 
 	// +1 to include \0
-	rc = ar_core_create( arecord, srecordArr, shares, threshold, message, (word16)messlen+1, clueArr, szLocation );
+	rc = ar_core_create( arecord, srecordArr, shares, threshold, message, (word16)messlen+1, cluePtrArr, szLocation );
 	if( rc ) { ASSERT(0); goto FAILCRYPT; }
 
 	//////////////
@@ -168,18 +194,17 @@ int library_uri_encoder( byteptr* sharesBarArr_out, int shares, int threshold, b
 	ar_uri_bufsize_a( &outbufsize, arecord );
 	outbufsize *= shares;
 
-	if( (*sharesBarArr_out = malloc( outbufsize )) == 0 ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
-	memset( *sharesBarArr_out, 0, outbufsize );
+	if( (*sharesArr_out = malloc( outbufsize )) == 0 ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
+	memset( *sharesArr_out, 0, outbufsize );
 
-	(*sharesBarArr_out)[0] = 0;
-	rc = ar_uri_create_a( (*sharesBarArr_out), outbufsize, arecord );
+	(*sharesArr_out)[0] = 0;
+	rc = ar_uri_create_a( (*sharesArr_out), outbufsize, arecord );
 	if( rc ) { ASSERT(0); goto FAILCRYPT; }
 
 	for( word16 s=0; s!=shares; s++ )
 	{
-		rc = ar_util_strcat( (*sharesBarArr_out), outbufsize, "|" ); // delimiter
-		rc = ar_uri_create_s( (*sharesBarArr_out), outbufsize, srecordArr[s] );
-		if( rc ) { ASSERT(0); goto FAILCRYPT; }
+		if( rc = ar_util_strcat( (*sharesArr_out), outbufsize, "\n" ) ) { ASSERT(0); goto FAILCRYPT; }
+		if( rc = ar_uri_create_s( (*sharesArr_out), outbufsize, srecordArr[s] ) ) { ASSERT(0); goto FAILCRYPT; }
 	}
 
 FAILCRYPT:
@@ -187,14 +212,14 @@ FAILCRYPT:
 	if( arecord ) free( arecord );
 	for( word16 i=0; i<shares; i++ ) { if( srecordArr[i] ) free( srecordArr[i] ); }
 	if( srecordArr ) free( srecordArr );
-	if( clueArr ) free( clueArr );
+	if( cluePtrArr ) free( cluePtrArr );
 
-	if( rc && *sharesBarArr_out ) free( *sharesBarArr_out );
+	if( rc && *sharesArr_out ) free( *sharesArr_out );
 	
 	return rc;
 }
 
-int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr sharesNLArr )
+int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr shares_arr, size_t shareArrLen )
 {
 	int rc = 0;
 
@@ -207,20 +232,13 @@ int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr share
 	word16 sharenum = 0;
 	arShareptr* srecordArr = 0;
 	arAuth* arecord = 0;
-	byteptr sharesNLArr_copy = 0;
 
 	size_t loclen = szLocation ? strlen( szLocation ) : 0;
 	if( loclen == 0 ) { ASSERT(0); rc=-1; goto FAIL; }
 
-	size_t shareslen = sharesNLArr ? strlen( sharesNLArr ) : 0;
-	if( shareslen == 0 ) { ASSERT(0); rc=-1; goto FAIL; }
-
-	sharesNLArr_copy = (byteptr)strdup( sharesNLArr );
-	if( sharesNLArr_copy == 0 ) { ASSERT(0); rc=-1; goto FAIL; }
-
-	byteptr end = sharesNLArr_copy + shareslen;
-	byteptr s_record = sharesNLArr_copy;
-	byteptr e_record = sharesNLArr_copy;
+	byteptr end = shares_arr + shareArrLen;
+	byteptr s_record = shares_arr;
+	byteptr e_record = shares_arr;
 
 	while( s_record < end )
 	{
@@ -244,7 +262,7 @@ int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr share
 				if( !*message_out ) { ASSERT(0); rc=-9; goto FAIL; }
 				memset( *message_out, 0, messlen );
 
-				size_t buflen = cluelen + messlen + loclen + 1; // +1 for \0
+				size_t buflen = cluelen + messlen + loclen;
 				size_t structlen = sizeof(arAuth) + buflen;
 
 				arecord = malloc( structlen );
@@ -271,7 +289,7 @@ int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr share
 
 			ar_uri_parse_cluelen( &cluelen, inbuf ); // optional
 
-			size_t buflen = cluelen + loclen + 1; // +1 for \0
+			size_t buflen = cluelen + loclen;
 			size_t structlen = sizeof(arShare) + buflen;
 
 			arShare* pShare = malloc( structlen );
@@ -299,67 +317,7 @@ FAIL:
 	if( arecord ) free( arecord );
 	for( int i=0; i<sharenum; i++ ) { if( srecordArr[i] ) { free( srecordArr[i] ); srecordArr[i] = 0; } }
 	if( srecordArr ) free( srecordArr );
-	if( sharesNLArr_copy ) free( sharesNLArr_copy);
 
-	return rc;
-}
-/*
-int library_b64_decoder( byteptr* string_out, byteptr string )
-{
-	int rc = 0;
-
-__android_log_print(ANDROID_LOG_INFO, "libartemis", "string %s", string );
-
-	*string_out = 0;
-	
-	size_t slen = string ? strlen( string ) : 0;
-__android_log_print(ANDROID_LOG_INFO, "libartemis", "slen %d", slen );
-	if( slen == 0 ) { ASSERT(0); rc=-1; goto FAILED; }
-
-	*string_out = malloc( slen + 1 );
-__android_log_print(ANDROID_LOG_INFO, "libartemis", "*string_out %X", *string_out );
-	if( *string_out == 0 ) { ASSERT(0); rc=-1; goto FAILED; }
-
-	memset( *string_out, 0, slen + 1 );
-	if( rc = ar_util_6BZto8BZ( *string_out, slen, string ) ) { ASSERT(0); goto FAILED; }
-
-FAILED:
-	
-	// REVIEW: check rc ?
-	
-	return rc;
-}
-*/
-int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, word16 uFieldNum )
-{
-	int rc = 0;
-	
-	if( !field_out ) { ASSERT(0); return -1; }
-	if( !szField ) { ASSERT(0); return -1; }
-	if( !szShare ) { ASSERT(0); return -1; }
-
-	char szFieldWithDelim[] = {0,0,0,0}; // +2 for '=' and \0
-	szFieldWithDelim[0] = szField[0];
-	szFieldWithDelim[1] = szField[1];
-	szFieldWithDelim[2] = '=';
-	
-	*field_out = 0;
-	
-	byteptr pFirst = 0;
-	byteptr pLast = 0;
-	
-	if( ar_uri_locate_field( &pFirst, &pLast, szShare, szFieldWithDelim, uFieldNum ) ) { ASSERT(0); rc=-2; goto FAIL; }
-
-	if( pFirst != pLast )
-	{
-		*field_out = (unsigned char*)strndup( pFirst, pLast - pFirst );
-		if( !*field_out ) { ASSERT(0); rc=-9; goto FAIL; }
-	}
-	
-FAIL:
-
-	if( rc && *field_out ) { free( *field_out ); *field_out = 0; }
-	
 	return rc;
 }
 
@@ -454,7 +412,32 @@ FAIL:
 	return rc;
 }
 
-
 void library_test()
 {
+
+#if defined(_DEBUG)
+
+	int rc = 0;
+
+	byteptr sharesArr_out;
+	int shares = 2;
+	int threshold = 2;
+	byteptr szLocation = "foo.bar";
+	byteptr clueArr = "main clue\nfirst clue\nsecond clue";
+	byteptr message = "something shared between friends";
+
+	rc = library_uri_encoder( &sharesArr_out, shares, threshold, szLocation, clueArr, strlen(clueArr), message );
+	ASSERT( rc == 0 );
+
+	byteptr message_out;
+	rc = library_uri_decoder( &message_out, szLocation, sharesArr_out, strlen(sharesArr_out) );
+	ASSERT( rc == 0 );
+
+	ASSERT( strcmp( message, message_out ) == 0 );
+
+	free( sharesArr_out );
+	free( message_out );
+
+#endif // _DEBUG
+
 }
