@@ -29,6 +29,16 @@ int main(int argc, char* argv[])
 
 #endif
 
+static void* realloc_zero(void* pBuffer, size_t oldSize, size_t newSize) {
+  void* pNew = realloc(pBuffer, newSize);
+  if ( newSize > oldSize && pNew ) {
+    size_t diff = newSize - oldSize;
+    void* pStart = ((char*)pNew) + oldSize;
+    memset(pStart, 0, diff);
+  }
+  return pNew;
+}
+
 word32 app_vmajor = 0;
 word32 app_vminor = 1;
 
@@ -100,50 +110,53 @@ HELP:
 	}
 	else if( decode )
 	{
-		byteptr outbuf = 0;
+		byteptr message_out = 0;
 
 		size_t bufsize = 1024;
-		byteptr inbuf = malloc( bufsize );
-		if( !inbuf ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
+		byteptr shareArr = malloc( bufsize );
+		if( !shareArr ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
 
-		size_t pos = 0;
+		size_t shareArrLen = 0;
 		while( 1 )
 		{
 			char ch = getc( stdin );
-			if( ch == EOF ) { inbuf[pos] = 0; break; }
-			inbuf[pos++] = ch;
-			if( pos == bufsize-1 )
+			if( ch == EOF ) { shareArr[shareArrLen] = 0; break; }
+			if( ch == '\n' ) { ch = '\0'; } // change array delim from \n to \0
+			shareArr[shareArrLen++] = ch;
+			if( shareArrLen == bufsize-1 )
 			{
-				bufsize *= 2;
-				rc = (inbuf = realloc( inbuf, bufsize )) ? 0 : -9;
+				size_t newbufsize = bufsize * 2;
+				rc = (shareArr = realloc_zero( shareArr, bufsize, newbufsize )) ? 0 : -9;
+				bufsize = newbufsize;
 				if( rc ) { printf("# decrypt error\n"); goto FAILDECRYPT; }
 			}
 		}
 
-		rc = library_uri_decoder( &outbuf, location, inbuf );
+		rc = library_uri_decoder( &message_out, location, shareArr, shareArrLen );
 		if( rc ) { printf("# decrypt error\n"); goto FAILDECRYPT; }
 
-		printf( "%s\n", outbuf );
+		printf( "%s\n", message_out );
 
 FAILDECRYPT:
 
-		if( outbuf ) library_free( &outbuf );
-		if( inbuf ) free( inbuf );
+		if( message_out ) library_free( &message_out );
+		if( shareArr ) free( shareArr );
 	}
 	else
 	{
-		byteptr outbuf = 0;
+		byteptr shareArr_out = 0;
 
-		rc = library_uri_encoder( &outbuf, shares, threshold, location, clueData, messageArg );
+		size_t clueStrLen = strlen( clueData );
+		for( size_t i = 0; i < clueStrLen; i++ ) { if( clueData[i]=='|' ) { clueData[i]='\n'; } }
+
+		rc = library_uri_encoder( &shareArr_out, shares, threshold, location, clueData, clueStrLen, messageArg );
 		if( rc ) { printf("# encrypt error\n"); goto FAILCRYPT; }
 
-		for( byteptr p=outbuf; *p; p++ ) { if( *p == '|' ) { *p = '\n'; } }
-
-		printf( "%s\n", outbuf );
+		printf( "%s\n", shareArr_out );
 
 FAILCRYPT:
 
-		if( outbuf ) library_free( &outbuf );
+		if( shareArr_out ) library_free( &shareArr_out );
 	}
 
 FAILPLATFORM:
