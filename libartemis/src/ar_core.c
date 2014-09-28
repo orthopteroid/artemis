@@ -44,10 +44,12 @@
 
 int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares, word16 numThres, byteptr inbuf, word16 inbuflen, byteptr* clueArr, byteptr location )
 {
+	int rc = 0;
+	
 	gfPoint* gfCryptCoefArr = 0;
 	gfPoint* shareArr = 0;
 	word16* shareIDArr = 0;
-	int rc = 0;
+	byteptr inbuf_rw = 0;
 
 	if( inbuflen == 0 ) { rc = -1; goto EXIT; }
 	if( numShares < numThres ) { rc = -1; goto EXIT; }
@@ -77,6 +79,9 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 #if defined( AR_DEMO )
 	if( inbuflen > 1 )
 	{
+		inbuf_rw = strdup( inbuf ); // writable version
+		inbuf = inbuf_rw; // alias writable version
+		//
 		size_t a, b;
 		word16 numswaps = max( inbuflen>>4, 1 );
 		for( word16 i=0; i<numswaps; i++ )
@@ -306,6 +311,7 @@ EXIT:
 	if( gfCryptCoefArr ) { memset( gfCryptCoefArr, 0, sizeof(gfPoint) * numThres ); free( gfCryptCoefArr ); }
 	if( shareArr ) { memset( shareArr, 0, sizeof(gfPoint) * numShares ); free( shareArr ); }
 	if( shareIDArr ) { memset( shareIDArr, 0, sizeof(word16) * numShares ); free( shareIDArr ); }
+	if( inbuf_rw ) { free( inbuf_rw ); }
 
 	return rc;
 }
