@@ -14,5 +14,5 @@ cd obj
 
 echo gcc $CFLAGS -o artemis ../../src/main.c libartemis.so
 gcc $CFLAGS -o artemis ../../src/main.c libartemis.so
+export LD_LIBRARY_PATH=./
 
-cd ..
