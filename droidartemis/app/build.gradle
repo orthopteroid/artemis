@@ -20,7 +20,7 @@ android {
         // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
         ndk {
             moduleName "myNDKModule"
-            cFlags "-std=c99 -I${project.buildDir}/../src/main/jni/libartemis-inc"
+            cFlags "-std=c99 -Wno-multichar -I${project.buildDir}/../src/main/jni/libartemis-inc"
         }
     }
 
