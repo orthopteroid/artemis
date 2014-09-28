@@ -19,7 +19,7 @@ DLLDECL int library_uri_sharetype( word16* pType, byteptr szShare );
 
 DLLDECL int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byteptr szLocation, byteptr clueArr, size_t clueArrLen, byteptr message );
 DLLDECL int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr shareArr, size_t shareArrLen );
-DLLDECL int library_uri_field( byteptr* field_out, byteptr szShare, byteptr szField, word16 uFieldNum );
+DLLDECL int library_uri_topic( byteptr* topic_out, byteptr szShare );
 DLLDECL int library_uri_clue( byteptr* clue_out, byteptr szShare );
 DLLDECL int library_uri_location( byteptr* location_out, byteptr szShare );
 

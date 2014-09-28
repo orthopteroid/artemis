@@ -215,6 +215,26 @@ int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 	return rc;	
 }
 
+int ar_uri_locate_topic( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
+{
+	int rc = 0;
+	
+	*ppFirst = *ppLast = 0;
+	
+	parsestate2 ss;
+	parsestate2* pss = &ss;
+	ps2_init( pss, szRecord, strlen( szRecord ) );
+
+	word32 token;
+	while( token = ps2_token( pss ) )
+	{
+		if( token == 'tp0\0' )
+		{ *ppFirst = ss.data_first; *ppLast = ss.data_last; break; }
+	}
+
+	return rc;	
+}
+
 int ar_uri_locate_location( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 {
 	int rc = 0;

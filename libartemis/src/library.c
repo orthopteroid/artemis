@@ -349,6 +349,33 @@ FAIL:
 	return rc;
 }
 
+int library_uri_topic( byteptr* topic_out, byteptr szShare )
+{
+	int rc = 0;
+	
+	if( !topic_out ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
+
+	*topic_out = 0;
+	
+	byteptr pFirst = 0;
+	byteptr pLast = 0;
+	
+	if( rc = ar_uri_locate_topic( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
+
+	if( pFirst != pLast )
+	{
+		*topic_out = (unsigned char*)strndup( pFirst, pLast - pFirst );
+		if( !*topic_out ) { ASSERT(0); rc=-9; goto FAIL; }
+	}
+	
+FAIL:
+	
+	if( rc && *topic_out ) { free( *topic_out ); *topic_out = 0; }
+	
+	return rc;
+}
+
 int library_uri_shareinfo( word16* pShares, word16* pThreshold, byteptr szShare )
 {
 	int rc = 0;
