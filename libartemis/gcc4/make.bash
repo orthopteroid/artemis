@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CFLAGS="-fpic -I../inc/ -std=c99 -c -msse3"
+CFLAGS="-fpic -I../inc/ -std=c99 -c -msse3 -Wno-multichar"
 #CFLAGS="-fpic -I../inc/ -std=c99 -c"
 
 if [ "$1" == "debug" ]
