@@ -49,7 +49,6 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	gfPoint* gfCryptCoefArr = 0;
 	gfPoint* shareArr = 0;
 	word16* shareIDArr = 0;
-	byteptr inbuf_rw = 0;
 
 	if( inbuflen == 0 ) { rc = -1; goto EXIT; }
 	if( numShares < numThres ) { rc = -1; goto EXIT; }
@@ -72,31 +71,6 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		size_t scluelen = ( clueArr && clueArr[i+1] ) ? strlen( clueArr[i+1] ) : 0;
 		if( pSRecordArr[i]->bufmax < ( loclen + scluelen ) ) { ASSERT(0); rc = -2; goto EXIT; }
 	}
-
-	///////////
-	// demo mode
-
-#if defined( AR_DEMO )
-	if( inbuflen > 1 )
-	{
-		inbuf_rw = strdup( inbuf ); // writable version
-		inbuf = inbuf_rw; // alias writable version
-		//
-		size_t a, b;
-		word16 numswaps = max( inbuflen>>4, 1 );
-		for( word16 i=0; i<numswaps; i++ )
-		{
-			a = ar_util_rnd32() % (inbuflen-1);
-			b = ar_util_rnd32() % (inbuflen-1);
-			if( a != b )
-			{
-				byte tmp = inbuf[ a ];
-				inbuf[ a ] = inbuf[ b ];
-				inbuf[ b ] = tmp;
-			}
-		}
-	}
-#endif
 
 	///////////
 	// create verification hash of cleartext
@@ -311,7 +285,6 @@ EXIT:
 	if( gfCryptCoefArr ) { memset( gfCryptCoefArr, 0, sizeof(gfPoint) * numThres ); free( gfCryptCoefArr ); }
 	if( shareArr ) { memset( shareArr, 0, sizeof(gfPoint) * numShares ); free( shareArr ); }
 	if( shareIDArr ) { memset( shareIDArr, 0, sizeof(word16) * numShares ); free( shareIDArr ); }
-	if( inbuf_rw ) { free( inbuf_rw ); }
 
 	return rc;
 }
