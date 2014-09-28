@@ -47,25 +47,6 @@ static word32 testendianness()
 	return 0;
 }
 
-typedef byteptr* byteptrarr;
-
-static int buildArrayTable( byteptrarr* table_out, byteptr arr, size_t len )
-{
-	if( !table_out ) { ASSERT(0); return -1; }
-
-	size_t numentries = 2; // +1 first entry, +1 0 (last) entry
-	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) numentries++; } // interior \0 only, not terminating one
-
-	*table_out = malloc( numentries * sizeof(byteptr) );
-	memset( *table_out, 0, numentries * sizeof(byteptr) );
-
-	size_t j = 0;
-	(*table_out)[j++] = arr;
-	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) (*table_out)[j++] = &arr[i-1]; }
-
-	return 0;
-}
-
 /////////////////////////
 
 word32 library_init()
@@ -128,34 +109,21 @@ int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byte
 	int rc = 0;
 
 	*sharesArr_out = 0;
+	
 	arAuth* arecord = 0;
 	arShareptr* srecordArr = 0;
 	byteptr* cluePtrArr = 0;
+	byteptr clueArr_rw = 0;
 
 	if( threshold == 0 || shares == 0 || threshold > shares ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
+	
+	if( !sharesArr_out || !szLocation || !clueArr || !message ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
 
-#if 1
-	for( size_t i = 0; i < cluePtrArrLen; i++ ) { if( clueArr[i]=='\n' ) { clueArr[i]='\0'; } }
-	if( rc = buildArrayTable( &cluePtrArr, clueArr, cluePtrArrLen ) ) { ASSERT(0); goto FAILCRYPT; }
-#else
-	size_t clueDataLen = clueArr ? strlen( clueArr ) : 0;
-	if( clueDataLen == 0 ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
-
-	int clueDelimCount = 0;
-	int clueIndex = 0;
-	cluePtrArr = malloc( sizeof(byteptr) * ( shares + 1 ) );
-	cluePtrArr[clueIndex++] = clueArr;							// index 0 is topiclue
-	for( size_t i=0; i<clueDataLen; i++ )
-	{
-		if( clueArr[i] == '|' )
-		{
-			cluePtrArr[clueIndex++] = &clueArr[i] + 1;
-			clueArr[i] = 0;
-			clueDelimCount++;
-		}
-	}
-	if( clueDelimCount != shares ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
-#endif
+	// change delimiters of clueArr
+	clueArr_rw = strdup( clueArr ); // make writable version
+	if( !clueArr_rw ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
+	for( size_t i = 0; i < cluePtrArrLen; i++ ) { if( clueArr_rw[i]=='\n' ) { clueArr_rw[i]='\0'; } }
+	if( rc = ar_util_buildBytePtrArr( &cluePtrArr, clueArr_rw, cluePtrArrLen ) ) { ASSERT(0); goto FAILCRYPT; }
 
 	size_t loclen = szLocation ? strlen( szLocation ) : 0;
 	if( loclen == 0 ) { ASSERT(0); rc=-1; goto FAILCRYPT; }
@@ -212,6 +180,7 @@ FAILCRYPT:
 	if( arecord ) free( arecord );
 	for( word16 i=0; i<shares; i++ ) { if( srecordArr[i] ) free( srecordArr[i] ); }
 	if( srecordArr ) free( srecordArr );
+	if( clueArr_rw ) free( clueArr_rw );
 	if( cluePtrArr ) free( cluePtrArr );
 
 	if( rc && *sharesArr_out ) free( *sharesArr_out );

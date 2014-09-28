@@ -5,6 +5,8 @@
 
 #include "ec_types.h"
 
+int ar_util_buildBytePtrArr( byteptrarr* table_out, byteptr arr, size_t len );
+
 // text conversion/copy routines that write to memy in big endian for printing or hashing
 // cant use these for the sha1 digest as it is already big endian
 
