@@ -471,6 +471,8 @@ void ar_core_test()
 	rc = ar_core_decrypt( cleartextout, 80, arecord, srecordarr, 2 );
 	ASSERT( rc == 0 );
 
+	ASSERT( strcmp( cleartextin, cleartextout ) == 0 );
+
 EXIT:
 
 	if( cleartextin ) free( cleartextin );
