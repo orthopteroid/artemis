@@ -658,7 +658,7 @@ void ar_uri_test()
 	memset( &srecords_[1], 0, sizeof(arShare80) );
 	arecord_.x.bufmax = srecords_[0].x.bufmax = srecords_[1].x.bufmax = 80;
 
-	char* clues[3] = {"topiclue", "clue1", "clue2"};
+	char* clues_r[3] = {"topiclue", "clue1", "clue2"};
 	char* location = "foo.bar";
 
 	char cleartextin[20];
@@ -677,7 +677,11 @@ void ar_uri_test()
 		for( int j=0; j<20; j++ ) { cleartextin[j] = (char)(ar_util_rnd32() % (122 - 32) + 32); }
 		cleartextin[ ar_util_rnd32() % 20 ] = 0;
 
-		rc = ar_core_create( &arecord.x, (arShareptr*)srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues, location ); // +1 to include \0
+		// make clue optional
+		char* clues_rw[3] = {clues_r[0], clues_r[1], clues_r[2]};
+		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
+		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
+		rc = ar_core_create( &arecord.x, (arShareptr*)srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues_rw, location ); // +1 to include \0
 		ASSERT( rc == 0 );
 
 		bufa[0] = 0;
@@ -698,11 +702,13 @@ void ar_uri_test()
 
 			char clue[80];
 			size_t cluelen = 0;
-			rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
-			ASSERT( rc == 0 );
-
+			if( s != e )
+			{
+				rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
+				ASSERT( rc == 0 );
+			}
 			clue[ cluelen ] = 0;
-			ASSERT( strcmp( clue, clues[0] ) == 0 );
+			ASSERT( strcmp( clue, clues_rw[0] ) == 0 );
 		}
 
 		bufs0[0] = 0;
@@ -723,11 +729,13 @@ void ar_uri_test()
 
 			char clue[80];
 			size_t cluelen = 0;
-			rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
-			ASSERT( rc == 0 );
-
+			if( s != e )
+			{
+				rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
+				ASSERT( rc == 0 );
+			}
 			clue[ cluelen ] = 0;
-			ASSERT( strcmp( clue, clues[1] ) == 0 );
+			ASSERT( strcmp( clue, clues_rw[1] ) == 0 );
 		}
 
 		bufs1[0] = 0;
@@ -748,11 +756,13 @@ void ar_uri_test()
 
 			char clue[80];
 			size_t cluelen = 0;
-			rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
-			ASSERT( rc == 0 );
-
+			if( s != e )
+			{
+				rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
+				ASSERT( rc == 0 );
+			}
 			clue[ cluelen ] = 0;
-			ASSERT( strcmp( clue, clues[2] ) == 0 );
+			ASSERT( strcmp( clue, clues_rw[2] ) == 0 );
 		}
 
 		if(0)
