@@ -131,6 +131,8 @@ static word32 ps2_token( ps2ptr pps )
 	}
 	else
 	{
+		if( pps->data_last == 0 ) { ASSERT(0); goto FINI; }
+
 		if( pps->data_last[1] == '!' )
 		{
 			pps->curr += 1; // skip sequence delimiter
@@ -497,8 +499,6 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 	byteptr bufloc = pARecord->buf;
 	size_t buflen = 0;
 
-	pARecord->bufused = (word16)(buflen);
-
 	if( uLocation == 0 ) { ASSERT(0); goto FAIL; }
 	memcpy_s( bufloc, pARecord->bufmax, pLocation, uLocation );
 	pARecord->loclen = (word16)(uLocation);
@@ -583,7 +583,7 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 		case 'ss1\0': // <sharesig> - s
 			if( rc = txt_to_vl( pSRecord->sharesig.s, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'sc0\0': // <messageclue>
+		case 'sc0\0': // <shareclue>
 			pClue = pss->data_first;
 			uClue = pss->data_len;
 			break;
@@ -596,8 +596,6 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 
 	byteptr bufloc = pSRecord->buf;
 	size_t buflen = 0;
-
-	pSRecord->bufused = (word16)(buflen);
 
 	if( uLocation == 0 ) { ASSERT(0); goto FAIL; }
 	memcpy_s( bufloc, pSRecord->bufmax, pLocation, uLocation );
