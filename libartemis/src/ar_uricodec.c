@@ -402,7 +402,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 	if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
 	if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.s ) ) { ASSERT(0); goto FAIL; }
 
-	if( pSRecord->bufused > 0 )
+	if( pSRecord->bufused - pSRecord->loclen > 0 )
 	{
 		if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
 		if( rc = ar_util_strcat( buf, bufsize, "sc=" ) ) { ASSERT(0); goto FAIL; }
