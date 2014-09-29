@@ -104,13 +104,13 @@ static word32 ps2_token( ps2ptr pps )
 	ps2_scan_private( pps );
 	if( pps->curr[0] == '\n' ) { pps->curr++; return pps->tagID = '\n\0\0\0'; } // end of line
 	if( pps->curr > pps->buf_last ) { ASSERT(0); goto FINI; } // found buffer end without finding a tag
+	if( bPsuedoTag && pps->curr[0] != '?' ) { ASSERT(0); goto FINI; } // first delim not '?'
 
 	///////////////////////
 	// handle tag type
 
 	if( bPsuedoTag )
 	{
-		if( pps->curr[0] != '?' ) { ASSERT(0); goto FINI; }
 		pps->tagPTR = pps->buf_first; // return psuedotag
 	}
 	else if( pps->curr[0] == '&' || pps->curr[0] == '?' )
