@@ -312,58 +312,88 @@ int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr szRecor
 
 int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 {
+	int rc = 0;
+
 	size_t buflen = 0;
 	char sz[3] = {0,0,0};
-	int rc = 0;
+
+	size_t tokenlen = 0;
+	word32 stateArr[] = {'tp\0\0', 'ai\0\0', 'vf\0\0', 'pk\0\0', 'as\0\0', 'mt\0\0', 'mc\0\0', 0 };
+
+#if defined(_DEBUG)
+
+	// impose some robustness on the order of the tags....
+	int k = sizeof(stateArr) / sizeof(word32) -1 -1; // -1 conv from size to count, -1 to omit EOA marker
+	for( int i = 0; i < k; i++ )
+	{
+		int j = ar_util_rnd32() % k;
+		word32 t = stateArr[j];
+		stateArr[j] = stateArr[i]; stateArr[i] = t;
+	}
+
+#endif
 
 	if( rc = ar_util_strcat( buf, bufsize, "http://" ) ) { ASSERT(0); goto FAIL; }
 	if( rc = ar_util_strncat( buf, bufsize, pARecord->buf, pARecord->loclen ) ) { ASSERT(0); goto FAIL; }
-	
-	if( rc = ar_util_strcat( buf, bufsize, "?" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "tp=" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->topic ) ) { ASSERT(0); goto FAIL; }
 
-	if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "ai=" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_12Bto6B( sz, pARecord->shares ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_12Bto6B( sz, pARecord->threshold ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_12Bto6B( sz, pARecord->fieldsize ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
-
-	if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "vf=" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->verify ) ) { ASSERT(0); goto FAIL; }
-
-	if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "pk=" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->pubkey ) ) { ASSERT(0); goto FAIL; }
-
-	if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "as=" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.r ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.s ) ) { ASSERT(0); goto FAIL; }
-
-	if( pARecord->cluelen > 0 )
+	word32 state = 0;
+	while( stateArr[ state ] )
 	{
-		if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-		if( rc = ar_util_strcat( buf, bufsize, "mc=" ) ) { ASSERT(0); goto FAIL; }
-		buflen = strlen(buf);
-		size_t mclen = 0;
-		rc = ar_util_8BAto6BA( &mclen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen, pARecord->cluelen );
-		if( rc == 0 ) { buf[ mclen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
+		// no clue, skip
+		if( stateArr[ state ] == 'mc\0\0' && pARecord->cluelen == 0 ) { state++; continue; }
+		//
+		char* szDelim = ( state == 0 ) ? "?" : "&";
+		if( rc = ar_util_strcat( buf, bufsize, szDelim ) ) { ASSERT(0); goto FAIL; }
+		//
+		switch( stateArr[ state ] )
+		{
+		default:
+			ASSERT(0); break;
+		case 'tp\0\0':
+			if( rc = ar_util_strcat( buf, bufsize, "tp=" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->topic ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'ai\0\0':
+			if( rc = ar_util_strcat( buf, bufsize, "ai=" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_12Bto6B( sz, pARecord->shares ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_12Bto6B( sz, pARecord->threshold ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_12Bto6B( sz, pARecord->fieldsize ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'vf\0\0':
+			if( rc = ar_util_strcat( buf, bufsize, "vf=" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->verify ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'pk\0\0':
+			if( rc = ar_util_strcat( buf, bufsize, "pk=" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->pubkey ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'as\0\0':
+			if( rc = ar_util_strcat( buf, bufsize, "as=" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.r ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.s ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'mc\0\0':
+			if( pARecord->cluelen == 0 ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, "mc=" ) ) { ASSERT(0); goto FAIL; }
+			buflen = strlen(buf);
+			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen, pARecord->cluelen );
+			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
+			break;
+		case 'mt\0\0':
+			if( rc = ar_util_strcat( buf, bufsize, "mt=" ) ) { ASSERT(0); goto FAIL; }
+			buflen = strlen(buf);
+			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen + pARecord->cluelen, pARecord->bufused - pARecord->loclen - pARecord->cluelen );
+			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
+			break;
+		}
+		state++;
 	}
-
-	if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "mt=" ) ) { ASSERT(0); goto FAIL; }
-	buflen = strlen(buf);
-	size_t mtlen = 0;
-	rc = ar_util_8BAto6BA( &mtlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen + pARecord->cluelen, pARecord->bufused - pARecord->loclen - pARecord->cluelen );
-	if( rc == 0 ) { buf[ mtlen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
 
 FAIL:
 
