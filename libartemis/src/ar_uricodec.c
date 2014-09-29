@@ -324,6 +324,9 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 {
 	int rc = 0;
 
+	if( !buf ) { ASSERT(0); goto FAIL; }
+	if( !pARecord ) { ASSERT(0); goto FAIL; }
+
 	size_t msgoffset = pARecord->loclen + pARecord->cluelen;
 
 	size_t buflen = 0;
