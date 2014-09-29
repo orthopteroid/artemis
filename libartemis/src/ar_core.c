@@ -94,11 +94,12 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	pARecord->cluelen = acluelen;
 	pARecord->msglen = inbuflen;
 	size_t abufused = loclen + inbuflen + acluelen;
+	size_t msgoffset = loclen + acluelen; // msg comes after clue + location
 
 	// fill buf with location, clue (if applic) then message
 	memcpy_s( pARecord->buf, pARecord->bufmax, location, loclen );
 	memcpy_s( pARecord->buf + loclen, pARecord->bufmax - loclen, clueArr[0], acluelen );
-	memcpy_s( pARecord->buf + loclen + acluelen, pARecord->bufmax - loclen - acluelen, inbuf, inbuflen );
+	memcpy_s( pARecord->buf + msgoffset, pARecord->bufmax - msgoffset, inbuf, inbuflen );
 
 	for( word16 t = 0; t < numThres; t++ )
 	{
@@ -124,7 +125,7 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		size_t deltalen = 0;
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
 		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, 16, rc4cranks, pARecord->buf + loclen + acluelen, inbuflen );
+		rc4( cryptkeyBArr, 16, rc4cranks, pARecord->buf + msgoffset, inbuflen );
 
 		vlClear( vlCryptkey );
 	}

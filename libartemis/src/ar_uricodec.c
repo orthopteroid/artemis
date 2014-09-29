@@ -324,6 +324,8 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 {
 	int rc = 0;
 
+	size_t msgoffset = pARecord->loclen + pARecord->cluelen;
+
 	size_t buflen = 0;
 	char sz[3] = {0,0,0};
 
@@ -400,7 +402,7 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 			break;
 		case 'mt=\0':
 			buflen = strlen(buf);
-			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen + pARecord->cluelen, pARecord->msglen );
+			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + msgoffset, pARecord->msglen );
 			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
 			break;
 		}
