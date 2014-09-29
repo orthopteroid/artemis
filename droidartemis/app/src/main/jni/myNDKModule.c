@@ -1,6 +1,7 @@
 #include "com_tereslogica_droidartemis_ArtemisLib.h"
 
 #include "library.h"
+#include <string.h>
 
 // adb logcat
 
@@ -33,7 +34,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "szLocation %s", szLocation );
 #endif
 
-    rc = library_uri_decoder( &cMessage_out, szLocation, (byte*)cSharesNLArr );
+    rc = library_uri_decoder( &cMessage_out, szLocation, (byte*)cSharesNLArr, strlen( cSharesNLArr ) );
 
 //http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
 #if defined(_DEBUG)
