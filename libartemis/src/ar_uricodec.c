@@ -106,8 +106,9 @@ static word32 ps2_token( ps2ptr pps )
 	///////////////////////
 	// handle tag type
 
-	if( bPsuedoTag && pps->curr[0] == '?' )
+	if( bPsuedoTag )
 	{
+		if( pps->curr[0] != '?' ) { ASSERT(0); goto FINI; }
 		pps->tagPTR = pps->buf_first; // return psuedotag
 	}
 	else if( pps->curr[0] == '&' || pps->curr[0] == '?' )
@@ -123,8 +124,9 @@ static word32 ps2_token( ps2ptr pps )
 	///////////////////////
 	// scan for data
 
-	if( bPsuedoTag && pps->curr[0] == '?' )
+	if( bPsuedoTag )
 	{
+		if( pps->curr[0] != '?' ) { ASSERT(0); goto FINI; }
 		pps->data_item = 0;
 		pps->data_first = pps->buf_first; // data for tag starts at start of buf
 		pps->data_last = pps->curr - 1;
@@ -152,15 +154,19 @@ static word32 ps2_token( ps2ptr pps )
 	///////////////////////
 	// set the return tag
 
+	char char3 = bPsuedoTag ? '=' : pps->tagPTR[2];
+
 	pps->tagID = 0;
 #if defined(LITTLE_ENDIAN)
 	pps->tagID |= ((pps->tagPTR[0])     <<24)&0xff000000;
 	pps->tagID |= ((pps->tagPTR[1])     <<16)&0x00ff0000;
-	pps->tagID |= ((0x30+pps->data_item)<< 8)&0x0000ff00;
+	pps->tagID |= ((char3)              << 8)&0x0000ff00;
+	pps->tagID |= ((0x30+pps->data_item)<< 0)&0x000000ff;
 #else
 	pps->tagID |= ((pps->tagPTR[0])     << 0)&0x000000ff;
 	pps->tagID |= ((pps->tagPTR[1])     << 8)&0x0000ff00;
-	pps->tagID |= ((0x30+pps->data_item)<<16)&0x00ff0000;
+	pps->tagID |= ((char3)              <<16)&0x00ff0000;
+	pps->tagID |= ((0x30+pps->data_item)<<24)&0xff000000;
 #endif
 	return pps->tagID;
 
@@ -210,7 +216,7 @@ int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 	word32 token;
 	while( token = ps2_token( pss ) )
 	{
-		if( token == 'mc0\0' || token == 'sc0\0' )
+		if( token == 'mc=0' || token == 'sc=0' )
 		{ *ppFirst = ss.data_first; *ppLast = ss.data_last; break; }
 	}
 
@@ -230,7 +236,7 @@ int ar_uri_locate_topic( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 	word32 token;
 	while( token = ps2_token( pss ) )
 	{
-		if( token == 'tp0\0' )
+		if( token == 'tp=0' )
 		{ *ppFirst = ss.data_first; *ppLast = ss.data_last; break; }
 	}
 
@@ -297,10 +303,10 @@ int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr szRecor
 	word32 token;
 	while( token = ps2_token( pss ) )
 	{
-		if( token == 'ai0\0' )			{ pShare_start = ss.data_first; }
-		else if( token == 'ai1\0' )	{ pThreshold_start = ss.data_first; }
-		else if( token == 'si0\0' )	{ pShare_start = ss.data_first; }
-		else if( token == 'si1\0' )	{ pThreshold_start = ss.data_first; }
+		if( token == 'ai=0' )			{ pShare_start = ss.data_first; }
+		else if( token == 'ai=1' )	{ pThreshold_start = ss.data_first; }
+		else if( token == 'si=0' )	{ pShare_start = ss.data_first; }
+		else if( token == 'si=1' )	{ pThreshold_start = ss.data_first; }
 		if( pShare_start != 0 && pThreshold_start != 0 ) { break; }
 	}
 	if( pShare_start == 0 && pThreshold_start == 0 ) { ASSERT(0); return -1; }
@@ -482,40 +488,40 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 		{
 		default: // unrecognized token
 			break;
-		case 'ht0\0': // http psuedotoken
+		case 'ht=0': // http psuedotoken
 			if( pss->data_len <= 7 ) { ASSERT(0); goto FAIL; }
 			pLocation = pss->data_first + 7; // 7 to remove 'http://'
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
-		case 'tp0\0': // topic
+		case 'tp=0': // topic
 			if( rc = txt_to_vl( pARecord->topic, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'ai0\0': // arecord info - shares
+		case 'ai=0': // arecord info - shares
 			if( rc = ar_util_6Bto12B( &pARecord->shares, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'ai1\0': // arecord info - threshold
+		case 'ai=1': // arecord info - threshold
 			if( rc = ar_util_6Bto12B( &pARecord->threshold, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'ai2\0': // arecord info - fieldsize
+		case 'ai=2': // arecord info - fieldsize
 			if( rc = ar_util_6Bto12B( &pARecord->fieldsize, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'vf0\0': // <verify>
+		case 'vf=0': // <verify>
 			if( rc = txt_to_vl( pARecord->verify, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'pk0\0': // <pubkey>
+		case 'pk=0': // <pubkey>
 			if( rc = txt_to_vl( pARecord->pubkey, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'as0\0': // <authsig> - r
+		case 'as=0': // <authsig> - r
 			if( rc = txt_to_vl( pARecord->authsig.r, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'as1\0': // <authsig> - s
+		case 'as=1': // <authsig> - s
 			if( rc = txt_to_vl( pARecord->authsig.s, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'mt0\0': // <messagetext>
+		case 'mt=0': // <messagetext>
 			pMessage = pss->data_first;
 			uMessage = pss->data_len;
 			break;
-		case 'mc0\0': // <messageclue>
+		case 'mc=0': // <messageclue>
 			pClue = pss->data_first;
 			uClue = pss->data_len;
 			break;
@@ -587,33 +593,33 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 		{
 		default: // unrecognized token
 			break;
-		case 'ht0\0': // http psuedotoken
+		case 'ht=0': // http psuedotoken
 			if( pss->data_len <= 7 ) { ASSERT(0); goto FAIL; }
 			pLocation = pss->data_first + 7; // 7 to remove 'http://'
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
-		case 'tp0\0': // topic
+		case 'tp=0': // topic
 			if( rc = txt_to_vl( pSRecord->topic, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'si0\0': // srecord info - shares
+		case 'si=0': // srecord info - shares
 			if( rc = ar_util_6Bto12B( &pSRecord->shares, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'si1\0': // srecord info - threshold
+		case 'si=1': // srecord info - threshold
 			if( rc = ar_util_6Bto12B( &pSRecord->threshold, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'si2\0': // srecord info - shareid
+		case 'si=2': // srecord info - shareid
 			if( rc = ar_util_6Bto12B( &pSRecord->shareid, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'sh0\0': // share
+		case 'sh=0': // share
 			if( rc = txt_to_vl( pSRecord->share, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'ss0\0': // <asharesig> - r
+		case 'ss=0': // <asharesig> - r
 			if( rc = txt_to_vl( pSRecord->sharesig.r, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'ss1\0': // <sharesig> - s
+		case 'ss=1': // <sharesig> - s
 			if( rc = txt_to_vl( pSRecord->sharesig.s, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'sc0\0': // <shareclue>
+		case 'sc=0': // <shareclue>
 			pClue = pss->data_first;
 			uClue = pss->data_len;
 			break;
