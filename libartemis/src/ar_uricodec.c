@@ -644,19 +644,9 @@ void ar_uri_test()
 	arShare80		srecords[2];
 	arShare80ptr	srecordarr[2] = { &srecords[0], &srecords[1] };
 
-	memset( &arecord, 0, sizeof(arAuth80) );
-	memset( &srecords[0], 0, sizeof(arShare80) );
-	memset( &srecords[1], 0, sizeof(arShare80) );
-	arecord.x.bufmax = srecords[0].x.bufmax = srecords[1].x.bufmax = 80;
-
 	arAuth80		arecord_;
 	arShare80		srecords_[2];
 	arShare80ptr	srecordarr_[2] = { &srecords_[0], &srecords_[1] };
-
-	memset( &arecord_, 0, sizeof(arAuth80) );
-	memset( &srecords_[0], 0, sizeof(arShare80) );
-	memset( &srecords_[1], 0, sizeof(arShare80) );
-	arecord_.x.bufmax = srecords_[0].x.bufmax = srecords_[1].x.bufmax = 80;
 
 	char* clues_r[3] = {"topiclue", "clue1", "clue2"};
 	char* location = "foo.bar";
@@ -681,6 +671,24 @@ void ar_uri_test()
 		char* clues_rw[3] = {clues_r[0], clues_r[1], clues_r[2]};
 		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
 		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
+
+		// clear
+		{
+			memset( &bufa, 0, sizeof(byte2048) );
+			memset( &bufs0, 0, sizeof(byte2048) );
+			memset( &bufs1, 0, sizeof(byte2048) );
+
+			memset( &arecord, 0, sizeof(arAuth80) );
+			memset( &srecords[0], 0, sizeof(arShare80) );
+			memset( &srecords[1], 0, sizeof(arShare80) );
+			arecord.x.bufmax = srecords[0].x.bufmax = srecords[1].x.bufmax = 80;
+
+			memset( &arecord_, 0, sizeof(arAuth80) );
+			memset( &srecords_[0], 0, sizeof(arShare80) );
+			memset( &srecords_[1], 0, sizeof(arShare80) );
+			arecord_.x.bufmax = srecords_[0].x.bufmax = srecords_[1].x.bufmax = 80;
+		}
+
 		rc = ar_core_create( &arecord.x, (arShareptr*)srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues_rw, location ); // +1 to include \0
 		ASSERT( rc == 0 );
 
