@@ -500,7 +500,7 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 	pARecord->bufused = (word16)(buflen);
 
 	if( uLocation == 0 ) { ASSERT(0); goto FAIL; }
-	strncpy_s( bufloc, pARecord->bufmax, pLocation, uLocation );
+	memcpy_s( bufloc, pARecord->bufmax, pLocation, uLocation );
 	pARecord->loclen = (word16)(uLocation);
 	bufloc += uLocation;
 	buflen += uLocation;
@@ -600,7 +600,7 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 	pSRecord->bufused = (word16)(buflen);
 
 	if( uLocation == 0 ) { ASSERT(0); goto FAIL; }
-	strncpy_s( bufloc, pSRecord->bufmax, pLocation, uLocation );
+	memcpy_s( bufloc, pSRecord->bufmax, pLocation, uLocation );
 	pSRecord->loclen = (word16)(uLocation);
 	bufloc += uLocation;
 	buflen += uLocation;
