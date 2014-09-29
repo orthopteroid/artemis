@@ -20,9 +20,9 @@ typedef struct arAuth_
 	vlPoint		verify;			// digest of message cleartext
 	//
 	word16		bufmax;
-	word16		bufused;
 	word16		loclen;			// location part of http url: domain/path/object
-	word16		cluelen;		// optional plaintext clue for share-series
+	word16		cluelen;		// optional plaintext clue
+	word16		msglen;			// size of message part
 	byte		buf[1];			// location [ clue ] message
 } arAuth;
 
@@ -39,8 +39,8 @@ typedef struct arShare_
 	cpPair		sharesig;
 	//
 	word16		bufmax;
-	word16		bufused;
 	word16		loclen;			// location part of http url: domain/path/object
+	word16		cluelen;		// optional plaintext clue
 	byte		buf[1];			// location [ clue ]
 } arShare;
 

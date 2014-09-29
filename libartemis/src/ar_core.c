@@ -92,14 +92,12 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 
 	pARecord->loclen = loclen;
 	pARecord->cluelen = acluelen;
-	pARecord->bufused = loclen + inbuflen + acluelen;
+	pARecord->msglen = inbuflen;
+	size_t abufused = loclen + inbuflen + acluelen;
 
 	// fill buf with location, clue (if applic) then message
 	memcpy_s( pARecord->buf, pARecord->bufmax, location, loclen );
-	if( acluelen > 0 )
-	{
-		memcpy_s( pARecord->buf + loclen, pARecord->bufmax - loclen, clueArr[0], acluelen );
-	}
+	memcpy_s( pARecord->buf + loclen, pARecord->bufmax - loclen, clueArr[0], acluelen );
 	memcpy_s( pARecord->buf + loclen + acluelen, pARecord->bufmax - loclen - acluelen, inbuf, inbuflen );
 
 	for( word16 t = 0; t < numThres; t++ )
@@ -137,7 +135,7 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 	memset( gfCryptCoefArr, 0, sizeof(gfPoint) * numThres );
 
 	/////////
-	// construct topic from cryptext and mclue
+	// construct topic from location, cryptext and mclue
 
 	vlPoint topic;
 	vlClear( topic );
@@ -146,7 +144,7 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		sha1_context c[1];
 		sha1_initial( c );
 
-		sha1_process( c, pARecord->buf, (unsigned)(pARecord->bufused) );		// hash the clue and the cryptext together
+		sha1_process( c, pARecord->buf, (unsigned)(abufused) );
 		sha1_final( c, digest );
 		vlSetWord64( topic, digest[0], digest[1] ); // topic is 64bit hash
 	}
@@ -196,7 +194,7 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 				sha1_process( c, (byteptr)&pARecord->fieldsize, (unsigned)(1 * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pubSigningkey+1, pubSigningkey[0] );
 				sha1_process( c, composebuf, (unsigned)(pubSigningkey[0] * sizeof(word16)) );
-				sha1_process( c, pARecord->buf, (unsigned)(pARecord->bufused) );
+				sha1_process( c, pARecord->buf, (unsigned)(abufused) );
 				memset( composebuf, 0, sizeof(composebuf) );
 			}
 			sha1_final( c, digest );
@@ -230,17 +228,15 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 		}
 		vlCopy( pSRecordArr[i]->share, vlShare );
 
-		{
-			size_t scluelen = ( clueArr && clueArr[i+1] ) ? strlen( clueArr[i+1] ) : 0;
+		////////////
+
+		size_t scluelen = ( clueArr && clueArr[i+1] ) ? strlen( clueArr[i+1] ) : 0;
+		pSRecordArr[i]->loclen = loclen;
+		pSRecordArr[i]->cluelen = scluelen;
+		size_t sbufused = pSRecordArr[i]->loclen + pSRecordArr[i]->cluelen;
 			
-			memcpy_s( pSRecordArr[i]->buf, pSRecordArr[i]->bufmax, location, loclen );
-			if( scluelen > 0 )
-			{
-				memcpy_s( pSRecordArr[i]->buf + loclen, pSRecordArr[i]->bufmax - loclen, clueArr[i+1], scluelen );
-			}
-			pSRecordArr[i]->loclen = loclen;
-			pSRecordArr[i]->bufused = loclen + scluelen;
-		}
+		memcpy_s( pSRecordArr[i]->buf, pSRecordArr[i]->bufmax, location, loclen );
+		memcpy_s( pSRecordArr[i]->buf + loclen, pSRecordArr[i]->bufmax - loclen, clueArr[i+1], scluelen );
 
 		//////////
 		// construct sharesignature to ensure consistiency between topic, shareid, share and clue
@@ -266,7 +262,7 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
 					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pSRecordArr[i]->share+1, pSRecordArr[i]->share[0] );
 					sha1_process( c, composebuf, (unsigned)(pSRecordArr[i]->share[0] * sizeof(word16)) );
-					sha1_process( c, pSRecordArr[i]->buf, (unsigned)(pSRecordArr[i]->bufused) );
+					sha1_process( c, pSRecordArr[i]->buf, (unsigned)(sbufused) );
 					memset( composebuf, 0, sizeof(composebuf) );
 				}
 				sha1_final( c, digest );
@@ -299,9 +295,9 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 	if( numSRecords < pARecord->threshold ) { rc = -7; goto EXIT; } // no assert
 
 	byteptr cryptext = pARecord->buf + pARecord->loclen + pARecord->cluelen;
-	word16  cryptlen = pARecord->bufused - pARecord->loclen - pARecord->cluelen;
+	size_t bufused = pARecord->msglen + pARecord->loclen + pARecord->cluelen;
 
-	if( outbuflen < cryptlen ) { ASSERT(0); rc = -2; goto EXIT; }
+	if( outbuflen < pARecord->msglen ) { ASSERT(0); rc = -2; goto EXIT; }
 
 	///////////
 	// check topic consistiency between ARecord, cryptext and all SRecords
@@ -310,7 +306,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 	vlClear( topic );
 	{
 		sha1Digest digest;
-		sha1_digest( digest, pARecord->buf, pARecord->bufused );		// hash clue and cryptext together
+		sha1_digest( digest, pARecord->buf, bufused );
 		vlSetWord64( topic, digest[0], digest[1] );
 	}
 	if( !vlEqual( pARecord->topic, topic ) ) { ASSERT(0); rc = -6; goto EXIT; }
@@ -342,7 +338,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 				sha1_process( c, (byteptr)&pARecord->fieldsize, (unsigned)(1 * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->pubkey+1, pARecord->pubkey[0] );
 				sha1_process( c, composebuf, (unsigned)(pARecord->pubkey[0] * sizeof(word16)) );
-				sha1_process( c, pARecord->buf, (unsigned)(pARecord->bufused) );
+				sha1_process( c, pARecord->buf, (unsigned)(bufused) );
 				memset( composebuf, 0, sizeof(composebuf) );
 			}
 			sha1_final( c, digest );
@@ -356,6 +352,8 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 
 	for( int i=0; i<numSRecords; i++ )
 	{
+		size_t bufused = pSRecordArr[i]->loclen + pSRecordArr[i]->cluelen;
+		//
 		vlPoint saltedsharehash;
 		vlClear( saltedsharehash );
 		{
@@ -373,7 +371,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pSRecordArr[i]->share+1, pSRecordArr[i]->share[0] );
 				sha1_process( c, composebuf, (unsigned)(pSRecordArr[i]->share[0] * sizeof(word16)) );
-				sha1_process( c, pSRecordArr[i]->buf, (unsigned)(pSRecordArr[i]->bufused) );
+				sha1_process( c, pSRecordArr[i]->buf, (unsigned)(bufused) );
 				memset( composebuf, 0, sizeof(composebuf) );
 			}
 			sha1_final( c, digest );
@@ -393,7 +391,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 		shareIDArr[i] = pSRecordArr[i]->shareid;
 	}
 
-	memcpy_s( outbuf, outbuflen, cryptext, cryptlen );
+	memcpy_s( outbuf, outbuflen, cryptext, pARecord->msglen );
 
 	{
 		gfPoint gfCryptkey;
@@ -408,7 +406,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 		size_t deltalen = 0;
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
 		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, 16, rc4cranks, outbuf, cryptlen );
+		rc4( cryptkeyBArr, 16, rc4cranks, outbuf, pARecord->msglen );
 	}
 
 	///////////
@@ -421,7 +419,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 			sha1Digest digest;
 			sha1_context c[1];
 			sha1_initial( c );
-			sha1_process( c, outbuf, (unsigned)(cryptlen) );
+			sha1_process( c, outbuf, (unsigned)(pARecord->msglen) );
 			sha1_final( c, digest );
 			vlSetWord32( verify, digest[0] );
 		}

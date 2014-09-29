@@ -197,12 +197,14 @@ static void ar_uri_arglen( size_t* pArglen, byteptr arg, byteptr buf )
 
 void ar_uri_bufsize_a( size_t* pUribufsize, arAuth* pARecord )
 {
-	*pUribufsize = ( sizeof(arAuth) + pARecord->bufused ) * 4 / 3; // b64 encoding
+	size_t bufused = pARecord->msglen + pARecord->loclen + pARecord->cluelen;
+	*pUribufsize = ( sizeof(arAuth) + bufused ) * 4 / 3; // b64 encoding
 }
 
 void ar_uri_bufsize_s( size_t* pUribufsize, arShare* pSRecord )
 {
-	*pUribufsize = ( sizeof(arShare) + pSRecord->bufused ) * 4 / 3; // b64 encoding
+	size_t bufused = pSRecord->loclen + pSRecord->cluelen;
+	*pUribufsize = ( sizeof(arShare) + bufused ) * 4 / 3; // b64 encoding
 }
 
 int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
@@ -398,7 +400,7 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 			break;
 		case 'mt=\0':
 			buflen = strlen(buf);
-			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen + pARecord->cluelen, pARecord->bufused - pARecord->loclen - pARecord->cluelen );
+			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen + pARecord->cluelen, pARecord->msglen );
 			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
 			break;
 		}
@@ -440,7 +442,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 	while( stateArr[ state ] )
 	{
 		// no clue, skip
-		if( stateArr[ state ] == 'sc=\0' && (pSRecord->bufused - pSRecord->loclen) == 0 ) { state++; continue; }
+		if( stateArr[ state ] == 'sc=\0' && pSRecord->cluelen == 0 ) { state++; continue; }
 		//
 #if 1
 		char delim[5] = DELIM_INIT( state == 0, stateArr[ state ] );
@@ -480,9 +482,9 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 			if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.s ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'sc=\0':
-			if( (pSRecord->bufused - pSRecord->loclen) == 0 ) { ASSERT(0); goto FAIL; }
+			if( pSRecord->cluelen == 0 ) { ASSERT(0); goto FAIL; }
 			buflen = strlen(buf);
-			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pSRecord->buf + pSRecord->loclen, (pSRecord->bufused - pSRecord->loclen) );
+			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pSRecord->buf + pSRecord->loclen, pSRecord->cluelen );
 			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
 			break;
 		}
@@ -590,10 +592,7 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 
 	if( uMessage == 0 ) { ASSERT(0); goto FAIL; }
 	if( rc = ar_util_6BAto8BA( &deltalen, bufloc, pARecord->bufmax - buflen, pMessage, uMessage ) ) { ASSERT(0); goto FAIL; }
-	bufloc += deltalen;
-	buflen += deltalen;
-
-	pARecord->bufused = (word16)(buflen);
+	pARecord->msglen = (word16)(deltalen);
 
 FAIL:
 
@@ -681,11 +680,8 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 	if( uClue > 0 ) // optional
 	{
 		if( rc = ar_util_6BAto8BA( &deltalen, bufloc, pSRecord->bufmax - buflen, pClue, uClue ) ) { ASSERT(0); goto FAIL; }
-		bufloc += deltalen;
-		buflen += deltalen;
+		pSRecord->cluelen = (word16)(deltalen);
 	}
-
-	pSRecord->bufused = (word16)(buflen);
 
 FAIL:
 
