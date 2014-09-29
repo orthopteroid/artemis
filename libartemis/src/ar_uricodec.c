@@ -13,6 +13,8 @@
 	#include "ar_core.h" // for testing
 #endif
 
+#define DELIM_INIT( f, t ) { (f) ? '?' : '&', 0xff & ((t) >> 24), 0xff & ((t) >> 16), 0xff & ((t) >> 8), 0 }
+
 //////////////////////
 
 static int txt_to_vl( vlPoint v, char* buf, size_t bufsize )
@@ -324,7 +326,7 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 	char sz[3] = {0,0,0};
 
 	size_t tokenlen = 0;
-	word32 stateArr[] = {'tp\0\0', 'ai\0\0', 'vf\0\0', 'pk\0\0', 'as\0\0', 'mt\0\0', 'mc\0\0', 0 };
+	word32 stateArr[] = {'tp=\0', 'ai=\0', 'vf=\0', 'pk=\0', 'as=\0', 'mt=\0', 'mc=\0', 0 };
 
 #if defined(_DEBUG)
 
@@ -346,21 +348,28 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 	while( stateArr[ state ] )
 	{
 		// no clue, skip
-		if( stateArr[ state ] == 'mc\0\0' && pARecord->cluelen == 0 ) { state++; continue; }
+		if( stateArr[ state ] == 'mc=\0' && pARecord->cluelen == 0 ) { state++; continue; }
 		//
-		char* szDelim = ( state == 0 ) ? "?" : "&";
-		if( rc = ar_util_strcat( buf, bufsize, szDelim ) ) { ASSERT(0); goto FAIL; }
+#if 1
+		char delim[5] = DELIM_INIT( state == 0, stateArr[ state ] );
+#else
+		char delim[5];
+		delim[0] = ( state == 0 ) ? '?' : '&';
+		delim[1] = 0xff & (stateArr[ state ] >> 24);
+		delim[2] = 0xff & (stateArr[ state ] >> 16);
+		delim[3] = 0xff & (stateArr[ state ] >> 8);
+		delim[4] = 0;
+#endif
+		if( rc = ar_util_strcat( buf, bufsize, delim ) ) { ASSERT(0); goto FAIL; }
 		//
 		switch( stateArr[ state ] )
 		{
 		default:
 			ASSERT(0); break;
-		case 'tp\0\0':
-			if( rc = ar_util_strcat( buf, bufsize, "tp=" ) ) { ASSERT(0); goto FAIL; }
+		case 'tp=\0':
 			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->topic ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'ai\0\0':
-			if( rc = ar_util_strcat( buf, bufsize, "ai=" ) ) { ASSERT(0); goto FAIL; }
+		case 'ai=\0':
 			if( rc = ar_util_12Bto6B( sz, pARecord->shares ) ) { ASSERT(0); goto FAIL; }
 			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
 			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
@@ -370,29 +379,24 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 			if( rc = ar_util_12Bto6B( sz, pARecord->fieldsize ) ) { ASSERT(0); goto FAIL; }
 			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'vf\0\0':
-			if( rc = ar_util_strcat( buf, bufsize, "vf=" ) ) { ASSERT(0); goto FAIL; }
+		case 'vf=\0':
 			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->verify ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'pk\0\0':
-			if( rc = ar_util_strcat( buf, bufsize, "pk=" ) ) { ASSERT(0); goto FAIL; }
+		case 'pk=\0':
 			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->pubkey ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'as\0\0':
-			if( rc = ar_util_strcat( buf, bufsize, "as=" ) ) { ASSERT(0); goto FAIL; }
+		case 'as=\0':
 			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.r ) ) { ASSERT(0); goto FAIL; }
 			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
 			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.s ) ) { ASSERT(0); goto FAIL; }
 			break;
-		case 'mc\0\0':
+		case 'mc=\0':
 			if( pARecord->cluelen == 0 ) { ASSERT(0); goto FAIL; }
-			if( rc = ar_util_strcat( buf, bufsize, "mc=" ) ) { ASSERT(0); goto FAIL; }
 			buflen = strlen(buf);
 			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen, pARecord->cluelen );
 			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
 			break;
-		case 'mt\0\0':
-			if( rc = ar_util_strcat( buf, bufsize, "mt=" ) ) { ASSERT(0); goto FAIL; }
+		case 'mt=\0':
 			buflen = strlen(buf);
 			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen + pARecord->cluelen, pARecord->bufused - pARecord->loclen - pARecord->cluelen );
 			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
@@ -408,46 +412,81 @@ FAIL:
 
 int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 {
+	int rc = 0;
+
 	size_t buflen = 0;
 	char sz[3] = {0,0,0};
-	int rc = 0;
+
+	size_t tokenlen = 0;
+	word32 stateArr[] = {'tp=\0', 'si=\0', 'sh=\0', 'ss=\0', 'sc=\0', 0 };
+
+#if defined(_DEBUG)
+
+	// impose some robustness on the order of the tags....
+	int k = sizeof(stateArr) / sizeof(word32) -1 -1; // -1 conv from size to count, -1 to omit EOA marker
+	for( int i = 0; i < k; i++ )
+	{
+		int j = ar_util_rnd32() % k;
+		word32 t = stateArr[j];
+		stateArr[j] = stateArr[i]; stateArr[i] = t;
+	}
+
+#endif
 
 	if( rc = ar_util_strcat( buf, bufsize, "http://" ) ) { ASSERT(0); goto FAIL; }
 	if( rc = ar_util_strncat( buf, bufsize, pSRecord->buf, pSRecord->loclen ) ) { ASSERT(0); goto FAIL; }
-	
-	if( rc = ar_util_strcat( buf, bufsize, "?" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "tp=" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->topic ) ) { ASSERT(0); goto FAIL; }
 
-	if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "si=" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_12Bto6B( sz, pSRecord->shares ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_12Bto6B( sz, pSRecord->threshold ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_12Bto6B( sz, pSRecord->shareid ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
-
-	if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "sh=" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->share ) ) { ASSERT(0); goto FAIL; }
-
-	if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "ss=" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.r ) ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
-	if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.s ) ) { ASSERT(0); goto FAIL; }
-
-	if( pSRecord->bufused - pSRecord->loclen > 0 )
+	word32 state = 0;
+	while( stateArr[ state ] )
 	{
-		if( rc = ar_util_strcat( buf, bufsize, "&" ) ) { ASSERT(0); goto FAIL; }
-		if( rc = ar_util_strcat( buf, bufsize, "sc=" ) ) { ASSERT(0); goto FAIL; }
-		size_t deltalen = 0;
-		buflen = strlen(buf);
-		rc = ar_util_8BAto6BA( &deltalen, buf + buflen, bufsize - buflen, pSRecord->buf + pSRecord->loclen, pSRecord->bufused - pSRecord->loclen );
-		if( rc == 0 ) { buf[ deltalen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
+		// no clue, skip
+		if( stateArr[ state ] == 'sc=\0' && (pSRecord->bufused - pSRecord->loclen) == 0 ) { state++; continue; }
+		//
+#if 1
+		char delim[5] = DELIM_INIT( state == 0, stateArr[ state ] );
+#else
+		char delim[5];
+		delim[0] = ( state == 0 ) ? '?' : '&';
+		delim[1] = 0xff & (stateArr[ state ] >> 24);
+		delim[2] = 0xff & (stateArr[ state ] >> 16);
+		delim[3] = 0xff & (stateArr[ state ] >> 8);
+		delim[4] = 0;
+#endif
+		if( rc = ar_util_strcat( buf, bufsize, delim ) ) { ASSERT(0); goto FAIL; }
+		//
+		switch( stateArr[ state ] )
+		{
+		default:
+			ASSERT(0); break;
+		case 'tp=\0':
+			if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->topic ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'si=\0':
+			if( rc = ar_util_12Bto6B( sz, pSRecord->shares ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_12Bto6B( sz, pSRecord->threshold ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_12Bto6B( sz, pSRecord->shareid ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'sh=\0':
+			if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->share ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'ss=\0':
+			if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.r ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { ASSERT(0); goto FAIL; }
+			if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.s ) ) { ASSERT(0); goto FAIL; }
+			break;
+		case 'sc=\0':
+			if( (pSRecord->bufused - pSRecord->loclen) == 0 ) { ASSERT(0); goto FAIL; }
+			buflen = strlen(buf);
+			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pSRecord->buf + pSRecord->loclen, (pSRecord->bufused - pSRecord->loclen) );
+			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { ASSERT(0); goto FAIL; }
+			break;
+		}
+		state++;
 	}
 
 FAIL:
