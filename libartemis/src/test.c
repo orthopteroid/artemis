@@ -19,6 +19,8 @@ void test_all()
 
 #if defined(_DEBUG)
 
+	library_settest();
+
 	printf("# tests starting\n");
 	sha1_test();
 	ar_shamir_test();

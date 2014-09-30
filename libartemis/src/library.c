@@ -17,6 +17,8 @@
 	#define printf(...) __android_log_print(ANDROID_LOG_DEBUG, "TAG", __VA_ARGS__);
 #endif
 
+static int testflag = 0;
+
 /////////////////////////
 
 static word32 testendianness()
@@ -79,6 +81,22 @@ int library_isdebug()
 	return 1;
 #else // _DEBUG
 	return 0;
+#endif // _DEBUG
+}
+
+int library_istest()
+{
+#if defined(_DEBUG)
+	return testflag;
+#else // _DEBUG
+	return 0;
+#endif // _DEBUG
+}
+
+void library_settest()
+{
+#if defined(_DEBUG)
+	testflag = 1;
 #endif // _DEBUG
 }
 
@@ -412,6 +430,8 @@ void library_test()
 {
 
 #if defined(_DEBUG)
+
+	printf("# library_test\n");
 
 	int rc = 0;
 

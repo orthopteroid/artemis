@@ -764,87 +764,87 @@ void ar_uri_test()
 		}
 
 		rc = ar_core_create( &arecord.x, (arShareptr*)srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues_rw, location ); // +1 to include \0
-		ASSERT( rc == 0 );
+		TESTASSERT( rc == 0 );
 
 		bufa[0] = 0;
 		rc = ar_uri_create_a( bufa, 2048, &arecord.x );
-		ASSERT( rc == 0 );
+		TESTASSERT( rc == 0 );
 
 		{
 			byteptr s, e;
 			rc = ar_uri_locate_location( &s, &e, bufa );
-			ASSERT( rc == 0 );
-			ASSERT( strncmp( s, location, e-s+1 ) == 0 );
+			TESTASSERT( rc == 0 );
+			TESTASSERT( strncmp( s, location, e-s+1 ) == 0 );
 		}
 
 		{
 			byteptr s, e;
 			rc = ar_uri_locate_clue( &s, &e, bufa );
-			ASSERT( rc == 0 );
+			TESTASSERT( rc == 0 );
 
 			char clue[80];
 			size_t cluelen = 0;
 			if( s != e )
 			{
 				rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
-				ASSERT( rc == 0 );
+				TESTASSERT( rc == 0 );
 			}
 			clue[ cluelen ] = 0;
-			ASSERT( strcmp( clue, clues_rw[0] ) == 0 );
+			TESTASSERT( strcmp( clue, clues_rw[0] ) == 0 );
 		}
 
 		bufs0[0] = 0;
 		rc = ar_uri_create_s( bufs0, 2048, &srecords[0].x );
-		ASSERT( rc == 0 );
+		TESTASSERT( rc == 0 );
 
 		{
 			byteptr s, e;
 			rc = ar_uri_locate_location( &s, &e, bufs0 );
-			ASSERT( rc == 0 );
-			ASSERT( strncmp( s, location, e-s+1 ) == 0 );
+			TESTASSERT( rc == 0 );
+			TESTASSERT( strncmp( s, location, e-s+1 ) == 0 );
 		}
 
 		{
 			byteptr s, e;
 			rc = ar_uri_locate_clue( &s, &e, bufs0 );
-			ASSERT( rc == 0 );
+			TESTASSERT( rc == 0 );
 
 			char clue[80];
 			size_t cluelen = 0;
 			if( s != e )
 			{
 				rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
-				ASSERT( rc == 0 );
+				TESTASSERT( rc == 0 );
 			}
 			clue[ cluelen ] = 0;
-			ASSERT( strcmp( clue, clues_rw[1] ) == 0 );
+			TESTASSERT( strcmp( clue, clues_rw[1] ) == 0 );
 		}
 
 		bufs1[0] = 0;
 		rc = ar_uri_create_s( bufs1, 2048, &srecords[1].x );
-		ASSERT( rc == 0 );
+		TESTASSERT( rc == 0 );
 
 		{
 			byteptr s, e;
 			rc = ar_uri_locate_location( &s, &e, bufs1 );
-			ASSERT( rc == 0 );
-			ASSERT( strncmp( s, location, e-s+1 ) == 0 );
+			TESTASSERT( rc == 0 );
+			TESTASSERT( strncmp( s, location, e-s+1 ) == 0 );
 		}
 
 		{
 			byteptr s, e;
 			rc = ar_uri_locate_clue( &s, &e, bufs1 );
-			ASSERT( rc == 0 );
+			TESTASSERT( rc == 0 );
 
 			char clue[80];
 			size_t cluelen = 0;
 			if( s != e )
 			{
 				rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
-				ASSERT( rc == 0 );
+				TESTASSERT( rc == 0 );
 			}
 			clue[ cluelen ] = 0;
-			ASSERT( strcmp( clue, clues_rw[2] ) == 0 );
+			TESTASSERT( strcmp( clue, clues_rw[2] ) == 0 );
 		}
 
 		if(0)
@@ -855,34 +855,34 @@ void ar_uri_test()
 		}
 
 		rc = ar_uri_parse_a( &arecord_.x, bufa, location );
-		ASSERT( rc == 0 );
+		TESTASSERT( rc == 0 );
 
 		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufa );
-		ASSERT( rc == 0 );
-		ASSERT( shares == 2 );
-		ASSERT( threshold == 2 );
+		TESTASSERT( rc == 0 );
+		TESTASSERT( shares == 2 );
+		TESTASSERT( threshold == 2 );
 
 		rc = ar_uri_parse_s( &srecords_[0].x, bufs0, location );
-		ASSERT( rc == 0 );
+		TESTASSERT( rc == 0 );
 
 		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufs0 );
-		ASSERT( rc == 0 );
-		ASSERT( shares == 2 );
-		ASSERT( threshold == 2 );
+		TESTASSERT( rc == 0 );
+		TESTASSERT( shares == 2 );
+		TESTASSERT( threshold == 2 );
 
 		rc = ar_uri_parse_s( &srecords_[1].x, bufs1, location );
-		ASSERT( rc == 0 );
+		TESTASSERT( rc == 0 );
 
 		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufs1 );
-		ASSERT( rc == 0 );
-		ASSERT( shares == 2 );
-		ASSERT( threshold == 2 );
+		TESTASSERT( rc == 0 );
+		TESTASSERT( shares == 2 );
+		TESTASSERT( threshold == 2 );
 
 		cleartextout[0]=0;
 		rc = ar_core_decrypt( cleartextout, 80, &arecord_.x, (arShareptr*)srecordarr_, 2 );
-		ASSERT( rc == 0 );
+		TESTASSERT( rc == 0 );
 
-		ASSERT( strcmp( cleartextin, cleartextout ) == 0 );
+		TESTASSERT( strcmp( cleartextin, cleartextout ) == 0 );
 
 		if(i > 0 &&  i % 10 == 0 ) { printf("%d",9 - i / (numtests / 9)); }
 	}

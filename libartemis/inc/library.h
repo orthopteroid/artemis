@@ -29,6 +29,8 @@ DLLDECL void library_free( byteptr* object );
 
 DLLDECL int library_isdebug();
 DLLDECL int library_isdemo();
+DLLDECL int library_istest();
+DLLDECL void library_settest();
 DLLDECL word32 library_vmajor();
 DLLDECL word32 library_vminor();
 DLLDECL word32 library_keylength();

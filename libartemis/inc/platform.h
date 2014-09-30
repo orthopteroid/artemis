@@ -28,11 +28,21 @@
 	//#define DLLDECL __declspec(dllimport)
 	//#endif // WINDLL_EXPORTS
 
+	DLLDECL int library_istest();
+
 	#if !defined(ASSERT)
 		#if defined(_DEBUG)
-			#define ASSERT( c ) do { if( !(c) ) { __debugbreak(); } } while( 0 )
+			#define ASSERT( c ) do { if( !library_istest() && !(c) ) { __debugbreak(); } } while( 0 )
 		#else // debug
 			#define ASSERT(...) (0)
+		#endif // debug
+	#endif
+
+	#if !defined(TESTASSERT)
+		#if defined(_DEBUG)
+			#define TESTASSERT( c ) do { if( !(c) ) { __debugbreak(); } } while( 0 )
+		#else // debug
+			#define TESTASSERT(...) (0)
 		#endif // debug
 	#endif
 
@@ -69,12 +79,23 @@
 
 	#define DLLDECL
 
+	DLLDECL int library_istest();
+
 	#if !defined(ASSERT)
 		#if defined(_DEBUG)
 			#include <assert.h>
-			#define ASSERT(...) assert( __VA_ARGS__ )
+			#define ASSERT(...) do { if( !library_istest() ) { assert( __VA_ARGS__ ) } } while(0)
 		#else // debug
 			#define ASSERT(...) (0)
+		#endif // debug
+	#endif
+
+	#if !defined(TESTASSERT)
+		#if defined(_DEBUG)
+			#include <assert.h>
+			#define TESTASSERT(...) assert( __VA_ARGS__ )
+		#else // debug
+			#define TESTASSERT(...) (0)
 		#endif // debug
 	#endif
 

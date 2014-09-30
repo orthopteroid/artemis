@@ -206,7 +206,7 @@ void sha1_test()
 	if( strcmp( y, buf ) != 0 )
 	{
 		printf( "%s -> %s (should be %s)\n", x, buf, y );
-		ASSERT( 0 );
+		TESTASSERT( 0 );
 	}
 		
 	x = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
@@ -221,7 +221,7 @@ void sha1_test()
 	if( strcmp( y, buf ) != 0 )
 	{
 		printf( "%s -> %s (should be %s)\n", x, buf, y );
-		ASSERT( 0 );
+		TESTASSERT( 0 );
 	}
 
 #endif //_DEBUG
