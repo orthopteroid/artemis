@@ -42,7 +42,7 @@
 #define AR_RC4CRANK_OFFSET	256
 #define AR_RC4CRANK_MASK	255
 
-int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordTbl_out, word16 numShares, word16 numThres, byteptr inbuf, word16 inbuflen, bytetbl clueTbl, byteptr location )
+int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, word16 numThres, byteptr inbuf, word16 inbuflen, bytetbl clueTbl, byteptr location )
 {
 	int rc = 0;
 	
@@ -55,10 +55,10 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordTbl_out, word16 n
 	if( inbuflen == 0 ) { rc = -1; goto EXIT; }
 
 	if( !arecord_out ) { ASSERT(0); rc = -1; goto EXIT; }
-	if( !srecordTbl_out ) { ASSERT(0); rc = -1; goto EXIT; }
+	if( !srecordtbl_out ) { ASSERT(0); rc = -1; goto EXIT; }
 
 	*arecord_out = 0;
-	*srecordTbl_out = 0;
+	*srecordtbl_out = 0;
 
 	if( numShares < 2 ) { ASSERT(0); rc = -2; goto EXIT; }
 	if( numShares < numThres ) { ASSERT(0); rc = -2; goto EXIT; }
@@ -89,7 +89,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordTbl_out, word16 n
 	arecord_out[0]->bufmax = abufused;
 
 	size_t stblsize = sizeof(arShareptr) * numShares;
-	if( !((*srecordTbl_out) = malloc( stblsize ) )) { ASSERT(0); goto EXIT; }
+	if( !((*srecordtbl_out) = malloc( stblsize ) )) { ASSERT(0); goto EXIT; }
 	memset( (*arecord_out), 0, stblsize );
 
 	for( int i=0; i<numShares; i++ )
@@ -98,9 +98,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordTbl_out, word16 n
 		size_t sbufused = loclen + scluelen;
 		size_t sstructsize = sizeof(arShare) + sbufused;
 
-		if( !((*srecordTbl_out)[i] = malloc( sstructsize )) ) { ASSERT(0); goto EXIT; }
-		memset( (*srecordTbl_out)[i], 0, sstructsize );
-		(*srecordTbl_out)[i]->bufmax = sbufused;
+		if( !((*srecordtbl_out)[i] = malloc( sstructsize )) ) { ASSERT(0); goto EXIT; }
+		memset( (*srecordtbl_out)[i], 0, sstructsize );
+		(*srecordtbl_out)[i]->bufmax = sbufused;
 	}
 
 	///////////
@@ -247,30 +247,30 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordTbl_out, word16 n
 
 	for( int i=0; i<numShares; i++ )
 	{
-		vlClear( (*srecordTbl_out)[i]->topic );
-		vlCopy( (*srecordTbl_out)[i]->topic, topic );
+		vlClear( (*srecordtbl_out)[i]->topic );
+		vlCopy( (*srecordtbl_out)[i]->topic, topic );
 
-		(*srecordTbl_out)[i]->shares = numShares;
-		(*srecordTbl_out)[i]->threshold = numThres;
-		(*srecordTbl_out)[i]->shareid = shareIDArr[i];
+		(*srecordtbl_out)[i]->shares = numShares;
+		(*srecordtbl_out)[i]->threshold = numThres;
+		(*srecordtbl_out)[i]->shareid = shareIDArr[i];
 
 		vlPoint vlShare;
 		{
 			vlClear( vlShare );
 			gfPack( shareArr[i], vlShare );
 		}
-		vlCopy( (*srecordTbl_out)[i]->share, vlShare );
+		vlCopy( (*srecordtbl_out)[i]->share, vlShare );
 
 		////////////
 
 		size_t scluelen = ( clueTbl && clueTbl[i+1] ) ? strlen( clueTbl[i+1] ) : 0;
 		size_t sbufused = loclen + scluelen;
 
-		(*srecordTbl_out)[i]->loclen = loclen;
-		(*srecordTbl_out)[i]->cluelen = scluelen;
+		(*srecordtbl_out)[i]->loclen = loclen;
+		(*srecordtbl_out)[i]->cluelen = scluelen;
 			
-		memcpy_s( (*srecordTbl_out)[i]->buf,			(*srecordTbl_out)[i]->bufmax,				location,		loclen );
-		memcpy_s( (*srecordTbl_out)[i]->buf + loclen,	(*srecordTbl_out)[i]->bufmax - loclen,		clueTbl[i+1],	scluelen );
+		memcpy_s( (*srecordtbl_out)[i]->buf,			(*srecordtbl_out)[i]->bufmax,				location,		loclen );
+		memcpy_s( (*srecordtbl_out)[i]->buf + loclen,	(*srecordtbl_out)[i]->bufmax - loclen,		clueTbl[i+1],	scluelen );
 
 		//////////
 		// construct sharesignature to ensure consistiency between topic, shareid, share and clue
@@ -288,17 +288,17 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordTbl_out, word16 n
 				{
 					size_t deltalen = 0;
 					char composebuf[ sizeof(vlPoint) ];
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), (*srecordTbl_out)[i]->topic+1, (*srecordTbl_out)[i]->topic[0] );
-					sha1_process( c, composebuf, (unsigned)((*srecordTbl_out)[i]->topic[0] * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &(*srecordTbl_out)[i]->shares, 1 );
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), (*srecordtbl_out)[i]->topic+1, (*srecordtbl_out)[i]->topic[0] );
+					sha1_process( c, composebuf, (unsigned)((*srecordtbl_out)[i]->topic[0] * sizeof(word16)) );
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &(*srecordtbl_out)[i]->shares, 1 );
 					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &(*srecordTbl_out)[i]->threshold, 1 );
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &(*srecordtbl_out)[i]->threshold, 1 );
 					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &(*srecordTbl_out)[i]->shareid, 1 );
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &(*srecordtbl_out)[i]->shareid, 1 );
 					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), (*srecordTbl_out)[i]->share+1, (*srecordTbl_out)[i]->share[0] );
-					sha1_process( c, composebuf, (unsigned)((*srecordTbl_out)[i]->share[0] * sizeof(word16)) );
-					sha1_process( c, (*srecordTbl_out)[i]->buf, (unsigned)(sbufused) );
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), (*srecordtbl_out)[i]->share+1, (*srecordtbl_out)[i]->share[0] );
+					sha1_process( c, composebuf, (unsigned)((*srecordtbl_out)[i]->share[0] * sizeof(word16)) );
+					sha1_process( c, (*srecordtbl_out)[i]->buf, (unsigned)(sbufused) );
 					memset( composebuf, 0, sizeof(composebuf) );
 				}
 				sha1_final( c, digest );
@@ -308,8 +308,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordTbl_out, word16 n
 			if( rc != 0 ) { ASSERT(0); rc = -1; goto EXIT; }
 		}
 
-		cpClear( &(*srecordTbl_out)[i]->sharesig );
-		cpCopy( &(*srecordTbl_out)[i]->sharesig, &sharesig );
+		cpClear( &(*srecordtbl_out)[i]->sharesig );
+		cpCopy( &(*srecordtbl_out)[i]->sharesig, &sharesig );
 	}
 
 EXIT:
@@ -321,7 +321,7 @@ EXIT:
 	return rc;
 }
 
-int ar_core_decrypt( byteptr* buf_out, arAuth* pARecord, arShareptr* pSRecordArr, word16 numSRecords )
+int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl, word16 numSRecords )
 {
 	int rc = 0;
 
@@ -332,22 +332,22 @@ int ar_core_decrypt( byteptr* buf_out, arAuth* pARecord, arShareptr* pSRecordArr
 
 	*buf_out = 0;
 
-	if( !pARecord ) { ASSERT(0); rc = -1; goto EXIT; }
-	if( !pSRecordArr ) { ASSERT(0); rc = -1; goto EXIT; }
+	if( !arecord ) { ASSERT(0); rc = -1; goto EXIT; }
+	if( !srecordtbl ) { ASSERT(0); rc = -1; goto EXIT; }
 
-	if( numSRecords < pARecord->threshold ) { rc = -3; goto EXIT; } // no assert
+	if( numSRecords < arecord->threshold ) { rc = -3; goto EXIT; } // no assert
 
-	if( !(*buf_out = malloc( pARecord->msglen )) ) { ASSERT(0); rc=-9; goto EXIT; }
+	if( !(*buf_out = malloc( arecord->msglen )) ) { ASSERT(0); rc=-9; goto EXIT; }
 	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { ASSERT(0); rc=-9; goto EXIT; }
 	if( !(shareIDArr = malloc( sizeof(word16) * numSRecords )) ) { ASSERT(0); rc=-9; goto EXIT; }
 
-	byteptr cryptext = pARecord->buf + pARecord->loclen + pARecord->cluelen;
-	size_t bufused = pARecord->msglen + pARecord->loclen + pARecord->cluelen;
+	byteptr cryptext = arecord->buf + arecord->loclen + arecord->cluelen;
+	size_t bufused = arecord->msglen + arecord->loclen + arecord->cluelen;
 
 	///////////
 	// check topic consistiency: internally to ARecord, then compared to all SRecords
 
-	if( rc = ar_core_check_topic( 0, pARecord, pSRecordArr, numSRecords ) )
+	if( rc = ar_core_check_topic( 0, arecord, srecordtbl, numSRecords ) )
 	{
 		ASSERT(0);
 		if( rc == -2 ) { rc = -4; } // remap authtopichash err
@@ -358,7 +358,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuth* pARecord, arShareptr* pSRecordArr
 	////////////
 	// check authsignature to ensure location, clue, topic and pubkey have consistient pairing
 
-	if( rc = ar_core_check_signature( 0, pARecord, pSRecordArr, numSRecords ) )
+	if( rc = ar_core_check_signature( 0, arecord, srecordtbl, numSRecords ) )
 	{
 		ASSERT(0);
 		if( rc == -2 ) { rc = -6; } // remap authsig err
@@ -370,11 +370,11 @@ int ar_core_decrypt( byteptr* buf_out, arAuth* pARecord, arShareptr* pSRecordArr
 
 	for( int i=0; i<numSRecords; i++ )
 	{
-		gfUnpack( shareArr[i], pSRecordArr[i]->share );
-		shareIDArr[i] = pSRecordArr[i]->shareid;
+		gfUnpack( shareArr[i], srecordtbl[i]->share );
+		shareIDArr[i] = srecordtbl[i]->shareid;
 	}
 
-	memcpy_s( *buf_out, pARecord->msglen, cryptext, pARecord->msglen );
+	memcpy_s( *buf_out, arecord->msglen, cryptext, arecord->msglen );
 
 	{
 		gfPoint gfCryptkey;
@@ -389,7 +389,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuth* pARecord, arShareptr* pSRecordArr
 		size_t deltalen = 0;
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
 		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, 16, rc4cranks, *buf_out, pARecord->msglen );
+		rc4( cryptkeyBArr, 16, rc4cranks, *buf_out, arecord->msglen );
 	}
 
 	///////////
@@ -402,11 +402,11 @@ int ar_core_decrypt( byteptr* buf_out, arAuth* pARecord, arShareptr* pSRecordArr
 			sha1Digest digest;
 			sha1_context c[1];
 			sha1_initial( c );
-			sha1_process( c, *buf_out, (unsigned)(pARecord->msglen) );
+			sha1_process( c, *buf_out, (unsigned)(arecord->msglen) );
 			sha1_final( c, digest );
 			vlSetWord32( verify, digest[0] );
 		}
-		if( !vlEqual( verify, pARecord->verify ) ) { ASSERT(0); rc = -8; goto EXIT; }
+		if( !vlEqual( verify, arecord->verify ) ) { ASSERT(0); rc = -8; goto EXIT; }
 	}
 
 EXIT:
@@ -417,14 +417,14 @@ EXIT:
 	return rc;
 }
 
-int ar_core_check_topic( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRecordArr_opt, word16 numSRecords )
+int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordtbl_opt, word16 numSRecords )
 {
 	int rc = 0;
 
 	// add marking for 'fail' to all
 	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
 
-	if( !pARecord ) { ASSERT(0); return -1; }
+	if( !arecord ) { ASSERT(0); return -1; }
 
 	// check internal topic consistiency for ARecord
 
@@ -432,18 +432,18 @@ int ar_core_check_topic( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRecord
 	vlClear( topic );
 	{
 		sha1Digest digest;
-		sha1_digest( digest, pARecord->buf, pARecord->msglen + pARecord->loclen + pARecord->cluelen );
+		sha1_digest( digest, arecord->buf, arecord->msglen + arecord->loclen + arecord->cluelen );
 		vlSetWord64( topic, digest[0], digest[1] );
 	}
-	if( !vlEqual( pARecord->topic, topic ) ) { rc = -2; goto EXIT; }
+	if( !vlEqual( arecord->topic, topic ) ) { rc = -2; goto EXIT; }
 
-	if( pSRecordArr_opt && numSRecords > 0 )
+	if( srecordtbl_opt && numSRecords > 0 )
 	{
 		// compare ARecord topic to all specified SRecords
 
 		for( int i=0; i<numSRecords; i++ )
 		{
-			int fail = !vlEqual( topic, pSRecordArr_opt[i]->topic );
+			int fail = !vlEqual( topic, srecordtbl_opt[i]->topic );
 
 			// return nz rc if there is any failure
 			if( fail ) { rc = -3; if( !buf_opt ) { goto EXIT; } }
@@ -457,14 +457,14 @@ EXIT:
 	return rc;
 }
 
-int ar_core_check_signature( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRecordArr_opt, word16 numSRecords )
+int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordtbl_opt, word16 numSRecords )
 {
 	int rc = 0;
 
 	// set 'fail' markings
 	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
 
-	if( !pARecord ) { ASSERT(0); return -1; }
+	if( !arecord ) { ASSERT(0); return -1; }
 
 	// check authsignature to ensure data integreity
 
@@ -478,34 +478,34 @@ int ar_core_check_signature( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRe
 			{
 				size_t deltalen = 0;
 				char composebuf[ sizeof(vlPoint) ];
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->topic+1, pARecord->topic[0] );
-				sha1_process( c, composebuf, (unsigned)(pARecord->topic[0] * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->verify+1, pARecord->verify[0] );
-				sha1_process( c, composebuf, (unsigned)(pARecord->verify[0] * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->shares, 1 );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), arecord->topic+1, arecord->topic[0] );
+				sha1_process( c, composebuf, (unsigned)(arecord->topic[0] * sizeof(word16)) );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), arecord->verify+1, arecord->verify[0] );
+				sha1_process( c, composebuf, (unsigned)(arecord->verify[0] * sizeof(word16)) );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &arecord->shares, 1 );
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->threshold, 1 );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &arecord->threshold, 1 );
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->fieldsize, 1 );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &arecord->fieldsize, 1 );
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->pubkey+1, pARecord->pubkey[0] );
-				sha1_process( c, composebuf, (unsigned)(pARecord->pubkey[0] * sizeof(word16)) );
-				sha1_process( c, pARecord->buf, (unsigned)(pARecord->msglen + pARecord->loclen + pARecord->cluelen) );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), arecord->pubkey+1, arecord->pubkey[0] );
+				sha1_process( c, composebuf, (unsigned)(arecord->pubkey[0] * sizeof(word16)) );
+				sha1_process( c, arecord->buf, (unsigned)(arecord->msglen + arecord->loclen + arecord->cluelen) );
 				memset( composebuf, 0, sizeof(composebuf) );
 			}
 			sha1_final( c, digest );
 			vlSetWord64( authhash, digest[0], digest[1] );
 		}
-		if( !cpVerify( pARecord->pubkey, authhash, &pARecord->authsig ) ) { rc = -2; goto EXIT; }
+		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { rc = -2; goto EXIT; }
 	}
 
 	// check sharesignatures to ensure data integreity
 
-	if( pSRecordArr_opt && numSRecords > 0 )
+	if( srecordtbl_opt && numSRecords > 0 )
 	{
 		for( int i=0; i<numSRecords; i++ )
 		{
-			arShareptr pSRecord = pSRecordArr_opt[i];
+			arShareptr pSRecord = srecordtbl_opt[i];
 			size_t bufused = pSRecord->loclen + pSRecord->cluelen;
 			//
 			vlPoint saltedsharehash;
@@ -533,7 +533,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRe
 				sha1_final( c, digest );
 				vlSetWord64( saltedsharehash, digest[0], digest[1] );
 			}
-			int fail = !cpVerify( pARecord->pubkey, saltedsharehash, &pSRecord->sharesig );
+			int fail = !cpVerify( arecord->pubkey, saltedsharehash, &pSRecord->sharesig );
 
 			// return nz rc if there is any failure
 			if( fail ) { rc = -3; if( !buf_opt ) { goto EXIT; } }
