@@ -312,6 +312,11 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		cpCopy( &(*srecordtbl_out)[i]->sharesig, &sharesig );
 	}
 
+	// double-check
+
+	if( rc = ar_core_check_topic( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { ASSERT(0); rc=-3; goto EXIT; }
+	if( rc = ar_core_check_signature( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { ASSERT(0); rc=-3; goto EXIT; }
+
 EXIT:
 
 	if( gfCryptCoefArr ) { memset( gfCryptCoefArr, 0, sizeof(gfPoint) * numThres ); free( gfCryptCoefArr ); }

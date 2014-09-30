@@ -10,7 +10,7 @@
 #include "ec_crypt.h"
 
 int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, word16 numThres, byteptr bytes, word16 bytelen, bytetbl clueTbl, byteptr location );
-	/* -2 bounds, -1 api, 0 OK */
+	/* -3 borked (try again), -2 bounds, -1 api, 0 OK */
 
 int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl, word16 numSRecords );
 	/* -9 malloc, -8 decrypt, -7 authsig, -6 sharesig, -5 sharetopic, -4 authtopic, -3 too few shares, -2 bounds, -1 api, 0 OK */
