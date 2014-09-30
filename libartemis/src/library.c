@@ -182,7 +182,7 @@ int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byte
 	ar_uri_bufsize_a( &outbufsize, arecord );
 	outbufsize *= shares;
 
-	if( (*sharesArr_out = malloc( outbufsize )) == 0 ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
+	if( !(*sharesArr_out = malloc( outbufsize )) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
 	memset( *sharesArr_out, 0, outbufsize );
 
 	(*sharesArr_out)[0] = 0;

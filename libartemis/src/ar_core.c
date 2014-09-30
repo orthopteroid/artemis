@@ -315,9 +315,9 @@ int ar_core_decrypt( byteptr* buf_out, arAuth* pARecord, arShareptr* pSRecordArr
 
 	if( numSRecords < pARecord->threshold ) { rc = -3; goto EXIT; } // no assert
 
-	if( (*buf_out = malloc( pARecord->msglen )) == 0 ) { ASSERT(0); rc=-9; goto EXIT; }
-	if( (shareArr = malloc( sizeof(gfPoint) * numSRecords )) == 0 ) { ASSERT(0); rc=-9; goto EXIT; }
-	if( (shareIDArr = malloc( sizeof(word16) * numSRecords )) == 0 ) { ASSERT(0); rc=-9; goto EXIT; }
+	if( !(*buf_out = malloc( pARecord->msglen )) ) { ASSERT(0); rc=-9; goto EXIT; }
+	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { ASSERT(0); rc=-9; goto EXIT; }
+	if( !(shareIDArr = malloc( sizeof(word16) * numSRecords )) ) { ASSERT(0); rc=-9; goto EXIT; }
 
 	byteptr cryptext = pARecord->buf + pARecord->loclen + pARecord->cluelen;
 	size_t bufused = pARecord->msglen + pARecord->loclen + pARecord->cluelen;

@@ -78,7 +78,7 @@ int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len )
 	size_t numentries = +1 +1; // +1 first entry, +1 0 (last) entry
 	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) numentries++; } // interior \0 only, not terminating one
 
-	*table_out = malloc( numentries * sizeof(byteptr) );
+	if( !(*table_out = malloc( numentries * sizeof(byteptr) )) ) { ASSERT(0); return -9; }
 	memset( *table_out, 0, numentries * sizeof(byteptr) );
 
 	size_t j = 0;
