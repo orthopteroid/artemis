@@ -16,12 +16,6 @@ void ar_uri_bufsize_a( size_t* pUribufsize, arAuth* pARecord );
 void ar_uri_bufsize_s( size_t* pUribufsize, arShare* pASecord );
 	/* returns number of bytes needed for uri compose buffer */
 
-void ar_uri_parse_messlen( size_t* pLen, byteptr buf );
-	/* returns num of bytes in message arg, if buf holds an arecord uri */
-
-void ar_uri_parse_cluelen( size_t* pLen, byteptr buf );
-	/* returns num of bytes in clue arg, if buf holds an arecord uri */
-
 void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf );
 	/* returns num of bytes needed to hold all variable length data in buf record */
 

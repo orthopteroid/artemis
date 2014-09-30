@@ -198,13 +198,13 @@ static void ar_uri_arglen( size_t* pArglen, byteptr arg, byteptr buf )
 void ar_uri_bufsize_a( size_t* pUribufsize, arAuth* pARecord )
 {
 	size_t bufused = pARecord->msglen + pARecord->loclen + pARecord->cluelen;
-	*pUribufsize = ( sizeof(arAuth) + bufused ) * 4 / 3; // b64 encoding
+	*pUribufsize = ( sizeof(arAuth) + bufused ) * 4 / 3; // crazy overkill + b64 encoding
 }
 
 void ar_uri_bufsize_s( size_t* pUribufsize, arShare* pSRecord )
 {
 	size_t bufused = pSRecord->loclen + pSRecord->cluelen;
-	*pUribufsize = ( sizeof(arShare) + bufused ) * 4 / 3; // b64 encoding
+	*pUribufsize = ( sizeof(arShare) + bufused ) * 4 / 3; // crazy overkill + b64 encoding
 }
 
 int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
@@ -271,17 +271,6 @@ int ar_uri_locate_location( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord 
 	*ppLast = e;
 
 	return rc;
-}
-
-void ar_uri_parse_messlen( size_t* pLen, byteptr buf )
-{
-	ar_uri_arglen( pLen, "mt=", buf );
-}
-
-void ar_uri_parse_cluelen( size_t* pLen, byteptr buf )
-{
-	ar_uri_arglen( pLen, "mc=", buf );
-	if( !*pLen ) { ar_uri_arglen( pLen, "sc=", buf ); }
 }
 
 void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf )
