@@ -198,18 +198,12 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 				sha1_process( c, composebuf, (unsigned)(topic[0] * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), verify+1, verify[0] );
 				sha1_process( c, composebuf, (unsigned)(verify[0] * sizeof(word16)) );
-#if 1
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->shares, 1 );
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->threshold, 1 );
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->fieldsize, 1 );
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-#else
-				sha1_process( c, (byteptr)&pARecord->shares, (unsigned)(1 * sizeof(word16)) );
-				sha1_process( c, (byteptr)&pARecord->threshold, (unsigned)(1 * sizeof(word16)) );
-				sha1_process( c, (byteptr)&pARecord->fieldsize, (unsigned)(1 * sizeof(word16)) );
-#endif
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pubSigningkey+1, pubSigningkey[0] );
 				sha1_process( c, composebuf, (unsigned)(pubSigningkey[0] * sizeof(word16)) );
 				sha1_process( c, pARecord->buf, (unsigned)(abufused) );
@@ -465,18 +459,12 @@ int ar_core_check_signature( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRe
 				sha1_process( c, composebuf, (unsigned)(pARecord->topic[0] * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->verify+1, pARecord->verify[0] );
 				sha1_process( c, composebuf, (unsigned)(pARecord->verify[0] * sizeof(word16)) );
-#if 1
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->shares, 1 );
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->threshold, 1 );
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->fieldsize, 1 );
 				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-#else
-				sha1_process( c, (byteptr)&pARecord->shares, (unsigned)(1 * sizeof(word16)) );
-				sha1_process( c, (byteptr)&pARecord->threshold, (unsigned)(1 * sizeof(word16)) );
-				sha1_process( c, (byteptr)&pARecord->fieldsize, (unsigned)(1 * sizeof(word16)) );
-#endif
 				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->pubkey+1, pARecord->pubkey[0] );
 				sha1_process( c, composebuf, (unsigned)(pARecord->pubkey[0] * sizeof(word16)) );
 				sha1_process( c, pARecord->buf, (unsigned)(pARecord->msglen + pARecord->loclen + pARecord->cluelen) );
