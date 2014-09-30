@@ -34,11 +34,9 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord );
 int ar_uri_parse_type( byteptr szRecord );
 	/* -1 for error, 1 for ARecord, 2 for SRecord */
 
-int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location );
-	/* -1 for error, -2 for bad record */
+int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord );
 
-int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location );
-	/* -1 for error, -2 for bad record */
+int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord );
 
 void ar_uri_test();
 

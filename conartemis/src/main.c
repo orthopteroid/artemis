@@ -144,19 +144,22 @@ FAILDECRYPT:
 	}
 	else
 	{
-		byteptr shareArr_out = 0;
+		byteptr arecord = 0;
+		byteptr srecorsArr = 0;
 
 		size_t clueStrLen = strlen( clueData );
 		for( size_t i = 0; i < clueStrLen; i++ ) { if( clueData[i]=='|' ) { clueData[i]='\n'; } }
 
-		rc = library_uri_encoder( &shareArr_out, shares, threshold, location, clueData, messageArg );
+		rc = library_uri_encoder( &arecord, &srecorsArr, shares, threshold, location, clueData, messageArg );
 		if( rc ) { printf("# encrypt error\n"); goto FAILCRYPT; }
 
-		printf( "%s\n", shareArr_out );
+		printf( "%s\n", arecord );
+		printf( "%s\n", srecorsArr );
 
 FAILCRYPT:
 
-		if( shareArr_out ) library_free( &shareArr_out );
+		if( arecord ) library_free( &arecord );
+		if( srecorsArr ) library_free( &srecorsArr );
 	}
 
 FAILPLATFORM:

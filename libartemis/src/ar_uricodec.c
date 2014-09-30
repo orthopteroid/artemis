@@ -507,12 +507,24 @@ FAIL:
 }
 
 
-int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
+int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 {
 	int rc = 0;
 
-	if( !pARecord || !szRecord ) { ASSERT(0); return -1; }
+	if( !arecord_out ) { ASSERT(0); return -1; }
+
+	*arecord_out = 0;
+
+	if( !szRecord ) { ASSERT(0); return -1; }
 	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
+
+	size_t bufsize = 0;
+	ar_uri_parse_vardatalen( &bufsize, szRecord );
+	size_t structsize = sizeof(arAuth) + bufsize;
+	if( !((*arecord_out) = malloc( structsize )) ) { ASSERT(0); rc=-9; goto FAIL; }
+	memset( (*arecord_out), 0, structsize );
+
+	(*arecord_out)->bufmax = bufsize;
 
 	// cached, as order is important when bundling
 	size_t uLocation = 0, uClue = 0, uMessage = 0;
@@ -545,28 +557,28 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
 		case 'tp=0': // topic
-			if( rc = txt_to_vl( pARecord->topic, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = txt_to_vl( (*arecord_out)->topic, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'ai=0': // arecord info - shares
-			if( rc = ar_util_6Bto12B( &pARecord->shares, pss->data_first ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_6Bto12B( &(*arecord_out)->shares, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'ai=1': // arecord info - threshold
-			if( rc = ar_util_6Bto12B( &pARecord->threshold, pss->data_first ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_6Bto12B( &(*arecord_out)->threshold, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'ai=2': // arecord info - fieldsize
-			if( rc = ar_util_6Bto12B( &pARecord->fieldsize, pss->data_first ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_6Bto12B( &(*arecord_out)->fieldsize, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'vf=0': // <verify>
-			if( rc = txt_to_vl( pARecord->verify, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = txt_to_vl( (*arecord_out)->verify, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'pk=0': // <pubkey>
-			if( rc = txt_to_vl( pARecord->pubkey, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = txt_to_vl( (*arecord_out)->pubkey, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'as=0': // <authsig> - r
-			if( rc = txt_to_vl( pARecord->authsig.r, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = txt_to_vl( (*arecord_out)->authsig.r, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'as=1': // <authsig> - s
-			if( rc = txt_to_vl( pARecord->authsig.s, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = txt_to_vl( (*arecord_out)->authsig.s, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'mt=0': // <messagetext>
 			pMessage = pss->data_first;
@@ -581,40 +593,52 @@ int ar_uri_parse_a( arAuth* pARecord, byteptr szRecord, byteptr location )
 
 	// assemble order-dependent text body
 
-	if( uLocation + uClue + uMessage > pARecord->bufmax ) { ASSERT(0); goto FAIL; }
+	if( uLocation + uClue + uMessage > (*arecord_out)->bufmax ) { ASSERT(0); goto FAIL; }
 
-	byteptr bufloc = pARecord->buf;
+	byteptr bufloc = (*arecord_out)->buf;
 	size_t buflen = 0;
 
 	if( uLocation == 0 ) { ASSERT(0); goto FAIL; }
-	memcpy_s( bufloc, pARecord->bufmax, pLocation, uLocation );
-	pARecord->loclen = (word16)(uLocation);
+	memcpy_s( bufloc, (*arecord_out)->bufmax, pLocation, uLocation );
+	(*arecord_out)->loclen = (word16)(uLocation);
 	bufloc += uLocation;
 	buflen += uLocation;
 
 	if( uClue > 0 ) // optional
 	{
-		if( rc = ar_util_6BAto8BA( &deltalen, bufloc, pARecord->bufmax - buflen, pClue, uClue ) ) { ASSERT(0); goto FAIL; }
-		pARecord->cluelen = (word16)(deltalen);
+		if( rc = ar_util_6BAto8BA( &deltalen, bufloc, (*arecord_out)->bufmax - buflen, pClue, uClue ) ) { ASSERT(0); goto FAIL; }
+		(*arecord_out)->cluelen = (word16)(deltalen);
 		bufloc += deltalen;
 		buflen += deltalen;
 	}
 
 	if( uMessage == 0 ) { ASSERT(0); goto FAIL; }
-	if( rc = ar_util_6BAto8BA( &deltalen, bufloc, pARecord->bufmax - buflen, pMessage, uMessage ) ) { ASSERT(0); goto FAIL; }
-	pARecord->msglen = (word16)(deltalen);
+	if( rc = ar_util_6BAto8BA( &deltalen, bufloc, (*arecord_out)->bufmax - buflen, pMessage, uMessage ) ) { ASSERT(0); goto FAIL; }
+	(*arecord_out)->msglen = (word16)(deltalen);
 
 FAIL:
 
 	return rc;
 }
 
-int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
+int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 {
 	int rc = 0;
 
-	if( !pSRecord || !szRecord ) { ASSERT(0); return -1; }
+	if( !srecord_out ) { ASSERT(0); return -1; }
+
+	*srecord_out = 0;
+
+	if( !szRecord ) { ASSERT(0); return -1; }
 	if( strlen( szRecord ) < 10 ) { ASSERT(0); return -1; }
+
+	size_t bufsize = 0;
+	ar_uri_parse_vardatalen( &bufsize, szRecord );
+	size_t structsize = sizeof(arAuth) + bufsize;
+	if( !((*srecord_out) = malloc( structsize )) ) { ASSERT(0); rc=-9; goto FAIL; }
+	memset( (*srecord_out), 0, structsize );
+
+	(*srecord_out)->bufmax = bufsize;
 
 	// cached, as order is important when bundling
 	size_t uLocation = 0, uClue = 0;
@@ -647,25 +671,25 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
 		case 'tp=0': // topic
-			if( rc = txt_to_vl( pSRecord->topic, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = txt_to_vl( (*srecord_out)->topic, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'si=0': // srecord info - shares
-			if( rc = ar_util_6Bto12B( &pSRecord->shares, pss->data_first ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_6Bto12B( &(*srecord_out)->shares, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'si=1': // srecord info - threshold
-			if( rc = ar_util_6Bto12B( &pSRecord->threshold, pss->data_first ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_6Bto12B( &(*srecord_out)->threshold, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'si=2': // srecord info - shareid
-			if( rc = ar_util_6Bto12B( &pSRecord->shareid, pss->data_first ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_util_6Bto12B( &(*srecord_out)->shareid, pss->data_first ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'sh=0': // share
-			if( rc = txt_to_vl( pSRecord->share, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = txt_to_vl( (*srecord_out)->share, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'ss=0': // <asharesig> - r
-			if( rc = txt_to_vl( pSRecord->sharesig.r, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = txt_to_vl( (*srecord_out)->sharesig.r, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'ss=1': // <sharesig> - s
-			if( rc = txt_to_vl( pSRecord->sharesig.s, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
+			if( rc = txt_to_vl( (*srecord_out)->sharesig.s, pss->data_first, pss->data_len ) ) { ASSERT(0); goto FAIL; }
 			break;
 		case 'sc=0': // <shareclue>
 			pClue = pss->data_first;
@@ -676,21 +700,21 @@ int ar_uri_parse_s( arShare* pSRecord, byteptr szRecord, byteptr location )
 
 	// assemble order-dependent text body
 
-	if( uLocation + uClue > pSRecord->bufmax ) { ASSERT(0); goto FAIL; }
+	if( uLocation + uClue > (*srecord_out)->bufmax ) { ASSERT(0); goto FAIL; }
 
-	byteptr bufloc = pSRecord->buf;
+	byteptr bufloc = (*srecord_out)->buf;
 	size_t buflen = 0;
 
 	if( uLocation == 0 ) { ASSERT(0); goto FAIL; }
-	memcpy_s( bufloc, pSRecord->bufmax, pLocation, uLocation );
-	pSRecord->loclen = (word16)(uLocation);
+	memcpy_s( bufloc, (*srecord_out)->bufmax, pLocation, uLocation );
+	(*srecord_out)->loclen = (word16)(uLocation);
 	bufloc += uLocation;
 	buflen += uLocation;
 
 	if( uClue > 0 ) // optional
 	{
-		if( rc = ar_util_6BAto8BA( &deltalen, bufloc, pSRecord->bufmax - buflen, pClue, uClue ) ) { ASSERT(0); goto FAIL; }
-		pSRecord->cluelen = (word16)(deltalen);
+		if( rc = ar_util_6BAto8BA( &deltalen, bufloc, (*srecord_out)->bufmax - buflen, pClue, uClue ) ) { ASSERT(0); goto FAIL; }
+		(*srecord_out)->cluelen = (word16)(deltalen);
 	}
 
 FAIL:
@@ -721,11 +745,9 @@ void ar_uri_test()
 
 	arAuthptr		arecord;
 	arSharetbl		srecordtbl;
-//	arShare80ptr	srecordarr[2] = { &srecords[0], &srecords[1] };
 
-	arAuth80		arecord_;
-	arShare80		srecords_[2];
-	arShare80ptr	srecordarr_[2] = { &srecords_[0], &srecords_[1] };
+	arAuthptr		arecord_;
+	arSharetbl		srecordtbl_;
 
 	char* clues_r[3] = {"topiclue", "clue1", "clue2"};
 	char* location = "foo.bar";
@@ -752,16 +774,9 @@ void ar_uri_test()
 		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
 
 		// clear
-		{
-			memset( &bufa, 0, sizeof(byte2048) );
-			memset( &bufs0, 0, sizeof(byte2048) );
-			memset( &bufs1, 0, sizeof(byte2048) );
-
-			memset( &arecord_, 0, sizeof(arAuth80) );
-			memset( &srecords_[0], 0, sizeof(arShare80) );
-			memset( &srecords_[1], 0, sizeof(arShare80) );
-			arecord_.x.bufmax = srecords_[0].x.bufmax = srecords_[1].x.bufmax = 80;
-		}
+		memset( &bufa, 0, sizeof(byte2048) );
+		memset( &bufs0, 0, sizeof(byte2048) );
+		memset( &bufs1, 0, sizeof(byte2048) );
 
 		rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues_rw, location ); // +1 to include \0
 		TESTASSERT( rc == 0 );
@@ -854,7 +869,7 @@ void ar_uri_test()
 			printf("%s\n",bufs1);
 		}
 
-		rc = ar_uri_parse_a( &arecord_.x, bufa, location );
+		rc = ar_uri_parse_a( &arecord_, bufa );
 		TESTASSERT( rc == 0 );
 
 		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufa );
@@ -862,7 +877,9 @@ void ar_uri_test()
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
-		rc = ar_uri_parse_s( &srecords_[0].x, bufs0, location );
+		srecordtbl_ = malloc( sizeof(arShare) * shares );
+
+		rc = ar_uri_parse_s( &srecordtbl_[0], bufs0 );
 		TESTASSERT( rc == 0 );
 
 		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufs0 );
@@ -870,7 +887,7 @@ void ar_uri_test()
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
-		rc = ar_uri_parse_s( &srecords_[1].x, bufs1, location );
+		rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 );
 		TESTASSERT( rc == 0 );
 
 		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufs1 );
@@ -878,7 +895,7 @@ void ar_uri_test()
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
-		rc = ar_core_decrypt( &cleartext_out, &arecord_.x, (arShareptr*)srecordarr_, 2 );
+		rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
 		TESTASSERT( rc == 0 );
 
 		TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
@@ -888,6 +905,10 @@ void ar_uri_test()
 		free( arecord );
 		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl[i] ); }
 		free( srecordtbl );
+
+		free( arecord_ );
+		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }
+		free( srecordtbl_ );
 	
 		if(i > 0 &&  i % 10 == 0 ) { printf("%d",9 - i / (numtests / 9)); }
 	}
