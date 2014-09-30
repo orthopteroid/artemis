@@ -168,14 +168,23 @@ int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byte
 	rc = ar_core_create( &arecord, &srecordtbl, shares, threshold, message, (word16)messlen+1, clueTbl, szLocation );
 	if( rc ) { ASSERT(0); goto FAILCRYPT; }
 
-	//////////////
+	// size the output buffer...
 
 	size_t outbufsize = 0;
-	ar_uri_bufsize_a( &outbufsize, arecord );
-	outbufsize *= shares;
+	size_t bufsize = 0;
+	ar_uri_bufsize_a( &bufsize, arecord );
+	outbufsize = bufsize;
+	for( size_t i = 0; i < shares; i++ )
+	{
+		size_t bufsize = 0;
+		ar_uri_bufsize_s( &bufsize, srecordtbl[i] );
+		outbufsize += bufsize;
+	}
 
 	if( !(*sharesArr_out = malloc( outbufsize )) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
 	memset( *sharesArr_out, 0, outbufsize );
+
+	// start concating records to the output buffer
 
 	(*sharesArr_out)[0] = 0;
 	rc = ar_uri_create_a( (*sharesArr_out), outbufsize, arecord );
