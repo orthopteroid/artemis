@@ -426,6 +426,103 @@ FAIL:
 	return rc;
 }
 
+int library_uri_validate( byteptr* validation_out_opt, byteptr szLocation, byteptr szARrecord, byteptr szSRecordArr_opt )
+{
+	int rc = 0;
+
+	word16 srecordCount = 0;
+
+	arAuth* pARecord = 0;
+
+	byteptr		szSRecordArr_rw = 0;
+	bytetbl		szSRecordTbl = 0;
+	arShareptr*	srecordTbl = 0;
+
+	if( validation_out_opt ) { *validation_out_opt = 0; }
+
+	if( !szLocation ) { ASSERT(0); return -1; }
+	if( !szARrecord ) { ASSERT(0); return -1; }
+
+	// validate arecord first
+
+	{
+		size_t buflen = 0;
+		ar_uri_parse_vardatalen( &buflen, szARrecord );
+
+		size_t structsize = sizeof(arAuth) + buflen;
+		if( !(pARecord = malloc( structsize )) ) { ASSERT(0); rc=-9; goto EXIT; }
+		memset( pARecord, 0, structsize );
+
+		pARecord->bufmax = (word16)buflen;
+
+		if( rc = ar_uri_parse_a( pARecord, szARrecord, szLocation ) ) { ASSERT(0); goto EXIT; }
+	}
+
+	if( rc = ar_core_check_topic( 0, pARecord, 0, 0 ) ) { ASSERT(0); rc = (rc==-2) ? -2 : rc; goto EXIT; } // conv failure code
+	if( rc = ar_core_check_signature( 0, pARecord, 0, 0 ) ) { ASSERT(0); rc = (rc==-2) ? -3 : rc; goto EXIT; } // conv failure code
+
+	// optionally validate srecords
+
+	if( szSRecordArr_opt )
+	{
+		szSRecordArr_rw = strdup( szSRecordArr_opt );
+		if( !szSRecordArr_rw ) { ASSERT(0); return -9; }
+
+		size_t shareArrLen = strlen( szSRecordArr_rw );
+
+		srecordCount = 1;
+		for( size_t i = 0; i < shareArrLen; i++ ) { if( szSRecordArr_rw[i] == '\n' ) { szSRecordArr_rw[i]=0; srecordCount++; } }
+
+		// init/make pointers to strings
+
+		if( rc = ar_util_buildByteTbl( &szSRecordTbl, szSRecordArr_rw, shareArrLen ) ) { ASSERT(0); goto EXIT; }
+
+		// make pointers to objects
+
+		size_t tblsize = sizeof(arShareptr) * srecordCount;
+		if( !(srecordTbl = malloc( tblsize )) ) { ASSERT(0); rc=-9; goto EXIT; }
+		memset( srecordTbl, 0, tblsize );
+
+		// init pointers to objects
+
+		for( size_t i = 0 ; i < srecordCount; i++ )
+		{
+			arShare* pSRecord = 0; // local var
+
+			size_t buflen = 0;
+			ar_uri_parse_vardatalen( &buflen, szSRecordTbl[i] );
+
+			size_t structsize = sizeof(arShare) + buflen;
+			if( !(pSRecord = malloc( structsize )) ) { ASSERT(0); rc=-9; goto EXIT; }
+			memset( pSRecord, 0, structsize );
+
+			pSRecord->bufmax = (word16)buflen;
+
+			srecordTbl[i] = pSRecord;
+
+			if( ar_uri_parse_s( pSRecord, szSRecordTbl[i], szLocation ) ) { ASSERT(0); rc=-9; goto EXIT; }
+		}
+
+		// check objects
+
+		if( !(*validation_out_opt = malloc( srecordCount )) ) { ASSERT(0); rc=-9; goto EXIT; }
+
+		if( rc = ar_core_check_topic( (*validation_out_opt), pARecord, srecordTbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -4 : rc; goto EXIT; } // conv failure code
+
+		if( rc = ar_core_check_signature( (*validation_out_opt), pARecord, srecordTbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -5 : rc; goto EXIT; } // conv failure code
+	}
+
+EXIT:
+
+	if( pARecord ) free( pARecord );
+	for( int i=0; i<srecordCount; i++ ) { if( srecordTbl[i] ) { free( srecordTbl[i] ); srecordTbl[i] = 0; } }
+	if( srecordTbl ) free( srecordTbl );
+	if( szSRecordTbl ) free( szSRecordTbl );
+	if( szSRecordArr_rw ) free( szSRecordArr_rw );
+
+	return rc;
+}
+
 void library_test()
 {
 

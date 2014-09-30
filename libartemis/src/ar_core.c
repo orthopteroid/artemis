@@ -424,7 +424,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 			sha1_final( c, digest );
 			vlSetWord32( verify, digest[0] );
 		}
-		if( !vlEqual( verify, pARecord->verify ) ) { ASSERT(0); rc = -5; goto EXIT; }
+		if( !vlEqual( verify, pARecord->verify ) ) { ASSERT(0); rc = -8; goto EXIT; }
 	}
 
 EXIT:
@@ -432,6 +432,136 @@ EXIT:
 	if( shareArr ) { memset( shareArr, 0, sizeof(gfPoint) * numSRecords ); free( shareArr ); }
 	if( shareIDArr ) { memset( shareIDArr, 0, sizeof(word16) * numSRecords ); free( shareIDArr ); }
 
+	return rc;
+}
+
+int ar_core_check_topic( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRecordArr_opt, word16 numSRecords )
+{
+	int rc = 0;
+
+	// add marking for 'fail' to all
+	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
+
+	if( !pARecord ) { ASSERT(0); return -1; }
+
+	// check internal topic consistiency for ARecord
+
+	vlPoint topic;
+	vlClear( topic );
+	{
+		sha1Digest digest;
+		sha1_digest( digest, pARecord->buf, pARecord->msglen + pARecord->loclen + pARecord->cluelen );
+		vlSetWord64( topic, digest[0], digest[1] );
+	}
+	if( !vlEqual( pARecord->topic, topic ) ) { rc = -2; goto EXIT; }
+
+	if( pSRecordArr_opt && numSRecords > 0 )
+	{
+		// compare ARecord topic to all specified SRecords
+
+		for( int i=0; i<numSRecords; i++ )
+		{
+			int fail = !vlEqual( topic, pSRecordArr_opt[i]->topic );
+
+			// return nz rc if there is any failure
+			if( fail ) { rc = -3; if( !buf_opt ) { goto EXIT; } }
+			else {
+				if( buf_opt ) { buf_opt[i] = 0; } // clear individual fail markings
+			}
+		}
+	}
+
+EXIT:
+	return rc;
+}
+
+int ar_core_check_signature( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRecordArr_opt, word16 numSRecords )
+{
+	int rc = 0;
+
+	// set 'fail' markings
+	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
+
+	if( !pARecord ) { ASSERT(0); return -1; }
+
+	// check authsignature to ensure data integreity
+
+	{
+		vlPoint authhash;
+		vlClear( authhash );
+		{
+			sha1Digest digest;
+			sha1_context c[1];
+			sha1_initial( c );
+			{
+				size_t deltalen = 0;
+				char composebuf[ sizeof(vlPoint) ];
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->topic+1, pARecord->topic[0] );
+				sha1_process( c, composebuf, (unsigned)(pARecord->topic[0] * sizeof(word16)) );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->verify+1, pARecord->verify[0] );
+				sha1_process( c, composebuf, (unsigned)(pARecord->verify[0] * sizeof(word16)) );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->shares, 1 );
+				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->threshold, 1 );
+				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pARecord->fieldsize, 1 );
+				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pARecord->pubkey+1, pARecord->pubkey[0] );
+				sha1_process( c, composebuf, (unsigned)(pARecord->pubkey[0] * sizeof(word16)) );
+				sha1_process( c, pARecord->buf, (unsigned)(pARecord->msglen + pARecord->loclen + pARecord->cluelen) );
+				memset( composebuf, 0, sizeof(composebuf) );
+			}
+			sha1_final( c, digest );
+			vlSetWord64( authhash, digest[0], digest[1] );
+		}
+		if( !cpVerify( pARecord->pubkey, authhash, &pARecord->authsig ) ) { rc = -2; goto EXIT; }
+	}
+
+	// check sharesignatures to ensure data integreity
+
+	if( pSRecordArr_opt && numSRecords > 0 )
+	{
+		for( int i=0; i<numSRecords; i++ )
+		{
+			arShareptr pSRecord = pSRecordArr_opt[i];
+			size_t bufused = pSRecord->loclen + pSRecord->cluelen;
+			//
+			vlPoint saltedsharehash;
+			vlClear( saltedsharehash );
+			{
+				sha1Digest digest;
+				sha1_context c[1];
+				sha1_initial( c );
+				{
+					size_t deltalen = 0;
+					char composebuf[ sizeof(vlPoint) ];
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pSRecord->topic+1, pSRecord->topic[0] );
+					sha1_process( c, composebuf, (unsigned)(pSRecord->topic[0] * sizeof(word16)) );
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pSRecord->shares, 1 );
+					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pSRecord->threshold, 1 );
+					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pSRecord->shareid, 1 );
+					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pSRecord->share+1, pSRecord->share[0] );
+					sha1_process( c, composebuf, (unsigned)(pSRecord->share[0] * sizeof(word16)) );
+					sha1_process( c, pSRecord->buf, (unsigned)(bufused) );
+					memset( composebuf, 0, sizeof(composebuf) );
+				}
+				sha1_final( c, digest );
+				vlSetWord64( saltedsharehash, digest[0], digest[1] );
+			}
+			int fail = !cpVerify( pARecord->pubkey, saltedsharehash, &pSRecord->sharesig );
+
+			// return nz rc if there is any failure
+			if( fail ) { rc = -3; if( !buf_opt ) { goto EXIT; } }
+			else {
+				if( buf_opt ) { buf_opt[i] = 0; } // remove individual fail markings
+			}
+		}
+	}
+
+EXIT:
 	return rc;
 }
 

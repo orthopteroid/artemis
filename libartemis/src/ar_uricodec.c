@@ -284,6 +284,22 @@ void ar_uri_parse_cluelen( size_t* pLen, byteptr buf )
 	if( !*pLen ) { ar_uri_arglen( pLen, "sc=", buf ); }
 }
 
+void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf )
+{
+	*pLen = 0;
+
+	parsestate2 ss;
+	parsestate2* pss = &ss;
+	ps2_init( pss, buf, strlen( buf ) );
+
+	word32 token;
+	while( token = ps2_token( pss ) )
+	{
+		if( token == 'ht=0' || token == 'mc=0' || token == 'sc=0' )		{ *pLen += ss.data_len; } // raw text
+		else if( token == 'mt=0' || token == 'st=0' )					{ *pLen += ss.data_len; } // overest the b64 text
+	}
+}
+
 int ar_uri_parse_type( byteptr buf )
 {
 	if( strstr( buf, "ai=" ) )			{ return 1; }

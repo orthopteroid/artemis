@@ -15,6 +15,14 @@ int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares,
 int ar_core_decrypt( byteptr buf, word16 buflen, arAuth* pARecord, arShareptr* pSRecordArr, word16 numSRecords );
 	/* -5 decrypt, -4 authsig, -3 sharesig, -6 topichash, -7 too few shares, -2 bounds, -1 api, 0 OK */
 
+int ar_core_check_topic( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRecordArr_opt, word16 numSRecords );
+	/* buf is atleast numSRecords big to hold the topic crosschecks. 0 == ok, 0xFF fail */
+	/* -3 SRecord fail (check buf for individual codes), -2 ARecord fail, -1 api, 0 OK */
+
+int ar_core_check_signature( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRecordArr_opt, word16 numSRecords );
+	/* buf is atleast numSRecords big to hold the signature crosschecks. 0 == ok, 0xFF fail */
+	/* -3 SRecord fail (check buf for individual codes), -2 ARecord fail, -1 api, 0 OK */
+
 void ar_core_test();
 
 #endif // _AR_CORE_H

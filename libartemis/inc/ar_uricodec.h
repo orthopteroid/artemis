@@ -22,6 +22,9 @@ void ar_uri_parse_messlen( size_t* pLen, byteptr buf );
 void ar_uri_parse_cluelen( size_t* pLen, byteptr buf );
 	/* returns num of bytes in clue arg, if buf holds an arecord uri */
 
+void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf );
+	/* returns num of bytes needed to hold all variable length data in buf record */
+
 int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr szRecord );
 
 int ar_uri_locate_topic( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord );
