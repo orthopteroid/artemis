@@ -132,7 +132,7 @@ HELP:
 			}
 		}
 
-		rc = library_uri_decoder( &message_out, location, shareArr, shareArrLen );
+		rc = library_uri_decoder( &message_out, location, shareArr );
 		if( rc ) { printf("# decrypt error\n"); goto FAILDECRYPT; }
 
 		printf( "%s\n", message_out );
@@ -149,7 +149,7 @@ FAILDECRYPT:
 		size_t clueStrLen = strlen( clueData );
 		for( size_t i = 0; i < clueStrLen; i++ ) { if( clueData[i]=='|' ) { clueData[i]='\n'; } }
 
-		rc = library_uri_encoder( &shareArr_out, shares, threshold, location, clueData, clueStrLen, messageArg );
+		rc = library_uri_encoder( &shareArr_out, shares, threshold, location, clueData, messageArg );
 		if( rc ) { printf("# encrypt error\n"); goto FAILCRYPT; }
 
 		printf( "%s\n", shareArr_out );

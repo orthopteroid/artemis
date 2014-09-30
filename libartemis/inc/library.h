@@ -7,6 +7,8 @@
 #include "ec_types.h"
 
 // nonzero function return values indicate an error
+// functions that return values through _out args those args to be passed to library_free(...) to prevent a memory leak
+// Arr args are '\n' delimited strings
 
 DLLDECL word32 library_init();
 DLLDECL void library_cleanup();
@@ -16,14 +18,13 @@ DLLDECL int library_uri_sharetype( word16* pType, byteptr szShare );
 
 DLLDECL int library_uri_validate( byteptr* validation_out, byteptr szLocation, byteptr szARrecord, byteptr szSRecordArr );
 	/* -5 srecord sig fail, -4 srecord topic fail, -3 arecord sig fail, -2 arecord topic fail, -1 api, 0 ok */
-// functions that return values through _out args those args to be passed to library_free(...) to prevent a memory leak
-// Arr args are '\n' delimited strings
 
-DLLDECL int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byteptr szLocation, byteptr clueArr, size_t clueArrLen, byteptr message );
-DLLDECL int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr shareArr, size_t shareArrLen );
 DLLDECL int library_uri_topic( byteptr* topic_out, byteptr szShare );
 DLLDECL int library_uri_clue( byteptr* clue_out, byteptr szShare );
 DLLDECL int library_uri_location( byteptr* location_out, byteptr szShare );
+
+DLLDECL int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byteptr szLocation, byteptr clueArr, byteptr message );
+DLLDECL int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr shareArr );
 
 DLLDECL void library_free( byteptr* object );
 

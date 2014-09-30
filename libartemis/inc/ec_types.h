@@ -11,9 +11,10 @@ typedef const byte*	constbyteptr;
 typedef word32*		word32ptr;
 typedef word16*		word16ptr;
 
-// helper types for pasing around pointers to arrays
-typedef byteptr*	byteptrarr;
-typedef word32ptr*	word32ptrarr;
-typedef word16ptr*	word16ptrarr;
+// an array is a sequence of a type
+// a table is an array of pointers to a type
+typedef byteptr*	bytetbl;
+typedef word32ptr*	word32tbl;
+typedef word16ptr*	word16tbl;
 
 #endif // PW_TYPES_H

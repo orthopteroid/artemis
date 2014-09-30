@@ -71,11 +71,11 @@ static int vl_to_txt( char* buf, size_t bufsize, vlPoint v )
 
 ////////////////////
 
-int ar_util_buildBytePtrArr( byteptrarr* table_out, byteptr arr, size_t len )
+int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len )
 {
 	if( !table_out ) { ASSERT(0); return -1; }
 
-	size_t numentries = 2; // +1 first entry, +1 0 (last) entry
+	size_t numentries = +1 +1; // +1 first entry, +1 0 (last) entry
 	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) numentries++; } // interior \0 only, not terminating one
 
 	*table_out = malloc( numentries * sizeof(byteptr) );
@@ -83,7 +83,7 @@ int ar_util_buildBytePtrArr( byteptrarr* table_out, byteptr arr, size_t len )
 
 	size_t j = 0;
 	(*table_out)[j++] = arr;
-	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) (*table_out)[j++] = &arr[i-1]; }
+	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) (*table_out)[j++] = &arr[ i + 1 ]; }
 
 	return 0;
 }
