@@ -730,9 +730,9 @@ void ar_uri_test()
 
 	typedef arShare80* arShare80ptr;
 
-	arAuth80		arecord;
-	arShare80		srecords[2];
-	arShare80ptr	srecordarr[2] = { &srecords[0], &srecords[1] };
+	arAuthptr		arecord;
+	arSharetbl		srecordtbl;
+//	arShare80ptr	srecordarr[2] = { &srecords[0], &srecords[1] };
 
 	arAuth80		arecord_;
 	arShare80		srecords_[2];
@@ -768,22 +768,17 @@ void ar_uri_test()
 			memset( &bufs0, 0, sizeof(byte2048) );
 			memset( &bufs1, 0, sizeof(byte2048) );
 
-			memset( &arecord, 0, sizeof(arAuth80) );
-			memset( &srecords[0], 0, sizeof(arShare80) );
-			memset( &srecords[1], 0, sizeof(arShare80) );
-			arecord.x.bufmax = srecords[0].x.bufmax = srecords[1].x.bufmax = 80;
-
 			memset( &arecord_, 0, sizeof(arAuth80) );
 			memset( &srecords_[0], 0, sizeof(arShare80) );
 			memset( &srecords_[1], 0, sizeof(arShare80) );
 			arecord_.x.bufmax = srecords_[0].x.bufmax = srecords_[1].x.bufmax = 80;
 		}
 
-		rc = ar_core_create( &arecord.x, (arShareptr*)srecordarr, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues_rw, location ); // +1 to include \0
+		rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues_rw, location ); // +1 to include \0
 		TESTASSERT( rc == 0 );
 
 		bufa[0] = 0;
-		rc = ar_uri_create_a( bufa, 2048, &arecord.x );
+		rc = ar_uri_create_a( bufa, 2048, arecord );
 		TESTASSERT( rc == 0 );
 
 		{
@@ -810,7 +805,7 @@ void ar_uri_test()
 		}
 
 		bufs0[0] = 0;
-		rc = ar_uri_create_s( bufs0, 2048, &srecords[0].x );
+		rc = ar_uri_create_s( bufs0, 2048, srecordtbl[0] );
 		TESTASSERT( rc == 0 );
 
 		{
@@ -837,7 +832,7 @@ void ar_uri_test()
 		}
 
 		bufs1[0] = 0;
-		rc = ar_uri_create_s( bufs1, 2048, &srecords[1].x );
+		rc = ar_uri_create_s( bufs1, 2048, srecordtbl[1] );
 		TESTASSERT( rc == 0 );
 
 		{
@@ -901,6 +896,10 @@ void ar_uri_test()
 
 		if( cleartext_out ) free( cleartext_out );
 
+		free( arecord );
+		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl[i] ); }
+		free( srecordtbl );
+	
 		if(i > 0 &&  i % 10 == 0 ) { printf("%d",9 - i / (numtests / 9)); }
 	}
 	putchar('\n');

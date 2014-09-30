@@ -45,5 +45,6 @@ typedef struct arShare_
 } arShare;
 
 typedef arShare*	arShareptr;
+typedef arShareptr*	arSharetbl;
 
 #endif // _AR_TYPES_H_

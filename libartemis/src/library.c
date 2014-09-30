@@ -128,8 +128,8 @@ int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byte
 
 	*sharesArr_out = 0;
 	
-	arAuth* arecord = 0;
-	arShareptr* srecordArr = 0;
+	arAuthptr arecord = 0;
+	arSharetbl srecordtbl = 0;
 	bytetbl clueTbl = 0;
 	byteptr clueArr_rw = 0;
 
@@ -155,25 +155,17 @@ int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byte
 	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
 	size_t abuflen = ( loclen + acluelen + messlen + 1 /* +1 for \0 */ );
 	size_t astructlen = sizeof(arAuth) + abuflen;
-	if( !(arecord = malloc( astructlen ) ) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
-	memset( arecord, 0, astructlen );
-	arecord->bufmax = (word16)abuflen;
 
 	// alloc srecord arr and the srecords themselves
-	if( !(srecordArr = malloc( sizeof(arShareptr) * shares ) ) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
-	memset( srecordArr, 0, sizeof(arShareptr) * shares );
 	for( word16 i=0; i<shares; i++ )
 	{
 		size_t scluelen = ( clueTbl && clueTbl[i] ) ? ( strlen( clueTbl[i] ) + 1 /* +1 for \0 */ ) : 0;
 		size_t sbuflen = loclen + scluelen;
 		size_t sstructlen = sizeof(arShare) + sbuflen;
-		if( !(srecordArr[i] = malloc( sstructlen ) ) ) { ASSERT(0); rc=-9; goto FAILCRYPT; }
-		memset( srecordArr[i], 0, sstructlen );
-		srecordArr[i]->bufmax = (word16)sbuflen;
 	}
 
 	// +1 to include \0
-	rc = ar_core_create( arecord, srecordArr, shares, threshold, message, (word16)messlen+1, clueTbl, szLocation );
+	rc = ar_core_create( &arecord, &srecordtbl, shares, threshold, message, (word16)messlen+1, clueTbl, szLocation );
 	if( rc ) { ASSERT(0); goto FAILCRYPT; }
 
 	//////////////
@@ -192,14 +184,14 @@ int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byte
 	for( word16 s=0; s!=shares; s++ )
 	{
 		if( rc = ar_util_strcat( (*sharesArr_out), outbufsize, "\n" ) ) { ASSERT(0); goto FAILCRYPT; }
-		if( rc = ar_uri_create_s( (*sharesArr_out), outbufsize, srecordArr[s] ) ) { ASSERT(0); goto FAILCRYPT; }
+		if( rc = ar_uri_create_s( (*sharesArr_out), outbufsize, srecordtbl[s] ) ) { ASSERT(0); goto FAILCRYPT; }
 	}
 
 FAILCRYPT:
 
 	if( arecord ) free( arecord );
-	for( word16 i=0; i<shares; i++ ) { if( srecordArr[i] ) free( srecordArr[i] ); }
-	if( srecordArr ) free( srecordArr );
+	for( word16 i=0; i<shares; i++ ) { if( srecordtbl[i] ) free( srecordtbl[i] ); }
+	if( srecordtbl ) free( srecordtbl );
 	if( clueArr_rw ) free( clueArr_rw );
 	if( clueTbl ) free( clueTbl );
 
