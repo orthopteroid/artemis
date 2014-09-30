@@ -258,10 +258,11 @@ int library_uri_decoder( byteptr* message_out, byteptr arecord, byteptr srecordA
 	while( s_record < end )
 	{
 		while( *e_record != '\0' ) { e_record++; } // now \0 delimited
-		*e_record = 0;
-		byteptr inbuf = s_record;
+		if( e_record > end ) { ASSERT(0); rc=-2; goto FAIL; } // blew buffer
 
-		if( rc = ar_uri_parse_s( &(srecordtbl[sharenum++]), inbuf ) ) { ASSERT(0); goto FAIL; }
+		*e_record = 0; // \0 term the string
+
+		if( rc = ar_uri_parse_s( &(srecordtbl[sharenum++]), s_record ) ) { ASSERT(0); goto FAIL; }
 
 		s_record = e_record = e_record + 1; // +1 for char after \0
 	}
