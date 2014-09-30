@@ -174,7 +174,7 @@ int library_uri_encoder( byteptr* sharesArr_out, int shares, int threshold, byte
 	size_t bufsize = 0;
 	ar_uri_bufsize_a( &bufsize, arecord );
 	outbufsize = bufsize;
-	for( size_t i = 0; i < shares; i++ )
+	for( int i = 0; i < shares; i++ )
 	{
 		size_t bufsize = 0;
 		ar_uri_bufsize_s( &bufsize, srecordtbl[i] );
@@ -431,7 +431,7 @@ int library_uri_validate( byteptr* validation_out_opt, byteptr szLocation, bytep
 
 	byteptr		szSRecordArr_rw = 0;
 	bytetbl		szSRecordTbl = 0;
-	arShareptr*	srecordTbl = 0;
+	arSharetbl	srecordtbl = 0;
 
 	if( validation_out_opt ) { *validation_out_opt = 0; }
 
@@ -475,8 +475,8 @@ int library_uri_validate( byteptr* validation_out_opt, byteptr szLocation, bytep
 		// make pointers to objects
 
 		size_t tblsize = sizeof(arShareptr) * srecordCount;
-		if( !(srecordTbl = malloc( tblsize )) ) { ASSERT(0); rc=-9; goto EXIT; }
-		memset( srecordTbl, 0, tblsize );
+		if( !(srecordtbl = malloc( tblsize )) ) { ASSERT(0); rc=-9; goto EXIT; }
+		memset( srecordtbl, 0, tblsize );
 
 		// init pointers to objects
 
@@ -493,7 +493,7 @@ int library_uri_validate( byteptr* validation_out_opt, byteptr szLocation, bytep
 
 			pSRecord->bufmax = (word16)buflen;
 
-			srecordTbl[i] = pSRecord;
+			srecordtbl[i] = pSRecord;
 
 			if( ar_uri_parse_s( pSRecord, szSRecordTbl[i], szLocation ) ) { ASSERT(0); rc=-9; goto EXIT; }
 		}
@@ -502,16 +502,16 @@ int library_uri_validate( byteptr* validation_out_opt, byteptr szLocation, bytep
 
 		if( !(*validation_out_opt = malloc( srecordCount )) ) { ASSERT(0); rc=-9; goto EXIT; }
 
-		if( rc = ar_core_check_topic( (*validation_out_opt), pARecord, srecordTbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -4 : rc; goto EXIT; } // conv failure code
+		if( rc = ar_core_check_topic( (*validation_out_opt), pARecord, srecordtbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -4 : rc; goto EXIT; } // conv failure code
 
-		if( rc = ar_core_check_signature( (*validation_out_opt), pARecord, srecordTbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -5 : rc; goto EXIT; } // conv failure code
+		if( rc = ar_core_check_signature( (*validation_out_opt), pARecord, srecordtbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -5 : rc; goto EXIT; } // conv failure code
 	}
 
 EXIT:
 
 	if( pARecord ) free( pARecord );
-	for( int i=0; i<srecordCount; i++ ) { if( srecordTbl[i] ) { free( srecordTbl[i] ); srecordTbl[i] = 0; } }
-	if( srecordTbl ) free( srecordTbl );
+	for( int i=0; i<srecordCount; i++ ) { if( srecordtbl[i] ) { free( srecordtbl[i] ); } }
+	if( srecordtbl ) free( srecordtbl );
 	if( szSRecordTbl ) free( szSRecordTbl );
 	if( szSRecordArr_rw ) free( szSRecordArr_rw );
 
