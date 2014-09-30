@@ -7,6 +7,10 @@
 
 #if defined(_WINDOWS)
 
+	#define _CRTDBG_MAP_ALLOC
+	#include <stdlib.h>
+	#include <crtdbg.h>
+
 	#define PRAGMA_SOMETHING __pragma("something")
 	#define PRAGMA_PUSH
 	#define PRAGMA_POP
@@ -46,7 +50,10 @@
 		#endif // debug
 	#endif
 
-	#define strdup _strdup
+	#if !defined(strdup)
+		#define strdup _strdup
+	#endif
+
 	char *strndup(const char *s, size_t n);
 
 	#define DEPRECATED __declspec(deprecated)
