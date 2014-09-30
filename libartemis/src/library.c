@@ -256,13 +256,6 @@ int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr share
 		{
 			if( !pARecord )
 			{
-				ar_uri_parse_messlen( &messlen, inbuf );
-				if( !messlen ) { return 1; }
-
-				*message_out = malloc( messlen );
-				if( !*message_out ) { ASSERT(0); rc=-9; goto FAIL; }
-				memset( *message_out, 0, messlen );
-
 				size_t structlen = sizeof(arAuth) + buflen;
 				if( !(pARecord = malloc( structlen )) ) { ASSERT(0); rc=-9; goto FAIL; }
 				memset( pARecord, 0, structlen );
@@ -297,12 +290,10 @@ int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr share
 
 	if( !pARecord || !srecordTbl ) { rc=-9; goto FAIL; } // no assert here
 
-	rc = ar_core_decrypt( *message_out, (word16)messlen, pARecord, srecordTbl, sharenum );
+	if( rc = ar_core_decrypt( message_out, pARecord, srecordTbl, sharenum ) ) { ASSERT(0); goto FAIL; }
 
 FAIL:
 
-	if( rc && *message_out ) { free( *message_out ); *message_out = 0; }
-	
 	if( pARecord ) free( pARecord );
 	for( int i=0; i<sharenum; i++ ) { if( srecordTbl[i] ) { free( srecordTbl[i] ); srecordTbl[i] = 0; } }
 	if( srecordTbl ) free( srecordTbl );

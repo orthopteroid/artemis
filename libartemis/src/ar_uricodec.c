@@ -742,7 +742,7 @@ void ar_uri_test()
 	char* location = "foo.bar";
 
 	char cleartextin[20];
-	char cleartextout[80];
+	char* cleartext_out;
 
 	typedef byte byte2048[2048];
 
@@ -894,11 +894,12 @@ void ar_uri_test()
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
-		cleartextout[0]=0;
-		rc = ar_core_decrypt( cleartextout, 80, &arecord_.x, (arShareptr*)srecordarr_, 2 );
+		rc = ar_core_decrypt( &cleartext_out, &arecord_.x, (arShareptr*)srecordarr_, 2 );
 		TESTASSERT( rc == 0 );
 
-		TESTASSERT( strcmp( cleartextin, cleartextout ) == 0 );
+		TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
+
+		if( cleartext_out ) free( cleartext_out );
 
 		if(i > 0 &&  i % 10 == 0 ) { printf("%d",9 - i / (numtests / 9)); }
 	}

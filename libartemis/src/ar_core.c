@@ -299,22 +299,23 @@ EXIT:
 	return rc;
 }
 
-int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShareptr* pSRecordArr, word16 numSRecords )
+int ar_core_decrypt( byteptr* buf_out, arAuth* pARecord, arShareptr* pSRecordArr, word16 numSRecords )
 {
 	int rc = 0;
 
 	gfPoint* shareArr = 0;
 	word16* shareIDArr = 0;
 
-	if( !outbuf ) { ASSERT(0); rc = -1; goto EXIT; }
+	if( !buf_out ) { ASSERT(0); rc = -1; goto EXIT; }
+
+	*buf_out = 0;
+
 	if( !pARecord ) { ASSERT(0); rc = -1; goto EXIT; }
 	if( !pSRecordArr ) { ASSERT(0); rc = -1; goto EXIT; }
-	if( outbuflen == 0 ) { ASSERT(0); rc = -1; goto EXIT; }
-
-	if( outbuflen < pARecord->msglen ) { ASSERT(0); rc = -2; goto EXIT; }
 
 	if( numSRecords < pARecord->threshold ) { rc = -3; goto EXIT; } // no assert
 
+	if( (*buf_out = malloc( pARecord->msglen )) == 0 ) { ASSERT(0); rc=-9; goto EXIT; }
 	if( (shareArr = malloc( sizeof(gfPoint) * numSRecords )) == 0 ) { ASSERT(0); rc=-9; goto EXIT; }
 	if( (shareIDArr = malloc( sizeof(word16) * numSRecords )) == 0 ) { ASSERT(0); rc=-9; goto EXIT; }
 
@@ -351,7 +352,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 		shareIDArr[i] = pSRecordArr[i]->shareid;
 	}
 
-	memcpy_s( outbuf, outbuflen, cryptext, pARecord->msglen );
+	memcpy_s( *buf_out, pARecord->msglen, cryptext, pARecord->msglen );
 
 	{
 		gfPoint gfCryptkey;
@@ -366,7 +367,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 		size_t deltalen = 0;
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
 		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, 16, rc4cranks, outbuf, pARecord->msglen );
+		rc4( cryptkeyBArr, 16, rc4cranks, *buf_out, pARecord->msglen );
 	}
 
 	///////////
@@ -379,7 +380,7 @@ int ar_core_decrypt( byteptr outbuf, word16 outbuflen, arAuth* pARecord, arShare
 			sha1Digest digest;
 			sha1_context c[1];
 			sha1_initial( c );
-			sha1_process( c, outbuf, (unsigned)(pARecord->msglen) );
+			sha1_process( c, *buf_out, (unsigned)(pARecord->msglen) );
 			sha1_final( c, digest );
 			vlSetWord32( verify, digest[0] );
 		}
@@ -535,7 +536,7 @@ void ar_core_test()
 	arShare* srecordarr[2] = {0,0};
 	char* reftextin = "dog food.";
 	char* cleartextin = 0;
-	char cleartextout[80];
+	char* cleartext_out = 0;
 	char* cluetbl[3] = {"topiclue", "clue1", "clue2"};
 	int rc = 0;
 
@@ -563,10 +564,10 @@ void ar_core_test()
 	TESTASSERT( checkarr[0] == 0 );
 	TESTASSERT( checkarr[1] == 0 );
 
-	rc = ar_core_decrypt( cleartextout, 80, arecord, srecordarr, 2 );
+	rc = ar_core_decrypt( &cleartext_out, arecord, srecordarr, 2 );
 	TESTASSERT( rc == 0 );
 
-	TESTASSERT( strcmp( cleartextin, cleartextout ) == 0 );
+	TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
 
 	///////////////////
 	// now start breaking things....
@@ -598,6 +599,7 @@ void ar_core_test()
 EXIT:
 
 	if( cleartextin ) free( cleartextin );
+	if( cleartext_out ) free( cleartext_out );
 	if( arecord ) free( arecord );
 	if( srecordarr[0] ) free( srecordarr[0] );
 	if( srecordarr[1] ) free( srecordarr[1] );

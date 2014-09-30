@@ -12,7 +12,7 @@
 int ar_core_create( arAuth* pARecord, arShareptr* pSRecordArr, word16 numShares, word16 numThres, byteptr bytes, word16 bytelen, bytetbl clueTbl, byteptr location );
 	/* -2 bounds, -1 api, 0 OK */
 
-int ar_core_decrypt( byteptr buf, word16 buflen, arAuth* pARecord, arShareptr* pSRecordArr, word16 numSRecords );
+int ar_core_decrypt( byteptr* buf_out, arAuth* pARecord, arShareptr* pSRecordArr, word16 numSRecords );
 	/* -9 malloc, -8 decrypt, -7 authsig, -6 sharesig, -5 sharetopic, -4 authtopic, -3 too few shares, -2 bounds, -1 api, 0 OK */
 
 int ar_core_check_topic( byteptr buf_opt, arAuth* pARecord, arShareptr* pSRecordArr_opt, word16 numSRecords );
