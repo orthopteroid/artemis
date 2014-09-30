@@ -421,7 +421,7 @@ FAIL:
 	return rc;
 }
 
-int library_uri_validate( byteptr* validation_out_opt, byteptr szLocation, byteptr szARrecord, byteptr szSRecordArr_opt )
+int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, byteptr szARrecord, byteptr szSRecordArr_opt )
 {
 	int rc = 0;
 
@@ -433,7 +433,7 @@ int library_uri_validate( byteptr* validation_out_opt, byteptr szLocation, bytep
 	bytetbl		szSRecordTbl = 0;
 	arSharetbl	srecordtbl = 0;
 
-	if( validation_out_opt ) { *validation_out_opt = 0; }
+	if( invalidBoolArr_out_opt ) { *invalidBoolArr_out_opt = 0; }
 
 	if( !szLocation ) { ASSERT(0); return -1; }
 	if( !szARrecord ) { ASSERT(0); return -1; }
@@ -500,11 +500,11 @@ int library_uri_validate( byteptr* validation_out_opt, byteptr szLocation, bytep
 
 		// check objects
 
-		if( !(*validation_out_opt = malloc( srecordCount )) ) { ASSERT(0); rc=-9; goto EXIT; }
+		if( !(*invalidBoolArr_out_opt = malloc( srecordCount )) ) { ASSERT(0); rc=-9; goto EXIT; }
 
-		if( rc = ar_core_check_topic( (*validation_out_opt), pARecord, srecordtbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -4 : rc; goto EXIT; } // conv failure code
+		if( rc = ar_core_check_topic( (*invalidBoolArr_out_opt), pARecord, srecordtbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -4 : rc; goto EXIT; } // conv failure code
 
-		if( rc = ar_core_check_signature( (*validation_out_opt), pARecord, srecordtbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -5 : rc; goto EXIT; } // conv failure code
+		if( rc = ar_core_check_signature( (*invalidBoolArr_out_opt), pARecord, srecordtbl, srecordCount ) ) { ASSERT(0); rc = (rc==-2) ? -5 : rc; goto EXIT; } // conv failure code
 	}
 
 EXIT:

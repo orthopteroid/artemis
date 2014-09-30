@@ -16,7 +16,7 @@ DLLDECL void library_cleanup();
 DLLDECL int library_uri_shareinfo( word16* pShares, word16* pThreshold, byteptr szShare );
 DLLDECL int library_uri_sharetype( word16* pType, byteptr szShare );
 
-DLLDECL int library_uri_validate( byteptr* validation_out, byteptr szLocation, byteptr szARrecord, byteptr szSRecordArr );
+DLLDECL int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, byteptr szARrecord, byteptr szSRecordArr_opt );
 	/* -5 srecord sig fail, -4 srecord topic fail, -3 arecord sig fail, -2 arecord topic fail, -1 api, 0 ok */
 
 DLLDECL int library_uri_topic( byteptr* topic_out, byteptr szShare );
