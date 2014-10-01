@@ -19,7 +19,7 @@ void ar_uri_bufsize_s( size_t* pUribufsize, arShare* pASecord );
 void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf );
 	/* returns num of bytes needed to hold all variable length data in buf record */
 
-int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr szRecord );
+int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szRecord );
 
 int ar_uri_locate_topic( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord );
 

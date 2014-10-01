@@ -367,32 +367,18 @@ FAIL:
 	return rc;
 }
 
-int library_uri_shareinfo( word16* pShares, word16* pThreshold, byteptr szShare )
-{
-	int rc = 0;
-	
-	if( !pShares ) { ASSERT(0); return -1; }
-	if( !pThreshold ) { ASSERT(0); return -1; }
-	if( !szShare ) { ASSERT(0); return -1; }
-
-	*pShares = *pThreshold = 0;
-
-	if( rc = ar_uri_parse_shareinfo( pShares, pThreshold, szShare ) ) { ASSERT(0); goto FAIL; }
-	
-FAIL:
-	
-	return rc;
-}
-
-int library_uri_sharetype( word16* pType, byteptr szShare )
+int library_uri_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szShare )
 {
 	int rc = 0;
 	
 	if( !pType ) { ASSERT(0); return -1; }
+	if( !pShares ) { ASSERT(0); return -1; }
+	if( !pThreshold ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
 
-	*pType = 0;
-	
-	if( (*pType = ar_uri_parse_type( szShare )) == -1 ) { ASSERT(0); rc=-1; goto FAIL; }
+	*pType = *pShares = *pThreshold = 0;
+
+	if( rc = ar_uri_parse_info( pType, pShares, pThreshold, szShare ) ) { ASSERT(0); goto FAIL; }
 	
 FAIL:
 	

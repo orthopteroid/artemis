@@ -296,11 +296,16 @@ int ar_uri_parse_type( byteptr buf )
 	return -1;
 }
 
-int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr szRecord )
+int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szRecord )
 {
 	int rc = 0;
 
-	*pShares = *pThreshold = 0;
+	if( !pType ) { ASSERT(0); return -1; }
+	if( !pShares ) { ASSERT(0); return -1; }
+	if( !pThreshold ) { ASSERT(0); return -1; }
+	if( !szRecord ) { ASSERT(0); return -1; }
+
+	*pType = *pShares = *pThreshold = 0;
 
 	byteptr pShare_start, pThreshold_start;
 	pShare_start = pThreshold_start = 0;
@@ -312,10 +317,10 @@ int ar_uri_parse_shareinfo( word16* pShares, word16* pThreshold, byteptr szRecor
 	word32 token;
 	while( token = ps2_token( pss ) )
 	{
-		if( token == 'ai=0' )			{ pShare_start = ss.data_first; }
-		else if( token == 'ai=1' )	{ pThreshold_start = ss.data_first; }
-		else if( token == 'si=0' )	{ pShare_start = ss.data_first; }
-		else if( token == 'si=1' )	{ pThreshold_start = ss.data_first; }
+		if( token == 'ai=0' )		{ *pType = 1; pShare_start = ss.data_first; }
+		else if( token == 'ai=1' )	{             pThreshold_start = ss.data_first; }
+		else if( token == 'si=0' )	{ *pType = 2; pShare_start = ss.data_first; }
+		else if( token == 'si=1' )	{             pThreshold_start = ss.data_first; }
 		if( pShare_start != 0 && pThreshold_start != 0 ) { break; }
 	}
 	if( pShare_start == 0 && pThreshold_start == 0 ) { ASSERT(0); return -1; }
@@ -758,7 +763,7 @@ void ar_uri_test()
 	typedef byte byte2048[2048];
 
 	byte2048 bufa, bufs0, bufs1;
-	word16 shares, threshold;
+	word16 stype, shares, threshold;
 
 	int numtests = 100;
 	for( int i=0; i<numtests; i++ )
@@ -872,8 +877,9 @@ void ar_uri_test()
 		rc = ar_uri_parse_a( &arecord_, bufa );
 		TESTASSERT( rc == 0 );
 
-		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufa );
+		rc = ar_uri_parse_info( &stype, &shares, &threshold, bufa );
 		TESTASSERT( rc == 0 );
+		TESTASSERT( stype == 1 );
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
@@ -882,16 +888,18 @@ void ar_uri_test()
 		rc = ar_uri_parse_s( &srecordtbl_[0], bufs0 );
 		TESTASSERT( rc == 0 );
 
-		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufs0 );
+		rc = ar_uri_parse_info( &stype, &shares, &threshold, bufs0 );
 		TESTASSERT( rc == 0 );
+		TESTASSERT( stype == 2 );
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
 		rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 );
 		TESTASSERT( rc == 0 );
 
-		rc = ar_uri_parse_shareinfo( &shares, &threshold, bufs1 );
+		rc = ar_uri_parse_info( &stype, &shares, &threshold, bufs1 );
 		TESTASSERT( rc == 0 );
+		TESTASSERT( stype == 2 );
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
