@@ -91,7 +91,7 @@
 	#if !defined(ASSERT)
 		#if defined(_DEBUG)
 			#include <assert.h>
-			#define ASSERT(...) do { if( !library_istest() ) { assert( __VA_ARGS__ ) } } while(0)
+			#define ASSERT(...) do { if( !library_istest() ) { assert( __VA_ARGS__ ); } } while(0)
 		#else // debug
 			#define ASSERT(...) (0)
 		#endif // debug
