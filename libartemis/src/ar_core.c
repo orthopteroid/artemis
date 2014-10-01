@@ -562,8 +562,8 @@ void ar_core_test()
 	arAuthptr arecord = 0;
 	arSharetbl srecordtbl = 0;
 	char* reftextin = "dog food.";
-	char* cleartextin = 0;
-	char* cleartext_out = 0;
+	byteptr cleartextin = 0;
+	byteptr cleartext_out = 0;
 	char* cluetbl[3] = {"topiclue", "clue1", "clue2"};
 	int rc = 0;
 

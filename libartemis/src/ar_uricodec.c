@@ -758,7 +758,7 @@ void ar_uri_test()
 	char* location = "foo.bar";
 
 	char cleartextin[20];
-	char* cleartext_out;
+	byteptr cleartext_out;
 
 	typedef byte byte2048[2048];
 
