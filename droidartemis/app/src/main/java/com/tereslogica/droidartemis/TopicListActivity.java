@@ -211,8 +211,9 @@ public class TopicListActivity extends FragmentActivity {
         ArtemisShare oShare = artemisSql.getShareInfo( share );
         if( oShare != null ) return; // got it already
         //
-        String topic = artemisLib.nativeShareTopic(share);
-        String clue = artemisLib.nativeShareClue(share);
+        int[] shareInfo = artemisLib.nativeInfo( share );
+        String topic = artemisLib.nativeTopic(share);
+        String clue = artemisLib.nativeClue(share);
         //
         oShare = new ArtemisShare( share, topic ); // sql api uses these
         //
@@ -220,11 +221,10 @@ public class TopicListActivity extends FragmentActivity {
         if( oTopic == null ) {
             // if topic not found in db, then create new topic and share objects for db
             //
-            String location = artemisLib.nativeShareLocation( share );
-            int[] shareInfo = artemisLib.nativeShareInfo( share );
-            oTopic = new ArtemisTopic( topic, shareInfo[0], shareInfo[1], clue, location );
+            String location = artemisLib.nativeLocation( share );
+            oTopic = new ArtemisTopic( topic, shareInfo[1], shareInfo[2], clue, location );
             //
-            if( artemisLib.nativeShareType( share ) == artemisLib.URI_B ) {
+            if( shareInfo[0] == artemisLib.URI_B ) {
                 oTopic.incCount(); // only B Types contribute towards the count
             }
             //
@@ -232,19 +232,28 @@ public class TopicListActivity extends FragmentActivity {
         } else {
             oTopic.addClue( clue );
             //
-            if( artemisLib.nativeShareType( share ) == artemisLib.URI_B ) {
+            if( shareInfo[0] == artemisLib.URI_B ) {
                 oTopic.incCount(); // only B Types contribute towards the count
             }
             //
-            String shareArrNL = share;
+            String arecord = "";
+            String srecordArr = "";
+            if( shareInfo[0] == artemisLib.URI_A ) { arecord = share; }
+            //
             Cursor cursor = artemisSql.getShareTopicCursor( topic );
             if (cursor.moveToFirst()) {
                 do {
-                    shareArrNL += "\n" + cursor.getString( ArtemisSQL.SHARE_COL );
+                    String othershare = cursor.getString( ArtemisSQL.SHARE_COL );
+                    if( artemisLib.nativeInfo( othershare )[0] == artemisLib.URI_A ) {
+                        arecord = othershare;
+                    } else {
+                        if( srecordArr.length() > 0 ) { srecordArr += "\n"; }
+                        srecordArr += othershare;
+                    }
                 } while( cursor.moveToNext() );
             }
             cursor.close();
-            oTopic.message = artemisLib.nativeDecode( shareArrNL ); // szLocation baked into library
+            oTopic.message = artemisLib.nativeDecode( arecord, srecordArr ); // szLocation baked into library
             artemisSql.addShareUpdateTopic( oShare, oTopic );
             //
         }

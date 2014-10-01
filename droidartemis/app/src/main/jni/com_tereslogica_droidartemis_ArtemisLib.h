@@ -48,20 +48,12 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGet
 
 JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetStatusOK(JNIEnv * env, jobject obj);
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jSharesNLArr);
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jARecord, jstring jSRecordArr);
 
-JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareInfo(JNIEnv * env, jobject obj, jstring jShare);
-
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareTopic(JNIEnv * env, jobject obj, jstring jShare);
-
-JNIEXPORT jint JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareType(JNIEnv * env, jobject obj, jstring jShare);
-
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareClue(JNIEnv * env, jobject obj, jstring jShare);
-
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareLocation(JNIEnv * env, jobject obj, jstring jShare);
-
-//JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecodeB64(JNIEnv * env, jobject obj, jstring jString);
-//JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeShareField(JNIEnv * env, jobject obj, jstring jShare, jstring jField, jint jFieldNum);
+JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeInfo(JNIEnv * env, jobject obj, jstring jRecord);
+JNIEXPORT jstring   JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeTopic(JNIEnv * env, jobject obj, jstring jRecord);
+JNIEXPORT jstring   JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeClue(JNIEnv * env, jobject obj, jstring jRecord);
+JNIEXPORT jstring   JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeLocation(JNIEnv * env, jobject obj, jstring jRecord);
 
 #ifdef __cplusplus
 }

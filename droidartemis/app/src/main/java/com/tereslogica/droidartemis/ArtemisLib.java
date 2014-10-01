@@ -12,16 +12,12 @@ public class ArtemisLib {
 
     public native String nativeGetString();
     public native boolean nativeGetStatusOK();
-    public native String nativeDecode( String data );
+    public native String nativeDecode( String arecord, String srecordArr ); // srecordArr is \n delimited
 
-    public native int[] nativeShareInfo( String share ); // 0 = shares, 1 = threshold
-    public native String nativeShareTopic( String share );
-    public native int nativeShareType( String share );
-    public native String nativeShareClue( String share );
-    public native String nativeShareLocation( String share );
-
-    //public native String nativeDecodeB64( String data );
-    //public native String nativeShareTopic( String share, String field, int num );
+    public native int[] nativeInfo( String record ); // type, shares, threshold
+    public native String nativeTopic( String record );
+    public native String nativeClue( String record );
+    public native String nativeLocation( String record );
 
     ArtemisLib() {
         String sss = nativeGetString();
