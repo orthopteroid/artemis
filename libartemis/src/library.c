@@ -21,6 +21,38 @@ static int testflag = 0;
 
 /////////////////////////
 
+typedef struct {
+	byteptr start, end, s_record, e_record;
+	int type;
+} scanstate;
+typedef scanstate* ssptr;
+
+static void ss_init( ssptr pss, byteptr buf, size_t len )
+
+{
+	pss->start = buf;
+	pss->end = buf + len;
+	pss->s_record = buf;
+	pss->e_record = buf;
+	pss->type = 0;
+}
+
+static int ss_scan( ssptr pss )
+{
+	if( pss->e_record != pss->start ) { pss->s_record = pss->e_record = pss->e_record + 1; } // +1 for char after \0
+	if( pss->s_record >= pss->end ) { pss->type = 0; return 0; } // stopping condition
+
+	while( *(pss->e_record) != '\0' ) { pss->e_record++; } // scan \0 delimited string
+	if( pss->e_record > pss->end ) { ASSERT(0); return -2; } // blew buffer
+	*(pss->e_record) = 0; // \0 term the string
+
+	pss->type = ar_uri_parse_type( pss->s_record );
+
+	return 1; // continuing condition
+}
+
+/////////////////////////
+
 static word32 testendianness()
 {
 	static byte x[4] = {1,2,3,4};
@@ -322,6 +354,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 
 	arAuth* pARecord = 0;
 	arShareptr* srecordtbl = 0;
+	scanstate ss;
 
 	byteptr arecordLoc = 0;
 	byteptr recordArr_rw = 0;
@@ -336,25 +369,13 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 
 	word16 arecordCount = 0;
 	word16 srecordCount = 0;
+
+	ss_init( &ss, recordArr_rw, shareArrLen );
+	while( (rc = ss_scan( &ss )) == 1 )
 	{
-		byteptr end = recordArr_rw + shareArrLen;
-		byteptr s_record = recordArr_rw;
-		byteptr e_record = recordArr_rw;
-		while( s_record < end )
-		{
-			while( *e_record != '\0' ) { e_record++; } // now \0 delimited
-			if( e_record > end ) { ASSERT(0); rc=-2; goto FAIL; } // blew buffer
-			*e_record = 0; // \0 term the string
-
-			if( ar_uri_parse_type( s_record ) == 1 ) {
-				arecordCount++;
-			} else {
-				srecordCount++;
-			}
-
-			s_record = e_record = e_record + 1; // +1 for char after \0
-		}
+		if( ss.type == 1 ) { arecordCount++; } else { srecordCount++; }
 	}
+	if( rc < 0 ) { ASSERT(0); goto FAIL; }
 
 	if( arecordCount != 1 ) { ASSERT(0); rc=-2; goto FAIL; }
 	if( srecordCount < 2 ) { ASSERT(0); rc=-2; goto FAIL; }
@@ -365,27 +386,19 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 	if( !(srecordtbl = malloc( tblsize )) ) { ASSERT(0); rc=-9; goto FAIL; }
 	memset( srecordtbl, 0, tblsize );
 
+	word16 srecnum = 0;
+
+	ss_init( &ss, recordArr_rw, shareArrLen );
+	while( (rc = ss_scan( &ss )) == 1 )
 	{
-		word16 i = 0;
-		byteptr end = recordArr_rw + shareArrLen;
-		byteptr s_record = recordArr_rw;
-		byteptr e_record = recordArr_rw;
-		while( s_record < end )
-		{
-			while( *e_record != '\0' ) { e_record++; } // now \0 delimited
-			if( e_record > end ) { ASSERT(0); rc=-2; goto FAIL; } // blew buffer
-			*e_record = 0; // \0 term the string
-
-			if( ar_uri_parse_type( s_record ) == 1 ) {
-				if( rc = ar_uri_parse_a( &pARecord, s_record ) ) { ASSERT(0); goto FAIL; }
-				if( rc = library_uri_location( &arecordLoc, s_record ) ) { ASSERT(0); goto FAIL; }
-			} else {
-				if( rc = ar_uri_parse_s( &(srecordtbl[ i++ ]), s_record ) ) { ASSERT(0); goto FAIL; }
-			}
-
-			s_record = e_record = e_record + 1; // +1 for char after \0
+		if( ss.type == 1 ) {
+			if( rc = ar_uri_parse_a( &pARecord, ss.s_record ) ) { ASSERT(0); goto FAIL; }
+			if( rc = library_uri_location( &arecordLoc, ss.s_record ) ) { ASSERT(0); goto FAIL; }
+		} else {
+			if( rc = ar_uri_parse_s( &(srecordtbl[ srecnum++ ]), ss.s_record ) ) { ASSERT(0); goto FAIL; }
 		}
 	}
+	if( rc < 0 ) { ASSERT(0); goto FAIL; }
 
 	if( strcmp( arecordLoc, location ) != 0 ) { ASSERT(0); rc=-2; goto FAIL; }
 
@@ -418,6 +431,7 @@ int library_uri_validate( byteptr* invalidBoolArr_out, byteptr szLocation, bytep
 
 	arAuth* pARecord = 0;
 	arShareptr* srecordtbl = 0;
+	scanstate ss;
 
 	byteptr arecordLoc = 0;
 	byteptr recordArr_rw = 0;
@@ -432,25 +446,13 @@ int library_uri_validate( byteptr* invalidBoolArr_out, byteptr szLocation, bytep
 
 	word16 arecordCount = 0;
 	word16 srecordCount = 0;
+
+	ss_init( &ss, recordArr_rw, shareArrLen );
+	while( (rc = ss_scan( &ss )) == 1 )
 	{
-		byteptr end = recordArr_rw + shareArrLen;
-		byteptr s_record = recordArr_rw;
-		byteptr e_record = recordArr_rw;
-		while( s_record < end )
-		{
-			while( *e_record != '\0' ) { e_record++; } // now \0 delimited
-			if( e_record > end ) { ASSERT(0); rc=-2; goto FAIL; } // blew buffer
-			*e_record = 0; // \0 term the string
-
-			if( ar_uri_parse_type( s_record ) == 1 ) {
-				arecordCount++;
-			} else {
-				srecordCount++;
-			}
-
-			s_record = e_record = e_record + 1; // +1 for char after \0
-		}
+		if( ss.type == 1 ) { arecordCount++; } else { srecordCount++; }
 	}
+	if( rc < 0 ) { ASSERT(0); goto FAIL; }
 
 	if( arecordCount != 1 ) { ASSERT(0); rc=-2; goto FAIL; }
 	if( srecordCount < 2 ) { ASSERT(0); rc=-2; goto FAIL; }
@@ -461,27 +463,19 @@ int library_uri_validate( byteptr* invalidBoolArr_out, byteptr szLocation, bytep
 	if( !(srecordtbl = malloc( tblsize )) ) { ASSERT(0); rc=-9; goto FAIL; }
 	memset( srecordtbl, 0, tblsize );
 
+	word16 srecnum = 0;
+
+	ss_init( &ss, recordArr_rw, shareArrLen );
+	while( (rc = ss_scan( &ss )) == 1 )
 	{
-		word16 i = 0;
-		byteptr end = recordArr_rw + shareArrLen;
-		byteptr s_record = recordArr_rw;
-		byteptr e_record = recordArr_rw;
-		while( s_record < end )
-		{
-			while( *e_record != '\0' ) { e_record++; } // now \0 delimited
-			if( e_record > end ) { ASSERT(0); rc=-2; goto FAIL; } // blew buffer
-			*e_record = 0; // \0 term the string
-
-			if( ar_uri_parse_type( s_record ) == 1 ) {
-				if( rc = ar_uri_parse_a( &pARecord, s_record ) ) { ASSERT(0); goto FAIL; }
-				if( rc = library_uri_location( &arecordLoc, s_record ) ) { ASSERT(0); goto FAIL; }
-			} else {
-				if( rc = ar_uri_parse_s( &(srecordtbl[ i++ ]), s_record ) ) { ASSERT(0); goto FAIL; }
-			}
-
-			s_record = e_record = e_record + 1; // +1 for char after \0
+		if( ss.type == 1 ) {
+			if( rc = ar_uri_parse_a( &pARecord, ss.s_record ) ) { ASSERT(0); goto FAIL; }
+			if( rc = library_uri_location( &arecordLoc, ss.s_record ) ) { ASSERT(0); goto FAIL; }
+		} else {
+			if( rc = ar_uri_parse_s( &(srecordtbl[ srecnum++ ]), ss.s_record ) ) { ASSERT(0); goto FAIL; }
 		}
 	}
+	if( rc < 0 ) { ASSERT(0); goto FAIL; }
 
 	// validate
 
