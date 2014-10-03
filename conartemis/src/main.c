@@ -119,9 +119,8 @@ HELP:
 		size_t shareArrLen = 0;
 		while( 1 )
 		{
-			char ch = getc( stdin );
+			char ch = getc( stdin ); // must be \n delim'd
 			if( ch == EOF ) { shareArr[shareArrLen] = 0; break; }
-			if( ch == '\n' ) { ch = '\0'; } // change array delim from \n to \0
 			shareArr[shareArrLen++] = ch;
 			if( shareArrLen == bufsize-1 )
 			{

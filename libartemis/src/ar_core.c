@@ -355,8 +355,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	if( rc = ar_core_check_topic( 0, arecord, srecordtbl, numSRecords ) )
 	{
 		ASSERT(0);
-		if( rc == -2 ) { rc = -4; } // remap authtopichash err
-		if( rc == -3 ) { rc = -5; } // remap sharetopichash err
+		if( rc == -2 ) { rc = -4; } else if( rc == -3 ) { rc = -5; } // remap err
 		goto EXIT;
 	}
 
@@ -366,8 +365,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	if( rc = ar_core_check_signature( 0, arecord, srecordtbl, numSRecords ) )
 	{
 		ASSERT(0);
-		if( rc == -2 ) { rc = -6; } // remap authsig err
-		if( rc == -3 ) { rc = -7; } // remap sharesig err
+		if( rc == -2 ) { rc = -6; } else if( rc == -3 ) { rc = -7; } // remap err
 		goto EXIT;
 	}
 
