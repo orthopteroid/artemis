@@ -89,7 +89,9 @@
 	DLLDECL int library_istest();
 
 	#if !defined(ASSERT)
-		#if defined(_DEBUG)
+		#if defined(NDK_DEBUG)
+			#define ASSERT(...) do { __android_log_print(ANDROID_LOG_INFO, "libartemis", "ASSERT Failed %s line %d", __FILE__, __LINE__ ); } while(0)
+		#elif defined(_DEBUG)
 			#include <assert.h>
 			#define ASSERT(...) do { if( !library_istest() ) { assert( __VA_ARGS__ ); } } while(0)
 		#else // debug
