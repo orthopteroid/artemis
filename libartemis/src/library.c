@@ -122,6 +122,112 @@ word32 library_keylength()
 
 //////////////////
 
+int library_uri_clue( byteptr* clue_out, byteptr szShare )
+{
+	int rc = 0;
+	
+	if( !clue_out ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
+
+	*clue_out = 0;
+	
+	byteptr pFirst = 0;
+	byteptr pLast = 0;
+	
+	if( rc = ar_uri_locate_clue( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
+
+	size_t clen = pLast - pFirst + 1; // but, overestimates because of b64 encoding
+	if( clen > 0 )
+	{
+		*clue_out = malloc( clen + 1 ); // +1 for \0
+		if( *clue_out == 0 ) { ASSERT(0); rc=-1; goto FAIL; }
+		
+		size_t deltalen = 0;
+		if( rc = ar_util_6BAto8BA( &deltalen, *clue_out, clen, pFirst, clen ) ) { ASSERT(0); goto FAIL; }
+		if( rc == 0 ) { (*clue_out)[ deltalen ] = 0; }
+	}
+	
+FAIL:
+
+	if( rc && *clue_out ) { free( *clue_out ); *clue_out = 0; }
+	
+	return rc;
+}
+
+int library_uri_location( byteptr* location_out, byteptr szShare )
+{
+	int rc = 0;
+	
+	if( !location_out ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
+
+	*location_out = 0;
+	
+	byteptr pFirst = 0;
+	byteptr pLast = 0;
+	
+	if( rc = ar_uri_locate_location( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
+
+	if( pFirst != 0 )
+	{
+		*location_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
+		if( !*location_out ) { ASSERT(0); rc=-9; goto FAIL; }
+	}
+	
+FAIL:
+	
+	if( rc && *location_out ) { free( *location_out ); *location_out = 0; }
+	
+	return rc;
+}
+
+int library_uri_topic( byteptr* topic_out, byteptr szShare )
+{
+	int rc = 0;
+	
+	if( !topic_out ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
+
+	*topic_out = 0;
+	
+	byteptr pFirst = 0;
+	byteptr pLast = 0;
+	
+	if( rc = ar_uri_locate_topic( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
+
+	if( pFirst != 0 )
+	{
+		*topic_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
+		if( !*topic_out ) { ASSERT(0); rc=-9; goto FAIL; }
+	}
+	
+FAIL:
+	
+	if( rc && *topic_out ) { free( *topic_out ); *topic_out = 0; }
+	
+	return rc;
+}
+
+int library_uri_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szShare )
+{
+	int rc = 0;
+	
+	if( !pType ) { ASSERT(0); return -1; }
+	if( !pShares ) { ASSERT(0); return -1; }
+	if( !pThreshold ) { ASSERT(0); return -1; }
+	if( !szShare ) { ASSERT(0); return -1; }
+
+	*pType = *pShares = *pThreshold = 0;
+
+	if( rc = ar_uri_parse_info( pType, pShares, pThreshold, szShare ) ) { ASSERT(0); goto FAIL; }
+	
+FAIL:
+	
+	return rc;
+}
+
+//////////////////
+
 int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byteptr szLocation, byteptr clueArr, byteptr message )
 {
 	int rc = 0;
@@ -295,110 +401,6 @@ FAIL:
 	if( srecordtbl ) free( srecordtbl );
 	if( recordArr_rw ) free( recordArr_rw );
 
-	return rc;
-}
-
-int library_uri_clue( byteptr* clue_out, byteptr szShare )
-{
-	int rc = 0;
-	
-	if( !clue_out ) { ASSERT(0); return -1; }
-	if( !szShare ) { ASSERT(0); return -1; }
-
-	*clue_out = 0;
-	
-	byteptr pFirst = 0;
-	byteptr pLast = 0;
-	
-	if( rc = ar_uri_locate_clue( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
-
-	size_t clen = pLast - pFirst + 1; // but, overestimates because of b64 encoding
-	if( clen > 0 )
-	{
-		*clue_out = malloc( clen + 1 ); // +1 for \0
-		if( *clue_out == 0 ) { ASSERT(0); rc=-1; goto FAIL; }
-		
-		size_t deltalen = 0;
-		if( rc = ar_util_6BAto8BA( &deltalen, *clue_out, clen, pFirst, clen ) ) { ASSERT(0); goto FAIL; }
-		if( rc == 0 ) { (*clue_out)[ deltalen ] = 0; }
-	}
-	
-FAIL:
-
-	if( rc && *clue_out ) { free( *clue_out ); *clue_out = 0; }
-	
-	return rc;
-}
-
-int library_uri_location( byteptr* location_out, byteptr szShare )
-{
-	int rc = 0;
-	
-	if( !location_out ) { ASSERT(0); return -1; }
-	if( !szShare ) { ASSERT(0); return -1; }
-
-	*location_out = 0;
-	
-	byteptr pFirst = 0;
-	byteptr pLast = 0;
-	
-	if( rc = ar_uri_locate_location( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
-
-	if( pFirst != 0 )
-	{
-		*location_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
-		if( !*location_out ) { ASSERT(0); rc=-9; goto FAIL; }
-	}
-	
-FAIL:
-	
-	if( rc && *location_out ) { free( *location_out ); *location_out = 0; }
-	
-	return rc;
-}
-
-int library_uri_topic( byteptr* topic_out, byteptr szShare )
-{
-	int rc = 0;
-	
-	if( !topic_out ) { ASSERT(0); return -1; }
-	if( !szShare ) { ASSERT(0); return -1; }
-
-	*topic_out = 0;
-	
-	byteptr pFirst = 0;
-	byteptr pLast = 0;
-	
-	if( rc = ar_uri_locate_topic( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
-
-	if( pFirst != 0 )
-	{
-		*topic_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
-		if( !*topic_out ) { ASSERT(0); rc=-9; goto FAIL; }
-	}
-	
-FAIL:
-	
-	if( rc && *topic_out ) { free( *topic_out ); *topic_out = 0; }
-	
-	return rc;
-}
-
-int library_uri_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szShare )
-{
-	int rc = 0;
-	
-	if( !pType ) { ASSERT(0); return -1; }
-	if( !pShares ) { ASSERT(0); return -1; }
-	if( !pThreshold ) { ASSERT(0); return -1; }
-	if( !szShare ) { ASSERT(0); return -1; }
-
-	*pType = *pShares = *pThreshold = 0;
-
-	if( rc = ar_uri_parse_info( pType, pShares, pThreshold, szShare ) ) { ASSERT(0); goto FAIL; }
-	
-FAIL:
-	
 	return rc;
 }
 
