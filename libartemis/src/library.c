@@ -327,9 +327,9 @@ int library_uri_location( byteptr* location_out, byteptr szShare )
 	
 	if( rc = ar_uri_locate_location( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
 
-	if( pFirst != pLast )
+	if( pFirst != 0 )
 	{
-		*location_out = (unsigned char*)strndup( pFirst, pLast - pFirst );
+		*location_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
 		if( !*location_out ) { ASSERT(0); rc=-9; goto FAIL; }
 	}
 	
@@ -354,9 +354,9 @@ int library_uri_topic( byteptr* topic_out, byteptr szShare )
 	
 	if( rc = ar_uri_locate_topic( &pFirst, &pLast, szShare ) ) { ASSERT(0); goto FAIL; }
 
-	if( pFirst != pLast )
+	if( pFirst != 0 )
 	{
-		*topic_out = (unsigned char*)strndup( pFirst, pLast - pFirst );
+		*topic_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
 		if( !*topic_out ) { ASSERT(0); rc=-9; goto FAIL; }
 	}
 	
