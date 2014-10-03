@@ -221,7 +221,7 @@ public class TopicListActivity extends FragmentActivity {
         if( oTopic == null ) {
             // if topic not found in db, then create new topic and share objects for db
             //
-            String location = artemisLib.nativeLocation( share );
+            String location = artemisLib.nativeLocation(share);
             oTopic = new ArtemisTopic( topic, shareInfo[1], shareInfo[2], clue, location );
             //
             if( shareInfo[0] == artemisLib.URI_B ) {
@@ -238,7 +238,7 @@ public class TopicListActivity extends FragmentActivity {
             //
             String arecord = "";
             String srecordArr = "";
-            if( shareInfo[0] == artemisLib.URI_A ) { arecord = share; }
+            if( shareInfo[0] == artemisLib.URI_A ) { arecord = share; } else { srecordArr = share; }
             //
             Cursor cursor = artemisSql.getShareTopicCursor( topic );
             if (cursor.moveToFirst()) {
@@ -253,9 +253,12 @@ public class TopicListActivity extends FragmentActivity {
                 } while( cursor.moveToNext() );
             }
             cursor.close();
-            oTopic.message = artemisLib.nativeDecode( arecord, srecordArr ); // szLocation baked into library
-            artemisSql.addShareUpdateTopic( oShare, oTopic );
             //
+            if( arecord.length() > 0 && arecord.length() > 0 ) {
+                oTopic.message = artemisLib.nativeDecode(arecord, srecordArr); // szLocation baked into library
+            }
+            //
+            artemisSql.addShareUpdateTopic( oShare, oTopic );
         }
         //
         refreshListView();
