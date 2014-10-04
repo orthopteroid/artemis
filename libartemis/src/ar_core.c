@@ -340,7 +340,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	if( !arecord ) { LOGFAIL; rc = -1; goto EXIT; }
 	if( !srecordtbl ) { LOGFAIL; rc = -1; goto EXIT; }
 
-	if( numSRecords < arecord->threshold ) { rc = -3; goto EXIT; } // no assert
+	if( numSRecords < arecord->threshold ) { LOGFAIL; rc = -3; goto EXIT; }
 
 	if( !(*buf_out = malloc( arecord->msglen )) ) { LOGFAIL; rc=-9; goto EXIT; }
 	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { LOGFAIL; rc=-9; goto EXIT; }
