@@ -12,7 +12,7 @@ public class ArtemisLib {
 
     public native String nativeGetString();
     public native boolean nativeGetStatusOK();
-    public native String nativeDecode( String arecord, String srecordArr ); // srecordArr is \n delimited
+    public native String nativeDecode( String recordArr ); // recordArr is \n delimited
 
     public native int[] nativeInfo( String record ); // type, shares, threshold
     public native String nativeTopic( String record );

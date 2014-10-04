@@ -231,32 +231,23 @@ public class TopicListActivity extends FragmentActivity {
             artemisSql.addShareAndTopic( oShare, oTopic );
         } else {
             oTopic.addClue( clue );
-            //
+            //&p[i], &q[i]
             if( shareInfo[0] == artemisLib.URI_B ) {
                 oTopic.incCount(); // only B Types contribute towards the count
             }
             //
-            String arecord = "";
-            String srecordArr = "";
-            if( shareInfo[0] == artemisLib.URI_A ) { arecord = share; } else { srecordArr = share; }
-            //
+            String recordArr = share;
             Cursor cursor = artemisSql.getShareTopicCursor( topic );
             if (cursor.moveToFirst()) {
                 do {
                     String othershare = cursor.getString( ArtemisSQL.SHARE_COL );
-                    if( artemisLib.nativeInfo( othershare )[0] == artemisLib.URI_A ) {
-                        arecord = othershare;
-                    } else {
-                        if( srecordArr.length() > 0 ) { srecordArr += "\n"; }
-                        srecordArr += othershare;
-                    }
+                    if( recordArr.length() > 0 ) { recordArr += "\n"; }
+                    recordArr += othershare;
                 } while( cursor.moveToNext() );
             }
             cursor.close();
             //
-            if( arecord.length() > 0 && arecord.length() > 0 ) {
-                oTopic.message = artemisLib.nativeDecode(arecord, srecordArr); // szLocation baked into library
-            }
+            oTopic.message = artemisLib.nativeDecode( recordArr ); // szLocation baked into library
             //
             artemisSql.addShareUpdateTopic( oShare, oTopic );
         }

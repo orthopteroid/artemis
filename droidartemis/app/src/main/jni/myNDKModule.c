@@ -22,20 +22,18 @@ JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGe
     return jok;
 }
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jARecord, jstring jSRecordArr)
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jRecordArr)
 {
     byte* cMessage_out = 0;
     jstring jMessage_out;
 
-    const char *cARecord    = (*env)->GetStringUTFChars(env, jARecord, 0);
-    const char *cSRecordArr = (*env)->GetStringUTFChars(env, jSRecordArr, 0);
+    const char *cRecordArr = (*env)->GetStringUTFChars(env, jRecordArr, 0);
 
 #if defined(_DEBUG)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cARecord %s", cARecord );
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cSRecordArr %s", cSRecordArr );
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cRecordArr %s", cRecordArr );
 #endif
 
-    rc = library_uri_decoder( &cMessage_out, (byte*)cARecord, (byte*)cSRecordArr );
+    rc = library_uri_decoder( &cMessage_out, (byte*)szLocation, (byte*)cRecordArr );
 
 //http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
 #if defined(_DEBUG)
@@ -53,8 +51,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
         jMessage_out = (*env)->NewStringUTF( env, szUnknown );
     }
 
-    (*env)->ReleaseStringUTFChars( env, jARecord, cARecord );
-    (*env)->ReleaseStringUTFChars( env, jSRecordArr, cSRecordArr );
+    (*env)->ReleaseStringUTFChars( env, jRecordArr, cRecordArr );
 
     return jMessage_out;
 }
