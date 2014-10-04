@@ -52,17 +52,20 @@ public class FakeScanner {
 
     Random rnd = new Random();
     int ordering[] = new int[ itemArr.length ];
+    final boolean scramble = false;
 
     public FakeScanner() {
         for (int j = 0; j < itemArr.length; j++) {
             ordering[j] = j;
         }
-        for (int j = 0; j < itemArr.length; j++) {
-            int a = rnd.nextInt( itemArr.length );
-            int b = rnd.nextInt( itemArr.length );
-            int swap = ordering[a];
-            ordering[a] = ordering[b];
-            ordering[b] = swap;
+        if( scramble ) {
+            for (int j = 0; j < itemArr.length; j++) {
+                int a = rnd.nextInt(itemArr.length);
+                int b = rnd.nextInt(itemArr.length);
+                int swap = ordering[a];
+                ordering[a] = ordering[b];
+                ordering[b] = swap;
+            }
         }
     }
 
