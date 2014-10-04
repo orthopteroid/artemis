@@ -34,11 +34,20 @@
 
 	DLLDECL int library_istest();
 
+	#if !defined(LOGFAIL)
+		#if defined(_DEBUG)
+			#define LOGFAIL do { if( !library_istest() ) { __debugbreak(); } } while( 0 )
+		#else // debug
+			#define LOGFAIL (0)
+		#endif // debug
+	#endif
+
 	#if !defined(ASSERT)
 		#if defined(_DEBUG)
-			#define ASSERT( c ) do { if( !library_istest() && !(c) ) { __debugbreak(); } } while( 0 )
+			#include <assert.h>
+			#define ASSERT( c ) do { if( !(c) ) { __debugbreak(); } } while( 0 )
 		#else // debug
-			#define ASSERT(...) (0)
+			#define ASSERT( c ) (0)
 		#endif // debug
 	#endif
 
@@ -46,7 +55,7 @@
 		#if defined(_DEBUG)
 			#define TESTASSERT( c ) do { if( !(c) ) { __debugbreak(); } } while( 0 )
 		#else // debug
-			#define TESTASSERT(...) (0)
+			#define TESTASSERT( c ) (0)
 		#endif // debug
 	#endif
 
@@ -88,23 +97,35 @@
 
 	DLLDECL int library_istest();
 
-	#if !defined(ASSERT)
+	#if !defined(LOGFAIL)
 		#if defined(NDK_DEBUG)
-			#define ASSERT(...) do { __android_log_print(ANDROID_LOG_INFO, "libartemis", "ASSERT Failed %s line %d", __FILE__, __LINE__ ); } while(0)
+			#define LOGFAIL __android_log_print(ANDROID_LOG_INFO, "libartemis", "LOGFAIL %s line %d", __FILE__, __LINE__ )
 		#elif defined(_DEBUG)
 			#include <assert.h>
-			#define ASSERT(...) do { if( !library_istest() ) { assert( __VA_ARGS__ ); } } while(0)
+			#define LOGFAIL do { if( !library_istest() ) { printf( "LOGFAIL %s line %d\n", __FILE__, __LINE__ ); assert(0); } while(0)
 		#else // debug
-			#define ASSERT(...) (0)
+			#define LOGFAIL (0)
+		#endif // debug
+	#endif
+
+	#if !defined(ASSERT)
+		#if defined(NDK_DEBUG)
+			#include <assert.h>
+			#define ASSERT( c ) do { __android_log_print(ANDROID_LOG_INFO, "libartemis", "ASSERT Failed %s line %d", __FILE__, __LINE__ ); assert(0); } while(0)
+		#elif defined(_DEBUG)
+			#include <assert.h>
+			#define ASSERT( c ) assert( c )
+		#else // debug
+			#define ASSERT( c ) (0)
 		#endif // debug
 	#endif
 
 	#if !defined(TESTASSERT)
 		#if defined(_DEBUG)
 			#include <assert.h>
-			#define TESTASSERT(...) assert( __VA_ARGS__ )
+			#define TESTASSERT( c ) assert( c )
 		#else // debug
-			#define TESTASSERT(...) (0)
+			#define TESTASSERT( c ) (0)
 		#endif // debug
 	#endif
 

@@ -71,7 +71,7 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 	gfPoint x;
 	gfPoint* gfShareIDArr = 0;
 
-	if( !(gfShareIDArr = malloc( numShares * sizeof(gfPoint) )) ) { ASSERT(0); goto EXIT; }
+	if( !(gfShareIDArr = malloc( numShares * sizeof(gfPoint) )) ) { LOGFAIL; goto EXIT; }
 
 	for( int i=0; i< numShares; i++ )
 	{
