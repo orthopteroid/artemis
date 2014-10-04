@@ -903,6 +903,12 @@ void ar_uri_test()
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
+		{
+			rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares -1 ); // fail
+			TESTASSERT( rc != 0 );
+			if( cleartext_out ) free( cleartext_out );
+		}
+
 		rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
 		TESTASSERT( rc == 0 );
 
