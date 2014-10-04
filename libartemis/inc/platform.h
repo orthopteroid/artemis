@@ -111,7 +111,7 @@
 	#if !defined(ASSERT)
 		#if defined(NDK_DEBUG)
 			#include <assert.h>
-			#define ASSERT( c ) do { __android_log_print(ANDROID_LOG_INFO, "libartemis", "ASSERT Failed %s line %d", __FILE__, __LINE__ ); assert(0); } while(0)
+			#define ASSERT( c ) do { if( !(c) ) { __android_log_print(ANDROID_LOG_INFO, "libartemis", "ASSERT Failed %s line %d", __FILE__, __LINE__ ); assert(0); } } while(0)
 		#elif defined(_DEBUG)
 			#include <assert.h>
 			#define ASSERT( c ) assert( c )
