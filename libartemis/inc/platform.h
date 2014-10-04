@@ -102,7 +102,7 @@
 			#define LOGFAIL __android_log_print(ANDROID_LOG_INFO, "libartemis", "LOGFAIL %s line %d", __FILE__, __LINE__ )
 		#elif defined(_DEBUG)
 			#include <assert.h>
-			#define LOGFAIL do { if( !library_istest() ) { printf( "LOGFAIL %s line %d\n", __FILE__, __LINE__ ); assert(0); } while(0)
+			#define LOGFAIL do { if( !library_istest() ) { printf( "LOGFAIL %s line %d\n", __FILE__, __LINE__ ); assert(0); } } while(0)
 		#else // debug
 			#define LOGFAIL (0)
 		#endif // debug
