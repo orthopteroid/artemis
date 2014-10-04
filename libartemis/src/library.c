@@ -329,8 +329,10 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 FAILCRYPT:
 
 	if( arecord ) free( arecord );
-	for( word16 i=0; i<shares; i++ ) { if( srecordtbl[i] ) free( srecordtbl[i] ); }
-	if( srecordtbl ) free( srecordtbl );
+	if( srecordtbl ) {
+		for( word16 i=0; i<shares; i++ ) { if( srecordtbl[i] ) free( srecordtbl[i] ); }
+		free( srecordtbl );
+	}
 	if( clueArr_rw ) free( clueArr_rw );
 	if( clueTbl ) free( clueTbl );
 
@@ -369,6 +371,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 
 	word16 arecordCount = 0;
 	word16 srecordCount = 0;
+	word16 srecordInit = 0;
 
 	ss_init( &ss, recordArr_rw, shareArrLen );
 	while( (rc = ss_scan( &ss )) == 1 )
@@ -386,8 +389,6 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 	if( !(srecordtbl = malloc( tblsize )) ) { ASSERT(0); rc=-9; goto FAIL; }
 	memset( srecordtbl, 0, tblsize );
 
-	word16 srecnum = 0;
-
 	ss_init( &ss, recordArr_rw, shareArrLen );
 	while( (rc = ss_scan( &ss )) == 1 )
 	{
@@ -395,10 +396,11 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 			if( rc = ar_uri_parse_a( &pARecord, ss.s_record ) ) { ASSERT(0); goto FAIL; }
 			if( rc = library_uri_location( &arecordLoc, ss.s_record ) ) { ASSERT(0); goto FAIL; }
 		} else {
-			if( rc = ar_uri_parse_s( &(srecordtbl[ srecnum++ ]), ss.s_record ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_uri_parse_s( &(srecordtbl[ srecordInit++ ]), ss.s_record ) ) { ASSERT(0); goto FAIL; }
 		}
 	}
 	if( rc < 0 ) { ASSERT(0); goto FAIL; }
+	if( srecordInit != srecordCount ) { ASSERT(0); rc=-2; goto FAIL; }
 
 	if( strcmp( arecordLoc, location ) != 0 ) { ASSERT(0); rc=-2; goto FAIL; }
 
@@ -410,8 +412,11 @@ FAIL:
 
 	if( arecordLoc ) free( arecordLoc );
 	if( pARecord ) free( pARecord );
-	for( int i=0; i<srecordCount; i++ ) { free( srecordtbl[i] ); }
-	if( srecordtbl ) free( srecordtbl );
+	if( srecordtbl )
+	{
+		for( int i = 0; i < srecordInit; i++ ) { if( srecordtbl[i] ) free( srecordtbl[i] ); }
+		free( srecordtbl );
+	}
 	if( recordArr_rw ) free( recordArr_rw );
 
 	return rc;
@@ -446,6 +451,7 @@ int library_uri_validate( byteptr* invalidBoolArr_out, byteptr szLocation, bytep
 
 	word16 arecordCount = 0;
 	word16 srecordCount = 0;
+	word16 srecordInit = 0;
 
 	ss_init( &ss, recordArr_rw, shareArrLen );
 	while( (rc = ss_scan( &ss )) == 1 )
@@ -463,8 +469,6 @@ int library_uri_validate( byteptr* invalidBoolArr_out, byteptr szLocation, bytep
 	if( !(srecordtbl = malloc( tblsize )) ) { ASSERT(0); rc=-9; goto FAIL; }
 	memset( srecordtbl, 0, tblsize );
 
-	word16 srecnum = 0;
-
 	ss_init( &ss, recordArr_rw, shareArrLen );
 	while( (rc = ss_scan( &ss )) == 1 )
 	{
@@ -472,11 +476,12 @@ int library_uri_validate( byteptr* invalidBoolArr_out, byteptr szLocation, bytep
 			if( rc = ar_uri_parse_a( &pARecord, ss.s_record ) ) { ASSERT(0); goto FAIL; }
 			if( rc = library_uri_location( &arecordLoc, ss.s_record ) ) { ASSERT(0); goto FAIL; }
 		} else {
-			if( rc = ar_uri_parse_s( &(srecordtbl[ srecnum++ ]), ss.s_record ) ) { ASSERT(0); goto FAIL; }
+			if( rc = ar_uri_parse_s( &(srecordtbl[ srecordInit++ ]), ss.s_record ) ) { ASSERT(0); goto FAIL; }
 		}
 	}
 	if( rc < 0 ) { ASSERT(0); goto FAIL; }
-
+	if( srecordInit != srecordCount ) { ASSERT(0); rc=-2; goto FAIL; }
+	
 	// validate
 
 	if( strcmp( arecordLoc, szLocation ) != 0 ) { ASSERT(0); rc=-2; goto FAIL; }
@@ -495,8 +500,11 @@ FAIL:
 
 	if( arecordLoc ) free( arecordLoc );
 	if( pARecord ) free( pARecord );
-	for( int i=0; i<srecordCount; i++ ) { free( srecordtbl[i] ); }
-	if( srecordtbl ) free( srecordtbl );
+	if( srecordtbl )
+	{
+		for( int i = 0; i < srecordInit; i++ ) { if( srecordtbl[i] ) free( srecordtbl[i] ); }
+		free( srecordtbl );
+	}
 	if( recordArr_rw ) free( recordArr_rw );
 
 	return rc;
