@@ -51,7 +51,7 @@ static int txt_to_vl( vlPoint v, char* buf )
 	vlClear( v );
 	size_t deltalen = 0;
 	char tmp[ sizeof(vlPoint) + 2 ] = {0};
-	rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, strlen(buf) );
+	rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, strlen(buf) ); // TODO: add 'goto' and leave output in known state
 	if( !rc ) { rc = ar_util_8BAto16BA( &deltalen, &v[1], words, tmp, deltalen ); }
 	if( rc == 0 ) { v[0] = (word16)deltalen; }
 	return rc;
@@ -63,7 +63,7 @@ static int vl_to_txt( char* buf, size_t bufsize, vlPoint v )
 	int rc=0;
 	size_t deltalen = 0;
 	char tmp[ sizeof( vlPoint) + 2 ] = {0};
-	rc = ar_util_16BAto8BA( &deltalen, tmp, sizeof(vlPoint), v+1, v[0] );
+	rc = ar_util_16BAto8BA( &deltalen, tmp, sizeof(vlPoint), v+1, v[0] ); // TODO: add 'goto' and leave output in known state
 	if( !rc ) { rc = ar_util_8BAto6BA( &deltalen, buf, bufsize, tmp, deltalen ); }
 	if( !rc ) { buf[ deltalen ] = 0; }
 	return rc;
@@ -189,7 +189,7 @@ int ar_util_8BAto4BZ( byteptr buf, size_t bufsize, byteptr in, size_t insize )
 	size_t deltalen = 0;
 	byteptr appendpos = buf + strlen(buf);
 	size_t appendsize = bufsize - strlen(buf);
-	int rc = ar_util_8BAto4BA( &deltalen, appendpos, appendsize, in, insize );
+	int rc = ar_util_8BAto4BA( &deltalen, appendpos, appendsize, in, insize ); // TODO: add 'goto' and leave output in known state
 	if( rc == 0 ) { appendpos[ deltalen ] = 0; }
 	return rc;
 }
@@ -274,7 +274,7 @@ int ar_util_8BZto4BZ( byteptr buf, size_t bufsize, byteptr in )
 	size_t deltalen = 0;
 	byteptr appendpos = buf + strlen(buf);
 	size_t appendsize = bufsize - strlen(buf);
-	int rc = ar_util_8BAto4BA( &deltalen, appendpos, appendsize, in, strlen(in) );
+	int rc = ar_util_8BAto4BA( &deltalen, appendpos, appendsize, in, strlen(in) ); // TODO: add 'goto' and leave output in known state
 	if( rc == 0 ) { appendpos[ deltalen ] = 0; }
 	return rc;
 }
@@ -284,7 +284,7 @@ int ar_util_4BZto8BZ( byteptr buf, size_t bufsize, byteptr in )
 	size_t deltalen = 0;
 	byteptr appendpos = buf + strlen(buf);
 	size_t appendsize = bufsize - strlen(buf);
-	int rc = ar_util_4BAto8BA( &deltalen, appendpos, appendsize, in, strlen(in) );
+	int rc = ar_util_4BAto8BA( &deltalen, appendpos, appendsize, in, strlen(in) ); // TODO: add 'goto' and leave output in known state
 	if( rc == 0 ) { appendpos[ deltalen ] = 0; }
 	return rc;
 }
@@ -294,7 +294,7 @@ int ar_util_8BZto6BZ( byteptr buf, size_t bufsize, byteptr in )
 	size_t deltalen = 0;
 	byteptr appendpos = buf + strlen(buf);
 	size_t appendsize = bufsize - strlen(buf);
-	int rc = ar_util_8BAto6BA( &deltalen, appendpos, appendsize, in, strlen(in) );
+	int rc = ar_util_8BAto6BA( &deltalen, appendpos, appendsize, in, strlen(in) ); // TODO: add 'goto' and leave output in known state
 	if( rc == 0 ) { appendpos[ deltalen ] = 0; }
 	return rc;
 }
@@ -304,7 +304,7 @@ int ar_util_6BZto8BZ( byteptr buf, size_t bufsize, byteptr in )
 	size_t deltalen = 0;
 	byteptr appendpos = buf + strlen(buf);
 	size_t appendsize = bufsize - strlen(buf);
-	int rc = ar_util_6BAto8BA( &deltalen, appendpos, appendsize, in, strlen(in) );
+	int rc = ar_util_6BAto8BA( &deltalen, appendpos, appendsize, in, strlen(in) ); // TODO: add 'goto' and leave output in known state
 	if( rc == 0 ) { appendpos[ deltalen ] = 0; }
 	return rc;
 }
@@ -314,7 +314,7 @@ int ar_util_16BAto4BZ( byteptr buf, size_t bufsize, word16ptr in, size_t insize 
 	size_t deltalen = 0;
 	byteptr appendpos = buf + strlen(buf);
 	size_t appendsize = bufsize - strlen(buf);
-	int rc = ar_util_16BAto4BA( &deltalen, appendpos, appendsize, in, insize );
+	int rc = ar_util_16BAto4BA( &deltalen, appendpos, appendsize, in, insize ); // TODO: add 'goto' and leave output in known state
 	if( rc == 0 ) { appendpos[ deltalen ] = 0; }
 	return rc;
 }

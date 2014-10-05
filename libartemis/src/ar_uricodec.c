@@ -25,9 +25,9 @@ static int txt_to_vl( vlPoint v, char* buf, size_t bufsize )
 	vlClear( v );
 	size_t deltalen = 0;
 	char tmp[ sizeof(vlPoint) + 2 ] = {0};
-	rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, bufsize );
+	rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, bufsize ); // TODO: add 'goto' and leave output in known state
 	if( !rc ) { rc = ar_util_8BAto16BA( &deltalen, &v[1], words, tmp, deltalen ); }
-	if( rc == 0 ) { v[0] = (word16)deltalen; }
+	if( !rc ) { v[0] = (word16)deltalen; }
 	return rc;
 }
 
@@ -38,7 +38,7 @@ static int vl_to_txt_cat( char* buf, size_t bufsize, vlPoint v )
 	size_t deltalen = 0;
 	size_t buflen = strlen(buf);
 	char tmp[ sizeof( vlPoint) + 2 ] = {0};
-	rc = ar_util_16BAto8BA( &deltalen, tmp, sizeof(vlPoint), v+1, v[0] );
+	rc = ar_util_16BAto8BA( &deltalen, tmp, sizeof(vlPoint), v+1, v[0] ); // TODO: add 'goto' and leave output in known state
 	if( !rc ) { rc = ar_util_8BAto6BA( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ); }
 	if( !rc ) { buf[ buflen + deltalen ] = 0; }
 	return rc;
@@ -498,7 +498,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 			if( pSRecord->cluelen == 0 ) { LOGFAIL; goto FAIL; }
 			buflen = strlen(buf);
 			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pSRecord->buf + pSRecord->loclen, pSRecord->cluelen );
-			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { LOGFAIL; goto FAIL; }
+			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { LOGFAIL; goto FAIL; } // TODO: add 'goto' and leave output in known state
 			break;
 		}
 		state++;
