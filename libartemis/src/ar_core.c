@@ -314,8 +314,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	// double-check
 
-	if( rc = ar_core_check_topic( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL; rc=-3; goto EXIT; }
-	if( rc = ar_core_check_signature( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL; rc=-3; goto EXIT; }
+	if( rc = ar_core_check_topic( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL; goto EXIT; }
+	if( rc = ar_core_check_signature( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL; goto EXIT; }
 
 EXIT:
 
@@ -345,7 +345,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 
 	if( !arecord ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 	
-	if( numSRecords < arecord->threshold ) { LOGFAIL; rc = -3; goto EXIT; }
+	if( numSRecords < arecord->threshold ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
 	
 	if( !srecordtbl ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
