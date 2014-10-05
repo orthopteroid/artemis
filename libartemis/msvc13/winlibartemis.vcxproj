@@ -161,6 +161,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\inc\ar_codes.h" />
     <ClInclude Include="..\inc\ar_core.h" />
     <ClInclude Include="..\inc\ar_shamir.h" />
     <ClInclude Include="..\inc\ar_types.h" />
