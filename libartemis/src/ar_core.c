@@ -579,11 +579,9 @@ void ar_core_test()
 	strcpy_s( cleartextin, strlen(reftextin)+1, reftextin );
 
 	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, "foo.bar" ); // +1 to include \0
-printf("%p %p\n",arecord,srecordtbl);
 	TESTASSERT( rc == 0 );
 
 	rc = ar_core_check_topic( checkarr, arecord, srecordtbl, 2 );
-printf("%d\n",rc);
 	TESTASSERT( rc == 0 );
 	TESTASSERT( checkarr[0] == 0 );
 	TESTASSERT( checkarr[1] == 0 );
