@@ -344,16 +344,10 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	*buf_out = 0;
 
 	if( !arecord ) { LOGFAIL; rc = -1; goto EXIT; }
-	if( !srecordtbl ) { LOGFAIL; rc = -1; goto EXIT; }
-
+	
 	if( numSRecords < arecord->threshold ) { LOGFAIL; rc = -3; goto EXIT; }
-
-	if( !(*buf_out = malloc( arecord->msglen )) ) { LOGFAIL; rc=-9; goto EXIT; }
-	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { LOGFAIL; rc=-9; goto EXIT; }
-	if( !(shareIDArr = malloc( sizeof(word16) * numSRecords )) ) { LOGFAIL; rc=-9; goto EXIT; }
-
-	byteptr cryptext = arecord->buf + arecord->loclen + arecord->cluelen;
-	size_t bufused = arecord->msglen + arecord->loclen + arecord->cluelen;
+	
+	if( !srecordtbl ) { LOGFAIL; rc = -1; goto EXIT; }
 
 	///////////
 	// check topic consistiency: internally to ARecord, then compared to all SRecords
@@ -375,15 +369,25 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 		goto EXIT;
 	}
 
-	//////////////
+	///
 
+	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { LOGFAIL; rc=-9; goto EXIT; }
+	if( !(shareIDArr = malloc( sizeof(word16) * numSRecords )) ) { LOGFAIL; rc=-9; goto EXIT; }
+	
 	for( int i=0; i<numSRecords; i++ )
 	{
 		gfUnpack( shareArr[i], srecordtbl[i]->share );
 		shareIDArr[i] = srecordtbl[i]->shareid;
 	}
 
-	memcpy_s( *buf_out, arecord->msglen, cryptext, arecord->msglen );
+	///
+
+	if( !(*buf_out = malloc( arecord->msglen )) ) { LOGFAIL; rc=-9; goto EXIT; }
+
+	{	
+		byteptr cryptext = arecord->buf + arecord->loclen + arecord->cluelen;
+		memcpy_s( *buf_out, arecord->msglen, cryptext, arecord->msglen );
+	}
 
 	{
 		gfPoint gfCryptkey;
