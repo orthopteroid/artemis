@@ -280,9 +280,13 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 
 	*recordArr_out = 0;
 	
-	if( !szLocation || !clueArr || !message ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !szLocation ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !clueArr ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !message ) { LOGFAIL; rc=-1; goto EXIT; }
 
-	if( threshold == 0 || shares == 0 || threshold > shares ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( threshold == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( shares == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( threshold > shares ) { LOGFAIL; rc=-1; goto EXIT; }
 	
 	// change delimiters of clueArr
 	if( !(clueArr_rw = strdup( clueArr )) ) { LOGFAIL; rc=-9; goto EXIT; }
