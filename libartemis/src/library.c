@@ -285,18 +285,17 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	if( threshold == 0 || shares == 0 || threshold > shares ) { LOGFAIL; rc=-1; goto EXIT; }
 	
 	// change delimiters of clueArr
-	clueArr_rw = strdup( clueArr ); // make writable version
-	if( !clueArr_rw ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !(clueArr_rw = strdup( clueArr )) ) { LOGFAIL; rc=-9; goto EXIT; }
 
 	size_t cluePtrArrLen = strlen( clueArr_rw );
 	for( size_t i = 0; i < cluePtrArrLen; i++ ) { if( clueArr_rw[i]=='\n' ) { clueArr_rw[i]='\0'; } }
 	if( rc = ar_util_buildByteTbl( &clueTbl, clueArr_rw, cluePtrArrLen ) ) { LOGFAIL; goto EXIT; }
 
 	size_t loclen = szLocation ? strlen( szLocation ) : 0;
-	if( loclen == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( loclen == 0 ) { LOGFAIL; rc=-2; goto EXIT; }
 
 	size_t messlen = message ? strlen( message ) : 0;
-	if( messlen == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( messlen == 0 ) { LOGFAIL; rc=-2; goto EXIT; }
 
 	// alloc arecord
 	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
@@ -372,7 +371,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 	{
 		size_t shareArrLen = strlen( recordArr );
 
-		if( shareArrLen < 10 ) { LOGFAIL; rc=-1; goto EXIT; }
+		if( shareArrLen < 10 ) { LOGFAIL; rc=-2; goto EXIT; }
 
 		// dup and change delim 
 
