@@ -511,12 +511,11 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 		{
 			if( !(pBoolArr = malloc( srecordCount )) ) { LOGFAIL; rc=-9; goto EXIT; }
 		}
+		*invalidBoolArr_out_opt = pBoolArr; // reassign before possible failures below
 		
 		if( rc = ar_core_check_topic( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; rc = (rc==-2) ? -4 : rc; goto EXIT; } // conv failure code
 		
 		if( rc = ar_core_check_signature( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; rc = (rc==-2) ? -5 : rc; goto EXIT; } // conv failure code
-
-		*invalidBoolArr_out_opt = pBoolArr;
 	}
 
 EXIT:
@@ -565,13 +564,13 @@ void library_test()
 	rc = library_uri_validate( &validation, location, recordArr );
 	TESTASSERT( rc == 0 );
 	free( validation );
-
+	
 	// now break something
 	recordArr[ 3 + strlen(recordArr) / 2 ]++;
 	rc = library_uri_validate( &validation, location, recordArr );
 	TESTASSERT( rc == -3 );
 	free( validation );
-
+	
 	free( recordArr );
 	free( message );
 
