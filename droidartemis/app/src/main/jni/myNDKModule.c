@@ -43,15 +43,12 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
     }
 #endif
 
-    if( cMessage_out )
-    {
-        if( rc == 0 ) {
-            jMessage_out = (*env)->NewStringUTF( env, cMessage_out );
-        } else {
-            jMessage_out = (*env)->NewStringUTF( env, szUnknown );
-        }
-        library_free( &cMessage_out );
+    if( rc == 0 && cMessage_out ) {
+        jMessage_out = (*env)->NewStringUTF( env, cMessage_out );
+    } else {
+        jMessage_out = (*env)->NewStringUTF( env, szUnknown );
     }
+    if( cMessage_out ) { library_free( &cMessage_out ); }
 
     (*env)->ReleaseStringUTFChars( env, jRecordArr, cRecordArr );
 
