@@ -46,7 +46,10 @@ static int ss_scan( ssptr pss )
 	if( pss->e_record > pss->end ) { LOGFAIL; return -2; } // blew buffer
 	*(pss->e_record) = 0; // \0 term the string
 
-	pss->type = ar_uri_parse_type( pss->s_record );
+	pss->type = 0;
+	if( strstr( pss->s_record, "ai=" ) )			{ pss->type = 1; }
+	else if( strstr( pss->s_record, "si=" ) )		{ pss->type = 2; }
+	if( pss->type == 0 ) { LOGFAIL; return -2; } // bad record
 
 	return 1; // continuing condition
 }

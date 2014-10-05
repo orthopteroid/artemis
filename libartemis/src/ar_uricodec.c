@@ -289,13 +289,6 @@ void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf )
 	}
 }
 
-int ar_uri_parse_type( byteptr buf )
-{
-	if( strstr( buf, "ai=" ) )			{ return 1; }
-	else if( strstr( buf, "si=" ) )		{ return 2; }
-	return -1;
-}
-
 int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szRecord )
 {
 	int rc = 0;
