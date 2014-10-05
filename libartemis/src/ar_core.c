@@ -323,6 +323,12 @@ EXIT:
 	if( shareArr ) { memset( shareArr, 0, sizeof(gfPoint) * numShares ); free( shareArr ); }
 	if( shareIDArr ) { memset( shareIDArr, 0, sizeof(word16) * numShares ); free( shareIDArr ); }
 
+	if( rc && arecord_out && *arecord_out ) { free( *arecord_out ); *arecord_out = 0; }
+	if( rc && srecordtbl_out && *srecordtbl_out ) {
+		for( word16 i=0; i<numShares; i++ ) { if( (*srecordtbl_out)[i] ) free( (*srecordtbl_out)[i] ); }
+		free( *srecordtbl_out );
+	}
+	
 	return rc;
 }
 
@@ -416,6 +422,8 @@ EXIT:
 
 	if( shareArr ) { memset( shareArr, 0, sizeof(gfPoint) * numSRecords ); free( shareArr ); }
 	if( shareIDArr ) { memset( shareIDArr, 0, sizeof(word16) * numSRecords ); free( shareIDArr ); }
+
+	if( rc && buf_out && *buf_out ) { free( *buf_out ); *buf_out = 0; }
 
 	return rc;
 }
@@ -571,9 +579,11 @@ void ar_core_test()
 	strcpy_s( cleartextin, strlen(reftextin)+1, reftextin );
 
 	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, "foo.bar" ); // +1 to include \0
+printf("%p %p\n",arecord,srecordtbl);
 	TESTASSERT( rc == 0 );
 
 	rc = ar_core_check_topic( checkarr, arecord, srecordtbl, 2 );
+printf("%d\n",rc);
 	TESTASSERT( rc == 0 );
 	TESTASSERT( checkarr[0] == 0 );
 	TESTASSERT( checkarr[1] == 0 );

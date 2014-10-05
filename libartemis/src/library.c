@@ -182,7 +182,7 @@ int library_uri_clue( byteptr* clue_out, byteptr szShare )
 	
 EXIT:
 
-	if( rc && *clue_out ) { free( *clue_out ); *clue_out = 0; }
+	if( rc && clue_out && *clue_out ) { free( *clue_out ); *clue_out = 0; }
 	
 	return rc;
 }
@@ -210,7 +210,7 @@ int library_uri_location( byteptr* location_out, byteptr szShare )
 	
 EXIT:
 	
-	if( rc && *location_out ) { free( *location_out ); *location_out = 0; }
+	if( rc && location_out && *location_out ) { free( *location_out ); *location_out = 0; }
 	
 	return rc;
 }
@@ -238,7 +238,7 @@ int library_uri_topic( byteptr* topic_out, byteptr szShare )
 	
 EXIT:
 	
-	if( rc && *topic_out ) { free( *topic_out ); *topic_out = 0; }
+	if( rc && topic_out && *topic_out ) { free( *topic_out ); *topic_out = 0; }
 	
 	return rc;
 }
@@ -339,6 +339,8 @@ EXIT:
 	if( clueArr_rw ) free( clueArr_rw );
 	if( clueTbl ) free( clueTbl );
 
+	if( rc && recordArr_out && *recordArr_out ) { free( *recordArr_out); *recordArr_out = 0; }
+
 	return rc;
 }
 
@@ -424,6 +426,8 @@ EXIT:
 		free( srecordtbl );
 	}
 	if( recordArr_rw ) free( recordArr_rw );
+
+	if( rc && message_out && *message_out ) { free( *message_out ); *message_out = 0; }
 
 	return rc;
 }
@@ -525,6 +529,8 @@ EXIT:
 		free( srecordtbl );
 	}
 	if( recordArr_rw ) free( recordArr_rw );
+
+	if( rc && invalidBoolArr_out_opt && *invalidBoolArr_out_opt ) { free( *invalidBoolArr_out_opt ); *invalidBoolArr_out_opt = 0; }
 
 	return rc;
 }
