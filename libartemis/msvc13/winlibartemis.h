@@ -14,7 +14,7 @@
 class WINLIBARTEMIS_API Cwinlibartemis {
 public:
 	Cwinlibartemis(void);
-	// TODO: add your methods here.
+	// add your methods here.
 };
 
 extern WINLIBARTEMIS_API int nwinlibartemis;
