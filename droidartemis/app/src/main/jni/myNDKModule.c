@@ -4,11 +4,16 @@
 #include <string.h>
 
 // adb logcat
+//http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
+
+//#define ENABLE_MESSAGES
 
 char* szUnknown = "?? ?? ??";
 char* szLocation = "foo.bar";
 
 static int rc = 0;
+
+//////////////////////////////
 
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetString(JNIEnv * env, jobject obj)
 {
@@ -29,14 +34,13 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
 
     const char *cRecordArr = (*env)->GetStringUTFChars(env, jRecordArr, 0);
 
-#if defined(_DEBUG)
+#if defined(ENABLE_MESSAGES)
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "cRecordArr %s", cRecordArr );
 #endif
 
     rc = library_uri_decoder( &cMessage_out, (byte*)szLocation, (byte*)cRecordArr );
 
-//http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
-#if defined(_DEBUG)
+#if defined(ENABLE_MESSAGES)
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "cMessage_out %X", (unsigned int)cMessage_out );
     if( cMessage_out) {
         __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cMessage_out );
