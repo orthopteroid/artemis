@@ -525,7 +525,7 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 	size_t bufsize = 0;
 	ar_uri_parse_vardatalen( &bufsize, szRecord );
 	size_t structsize = sizeof(arAuth) + bufsize;
-	if( !((*arecord_out) = malloc( structsize )) ) { LOGFAIL; rc=-9; goto FAIL; }
+	if( !((*arecord_out) = malloc( structsize )) ) { LOGFAIL; rc = RC_MALLOC; goto FAIL; }
 	memset( (*arecord_out), 0, structsize );
 
 	(*arecord_out)->bufmax = bufsize;
@@ -640,7 +640,7 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 	size_t bufsize = 0;
 	ar_uri_parse_vardatalen( &bufsize, szRecord );
 	size_t structsize = sizeof(arAuth) + bufsize;
-	if( !((*srecord_out) = malloc( structsize )) ) { LOGFAIL; rc=-9; goto FAIL; }
+	if( !((*srecord_out) = malloc( structsize )) ) { LOGFAIL; rc = RC_MALLOC; goto FAIL; }
 	memset( (*srecord_out), 0, structsize );
 
 	(*srecord_out)->bufmax = bufsize;

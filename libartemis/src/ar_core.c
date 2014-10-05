@@ -68,9 +68,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	///////////
 	// alloc tmp storage
 
-	if( !(shareArr = malloc( sizeof(gfPoint) * numShares )) ) { LOGFAIL; rc=-9; goto EXIT; }
-	if( !(shareIDArr = malloc( sizeof(word16) * numShares )) ) { LOGFAIL; rc=-9; goto EXIT; }
-	if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { LOGFAIL; rc=-9; goto EXIT; }
+	if( !(shareArr = malloc( sizeof(gfPoint) * numShares )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
+	if( !(shareIDArr = malloc( sizeof(word16) * numShares )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
+	if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 
 	///////////
 	// general vars
@@ -86,12 +86,12 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	size_t abufused = loclen + inbuflen + acluelen;
 	size_t astructsize = sizeof(arAuth) + abufused;
-	if( !(arecord_out[0] = malloc( astructsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
+	if( !(arecord_out[0] = malloc( astructsize )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 	memset( arecord_out[0], 0, astructsize );
 	arecord_out[0]->bufmax = abufused;
 
 	size_t stblsize = sizeof(arShareptr) * numShares;
-	if( !((*srecordtbl_out) = malloc( stblsize ) )) { LOGFAIL; rc=-9; goto EXIT; }
+	if( !((*srecordtbl_out) = malloc( stblsize ) )) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 	memset( (*arecord_out), 0, stblsize );
 
 	for( int i=0; i<numShares; i++ )
@@ -100,7 +100,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		size_t sbufused = loclen + scluelen;
 		size_t sstructsize = sizeof(arShare) + sbufused;
 
-		if( !((*srecordtbl_out)[i] = malloc( sstructsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
+		if( !((*srecordtbl_out)[i] = malloc( sstructsize )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 		memset( (*srecordtbl_out)[i], 0, sstructsize );
 		(*srecordtbl_out)[i]->bufmax = sbufused;
 	}
@@ -361,8 +361,8 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 
 	///
 
-	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { LOGFAIL; rc=-9; goto EXIT; }
-	if( !(shareIDArr = malloc( sizeof(word16) * numSRecords )) ) { LOGFAIL; rc=-9; goto EXIT; }
+	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
+	if( !(shareIDArr = malloc( sizeof(word16) * numSRecords )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 	
 	for( int i=0; i<numSRecords; i++ )
 	{
@@ -372,7 +372,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 
 	///
 
-	if( !(*buf_out = malloc( arecord->msglen )) ) { LOGFAIL; rc=-9; goto EXIT; }
+	if( !(*buf_out = malloc( arecord->msglen )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 
 	{	
 		byteptr cryptext = arecord->buf + arecord->loclen + arecord->cluelen;

@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "ar_codes.h"
+
 #include "ar_uricodec.h"
 #include "ar_core.h"
 #include "ar_util.h"
@@ -111,10 +113,10 @@ HELP:
 	else if( decode )
 	{
 		byteptr message_out = 0;
+		byteptr shareArr = 0;
 
 		size_t bufsize = 1024;
-		byteptr shareArr = malloc( bufsize );
-		if( !shareArr ) { ASSERT(0); rc=-9; goto FAILDECRYPT; }
+		if( !(shareArr = malloc( bufsize )) ) { ASSERT(0); rc = RC_MALLOC; goto EXIT; }
 
 		size_t shareArrLen = 0;
 		while( 1 )
@@ -122,21 +124,21 @@ HELP:
 			char ch = getc( stdin ); // must be \n delim'd
 			if( ch == EOF ) { shareArr[shareArrLen] = 0; break; }
 			shareArr[shareArrLen++] = ch;
-			if( shareArrLen == bufsize-1 )
+			if( shareArrLen == bufsize -1 )
 			{
 				size_t newbufsize = bufsize * 2;
-				rc = (shareArr = realloc_zero( shareArr, bufsize, newbufsize )) ? 0 : -9;
+				rc = (shareArr = realloc_zero( shareArr, bufsize, newbufsize )) ? 0 : RC_MALLOC;
 				bufsize = newbufsize;
-				if( rc ) { printf("# decrypt error\n"); goto FAILDECRYPT; }
+				if( rc ) { printf("# decrypt error\n"); goto EXIT; }
 			}
 		}
 
 		rc = library_uri_decoder( &message_out, location, shareArr );
-		if( rc ) { printf("# decrypt error\n"); goto FAILDECRYPT; }
+		if( rc ) { printf("# decrypt error\n"); goto EXIT; }
 
 		printf( "%s\n", message_out );
 
-FAILDECRYPT:
+EXIT:
 
 		if( message_out ) library_free( &message_out );
 		if( shareArr ) free( shareArr );

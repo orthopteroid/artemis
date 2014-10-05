@@ -208,7 +208,7 @@ int library_uri_location( byteptr* location_out, byteptr szShare )
 	if( pFirst != 0 )
 	{
 		*location_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
-		if( !*location_out ) { LOGFAIL; rc=-9; goto EXIT; }
+		if( !(*location_out) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 	}
 	
 EXIT:
@@ -236,7 +236,7 @@ int library_uri_topic( byteptr* topic_out, byteptr szShare )
 	if( pFirst != 0 )
 	{
 		*topic_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
-		if( !*topic_out ) { LOGFAIL; rc=-9; goto EXIT; }
+		if( !(*topic_out) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 	}
 	
 EXIT:
@@ -288,7 +288,7 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	if( threshold > shares ) { LOGFAIL; rc = RC_ARG; goto EXIT; }
 	
 	// change delimiters of clueArr
-	if( !(clueArr_rw = strdup( clueArr )) ) { LOGFAIL; rc=-9; goto EXIT; }
+	if( !(clueArr_rw = strdup( clueArr )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 
 	size_t cluePtrArrLen = strlen( clueArr_rw );
 	for( size_t i = 0; i < cluePtrArrLen; i++ ) { if( clueArr_rw[i]=='\n' ) { clueArr_rw[i]='\0'; } }
@@ -322,7 +322,7 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	ar_uri_bufsize_a( &bufsize, arecord );
 	for( int i = 0; i < shares; i++ ) { size_t s=0; ar_uri_bufsize_s( &s, srecordtbl[i] ); bufsize += s; }
 
-	if( !(*recordArr_out = malloc( bufsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
+	if( !(*recordArr_out = malloc( bufsize )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 	memset( *recordArr_out, 0, bufsize );
 
 	// concat to output buffer
@@ -378,7 +378,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 
 		// dup and change delim 
 
-		if( !(recordArr_rw = strdup( recordArr )) ) { LOGFAIL; rc=-9; goto EXIT; }
+		if( !(recordArr_rw = strdup( recordArr )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 
 		for( size_t i = 0; i < shareArrLen; i++ ) { if( recordArr_rw[i] == '\n' ) { recordArr_rw[i]=0; } }
 
@@ -398,7 +398,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 
 		{
 			size_t tblsize = sizeof(arShareptr) * srecordCount;
-			if( !(srecordtbl = malloc( tblsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
+			if( !(srecordtbl = malloc( tblsize )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 			memset( srecordtbl, 0, tblsize );
 		}
 
@@ -464,7 +464,7 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 
 		// dup and change delim 
 
-		if( !(recordArr_rw = strdup( szRecordArr )) ) { LOGFAIL; rc=-9; goto EXIT; }
+		if( !(recordArr_rw = strdup( szRecordArr )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 
 		for( size_t i = 0; i < shareArrLen; i++ ) { if( recordArr_rw[i] == '\n' ) { recordArr_rw[i]=0; } }
 
@@ -484,7 +484,7 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 
 		{
 			size_t tblsize = sizeof(arShareptr) * srecordCount;
-			if( !(srecordtbl = malloc( tblsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
+			if( !(srecordtbl = malloc( tblsize )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 			memset( srecordtbl, 0, tblsize );
 		}
 
@@ -515,7 +515,7 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 		
 		if( invalidBoolArr_out_opt )
 		{
-			if( !(pBoolArr = malloc( srecordCount )) ) { LOGFAIL; rc=-9; goto EXIT; }
+			if( !(pBoolArr = malloc( srecordCount )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
 		}
 		*invalidBoolArr_out_opt = pBoolArr; // reassign before possible failures below
 		
