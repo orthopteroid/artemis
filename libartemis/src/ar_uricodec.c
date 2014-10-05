@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "platform.h"
+#include "ar_codes.h"
 
 #include "ar_uricodec.h"
 #include "ec_vlong.h"

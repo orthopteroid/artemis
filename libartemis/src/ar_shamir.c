@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include "platform.h"
+#include "ar_codes.h"
+
 #include "ar_util.h"
 #include "ar_shamir.h"
 

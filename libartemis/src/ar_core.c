@@ -4,6 +4,8 @@
 #include <stdlib.h>
 
 #include "platform.h"
+#include "ar_codes.h"
+
 #include "ar_core.h"
 #include "ec_vlong.h"
 #include "ar_shamir.h"

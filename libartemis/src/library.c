@@ -6,6 +6,7 @@
 
 #include "platform.h"
 #include "version.h"
+#include "ar_codes.h"
 
 #include "library.h"
 #include "ec_field.h"
