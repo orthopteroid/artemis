@@ -30,6 +30,13 @@ void test_all()
 	library_test();
 	printf("# tests complete\n");
 
+	byteptr shares;
+	
+	library_uri_encoder( &shares, 5, 5, "foo.bar", "main\none\ntwo\nthree\nfour\nfive", "message five" );  printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 4, "foo.bar", "main\none\ntwo\nthree\nfour\nfive", "message four" );  printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 3, "foo.bar", "main\none\ntwo\nthree\nfour\nfive", "message three" ); printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 2, "foo.bar", "main\none\ntwo\nthree\nfour\nfive", "message two" );   printf( "%s\n", shares ); library_free( &shares );
+
 #else // _DEBUG
 
 	printf("# no tests in this build\n");

@@ -7,52 +7,36 @@ public class FakeScanner {
     int i  = 0;
 
     String[] itemArr =
-            {
-"http://foo.bar?tp=szvNzIafmi8&ai=AF!AD!CI&vf=Hkb7QA&pk=AZoMKUOUDRZf_dB4okXV-YS4&as=cpWo8SblmAHxfXcziacj4Q!lx10akSXo9zf6MTCypAJ9g&mc=MA&mt=M0IaIYWH",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AF&sh=cOPgvA&sc=NQ&ss=FvbcqF0UpwCLF9DmtrKFoQ!sdtd67e6beSBe3LKN0dIDA",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AE&sh=5MHyPw&sc=NA&ss=Y0iA3bz-ed9XbUKuAyGfcw!vy5AyYGqaqEMgxcitU_dfA",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AD&sh=y_R3Iw&sc=Mw&ss=qlPcizBzy0rNQ32eARfePw!N94a5vkb_X9h63fmMA5qzg",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AC&sh=X9ZloA&sc=Mg&ss=HJs4lVQgij0f81DfQYTBrg!JmDkFL37lMhIuhxr__nKyg",
-"http://foo.bar?tp=szvNzIafmi8&si=AF!AB&sh=DEt2vw&sc=MQ&ss=forhBEj5J5laWcPM0YKlzw!nhcAAet2mUeYee8pbMLAVw",
-"http://foo.bar?tp=qISsySoncGY&ai=AD!AC!CI&vf=SnBrcA&pk=AAOeox92LcLIQLgCUWobPJGz&as=5zYwGCFraz0Ik84HekoTYw!NvmT2GFMCUT5adoVURi4_w&mc=MDAw&mt=OkYZMITiinA",
-"http://foo.bar?tp=qISsySoncGY&si=AD!AB&sh=0BoCDw&ss=bPva6xusL82O4eflw-OICw!o3s7QyGdaUlMxDo6uG4i7A&sc=MTEx",
-"http://foo.bar?tp=qISsySoncGY&si=AD!AC&sh=CI-oWg&ss=AtNEqwik0ktfC8obg5B3Qg!pYOBvb3yGYvKpNVFgAc_OA&sc=MjIy",
-"http://foo.bar?tp=qISsySoncGY&si=AD!AD&sh=QPzOaQ&ss=aHA7vLVHvH484v-N1WSYCw!Nm86NFU2qzCII32Sk2of5g&sc=MzMz",
-"http://foo.bar?tp=9CLZfcQU5t0&ai=AD!AC!CI&vf=xB9Vzw&pk=AAOeox92LcLIQLgCUWobPJGz&as=5zYwGCFrazz7IclWK-53Xw!NvmT2GzeTIG9XfCMgAnLvw&mc=MDAw&mt=OkASaoXpnQKejfKEnQ",
-"http://foo.bar?tp=9CLZfcQU5t0&si=AD!AB&sh=0BoCDw&ss=bPva6xusL81HmMjKsULu8A!o3s7Q1727qWMtMmr8cKhfA&sc=MTEx",
-"http://foo.bar?tp=9CLZfcQU5t0&si=AD!AC&sh=CI-oWg&ss=AtNEqwik0ktTvr0K7lsnDg!pYOBvcer6U3cAlsTTXny-A&sc=MjIy",
-"http://foo.bar?tp=9CLZfcQU5t0&si=AD!AD&sh=QPzOaQ&ss=aHA7vLVHvH4Jn9BLMHHJMQ!Nm86NIFUt21xlQi4yw0dxg&sc=MzMz",
-"http://foo.bar?tp=jGVeH7-wpSk&ai=AD!AC!CI&vf=SNMK5w&pk=AAOeox92LcLIQLgCUWobPJGz&as=5zYwGCFraz1YPfvG11oFMw!NvmT2By8cMwqKYp_2cA5_w&mc=MDAw&mt=NEZYNo_mnF6SjLOV9YgWlpvYx0hZ",
-"http://foo.bar?tp=jGVeH7-wpSk&si=AD!AB&sh=0BoCDw&ss=bPva6xusL8y-1KGbXIInrw!o3s7Q9SrBLmIIKjYeCYSLA&sc=MTEx",
-"http://foo.bar?tp=jGVeH7-wpSk&si=AD!AC&sh=CI-oWg&ss=AtNEqwik0ktAae2nwBvl7A!pYOBvdhO8ixuad40ljwiWA&sc=MjIy",
-"http://foo.bar?tp=jGVeH7-wpSk&si=AD!AD&sh=QPzOaQ&ss=aHA7vLVHvH3SbT83_MEemQ!Nm86NLDVvEK1lKbY--dGRg&sc=MzMz",
-"http://foo.bar?tp=0i0wT8LtTig&ai=AD!AC!CI&vf=lpSwYw&pk=AAOeox92LcLIQLgCUWobPJGz&as=5zYwGCFraz10r4GUF-AORQ!NvmT2ARB1O1yF_HyasvVnw&mc=MDAw&mt=KEEbIZ7vlhmUzL6O74QK3_Q",
-"http://foo.bar?tp=0i0wT8LtTig&si=AD!AB&sh=0BoCDw&ss=bPva6xusL8yc-Xlcvx3rSQ!o3s7Q_HOIRWoGqPU3LPQTA&sc=MTEx",
-"http://foo.bar?tp=0i0wT8LtTig&si=AD!AC&sh=CI-oWg&ss=AtNEqwik0ks8DNxsSdmXIA!pYOBvdwQUGsnpg9eLhK-mA&sc=MjIy",
-"http://foo.bar?tp=0i0wT8LtTig&si=AD!AD&sh=QPzOaQ&ss=aHA7vLVHvH4L8KmyBYdovQ!Nm86NH9Wf_YO1PiEtJf9hg&sc=MzMz",
-"http://foo.bar?tp=9xZVvHapqyE&ai=AF!AD!CI&vf=wLCBLw&pk=AZoMKUOUDRZf_dB4okXV-YS4&as=cpWo8SblmAJOf0QH5I8wig!lx10aiLOUEXVMq2i3NDsxQ&mc=MDAw&mt=PkITNILmjB7z",
-"http://foo.bar?tp=9xZVvHapqyE&si=AF!AB&sh=DEt2vw&ss=forhBEj5J5mGnj6QXj5Zdg!nhcAAdth4JO5mTEf_1g2uA&sc=MTEx",
-"http://foo.bar?tp=9xZVvHapqyE&si=AF!AC&sh=X9ZloA&ss=HJs4lVQgijxbuL6-VJeuBQ!JmDkFQVEKwVZpDIqB9bm-w&sc=MjIy",
-"http://foo.bar?tp=9xZVvHapqyE&si=AF!AD&sh=y_R3Iw&ss=qlPcizBzy0oCSI6GGSUZIQ!N94a50LYb2yE_kUHKmqOXA&sc=MzMz",
-"http://foo.bar?tp=9xZVvHapqyE&si=AF!AE&sh=5MHyPw&ss=Y0iA3bz-ed-fkr26X3i0fQ!vy5AyWd1DfLOT4VKUnbjog&sc=NDQ0",
-"http://foo.bar?tp=9xZVvHapqyE&si=AF!AF&sh=cOPgvA&ss=FvbcqF0UpwEcSO4kVQWwdw!sdtd64L8GR8JWH-FXzcrBg&sc=NTU1",
-"http://foo.bar?tp=89UiHLfwyIc&ai=AF!AD!CI&vf=ew22pg&pk=AZoMKUOUDRZf_dB4okXV-YS4&as=cpWo8SblmAIxYKY042m2Pw!lx10ai1iVV0p7uYynicfKA&mc=MDAw&mt=ME8YI4v1lx_z",
-"http://foo.bar?tp=89UiHLfwyIc&si=AF!AB&sh=DEt2vw&ss=forhBEj5J5lgFi5AautTlA!nhcAAelhK8b7Etx_kbX2Kg&sc=MTEx",
-"http://foo.bar?tp=89UiHLfwyIc&si=AF!AC&sh=X9ZloA&ss=HJs4lVQgij0tCMEdA3wCLA!JmDkFLk61sx2bgJoBaoY3A&sc=MjIy",
-"http://foo.bar?tp=89UiHLfwyIc&si=AF!AD&sh=y_R3Iw&ss=qlPcizBzy0pYXNWSZibnZA!N94a5yOTXzDNWHQTfwUyQQ&sc=MzMz",
-"http://foo.bar?tp=89UiHLfwyIc&si=AF!AE&sh=5MHyPw&ss=Y0iA3bz-ed-es8v5w_21Mg!vy5AyWfGCvzaOVeo6y0DBQ&sc=NDQ0",
-"http://foo.bar?tp=89UiHLfwyIc&si=AF!AF&sh=cOPgvA&ss=FvbcqF0UpwCk7O8x3rYNTA!sdtd665YGSskglgt3rDlSQ&sc=NTU1",
-"http://foo.bar?tp=iW3HlmUOeto&ai=AF!AF!CI&vf=QGAWFQ&pk=AQiVPVZFqbcqDXYFzyXcHeKo&as=forhBEj5J5knT0nEqPfO1A!MuqrgAfItFEp4Vti_dzg-A&mc=MDAw&mt=Nl0DK4-H",
-"http://foo.bar?tp=iW3HlmUOeto&si=AF!AB&sh=xP5FHg&ss=HJs4lVQgijy797EmzNoyoA!3LZzzEMIfXbgVP8J9etC1g&sc=MTEx",
-"http://foo.bar?tp=iW3HlmUOeto&si=AF!AC&sh=MKk39A&ss=qlPcizBzy0ntpjhs_MAbVA!PZk01xlgLLhUwQT-LebTgg&sc=MjIy",
-"http://foo.bar?tp=iW3HlmUOeto&si=AF!AD&sh=uQZAfQ&ss=Y0iA3bz-ed8NeN-dtqIzIA!wFu5gl7ECBJKy8XHuou85Q&sc=MzMz",
-"http://foo.bar?tp=iW3HlmUOeto&si=AF!AE&sh=5TGp0g&ss=FvbcqF0UpwDXdTs1_hmTtw!lFtgBPBkkRSE0njVXoaJQg&sc=NDQ0",
-"http://foo.bar?tp=iW3HlmUOeto&si=AF!AF&sh=fTZhLQ&ss=FlHpf6e49omaNbq-QGYRNw!EKjPCD4EqxxOTcuIBuTPDw&sc=NTU1",
-            };
+    {
+"http://foo.bar?tp=EUAsYRgDPEk&mt=YFXv5y5zmHKeSqhmBA&pk=AAh4ja-DLu2ORvuNpb1Q0RsR&vf=ry28Qw&as=vxNlfhxAUPN-81AR0YuyNw!JBwzNQDYBFxrgzkF9F-3gQ&ai=AF!AF!CI&mc=bWFpbg",
+"http://foo.bar?tp=EUAsYRgDPEk&sh=xDNtXw&ss=V5bq6kmk2_UEdhz3TL_ewg!CLLYzY0Ycd-LWYqqDQOTnQ&si=AF!AF!AB&sc=b25l",
+"http://foo.bar?sh=xjR6DQ&tp=EUAsYRgDPEk&si=AF!AF!AC&ss=Mlz-U2Mf7qblAWbaClH_WA!pu2DXyOWLwmTg6zDgOC8uA&sc=dHdv",
+"http://foo.bar?si=AF!AF!AD&sh=FxMryA&tp=EUAsYRgDPEk&ss=DkI1Qi35hjOK_hhlw9Iguw!QmWTnj8UmxZLbhO1Dz8DSw&sc=dGhyZWU",
+"http://foo.bar?sh=agUrNQ&si=AF!AF!AE&ss=p6TZiZ305Nzq46cyhP6iGA!KjgPUY4u7O4asvht9xl5ZQ&tp=EUAsYRgDPEk&sc=Zm91cg",
+"http://foo.bar?sh=KOYgkw&tp=EUAsYRgDPEk&ss=sADofp3IaTcJcMPZzq86Dg!hR7m1HdeG5zb0H3y6Ct_EA&si=AF!AF!AF&sc=Zml2ZQ",
+"http://foo.bar?mt=LTEcCugljRs1gvg92w&pk=ADZRW9nlDGrXGIxXuYUYrRKv&tp=16UqxPQk-Vk&as=rNRalL19WezruFcF3EPalQ!W1J5FjefcqsIaj8L7josRw&ai=AF!AE!CI&vf=KKkPqg&mc=bWFpbg",
+"http://foo.bar?tp=16UqxPQk-Vk&ss=X47HXUrdFALgW3p8gEXxJA!D5dpjxxEtiJBayVA9ssrgA&si=AF!AE!AB&sh=40o_-w&sc=b25l",
+"http://foo.bar?ss=ktZOFPx2dXX0q9m9cNzBDw!3Hqc5ob1MJXP_eXUH8XPew&sh=-hhNXQ&si=AF!AE!AC&tp=16UqxPQk-Vk&sc=dHdv",
+"http://foo.bar?sh=a12__g&tp=16UqxPQk-Vk&si=AF!AE!AD&ss=IFdeA8WtAzxULW3d1N_Arw!01bUWiwjPRWkuLGF7pGzUA&sc=dGhyZWU",
+"http://foo.bar?si=AF!AE!AE&tp=16UqxPQk-Vk&ss=0PXreEI0whW9nJEWrghMLg!OoIlmNl-Ha-g6WRzpaqBAA&sh=LloxbQ&sc=Zm91cg",
+"http://foo.bar?sh=b-Uw3A&ss=nHt2MaQyrFYI3uEwxSfg1A!JAOth-Tzb6aQmOGNFKXF6w&tp=16UqxPQk-Vk&si=AF!AE!AF&sc=Zml2ZQ",
+"http://foo.bar?mt=_TLbR1eGlQ0FRSd-9ZY&ai=AF!AD!CI&vf=3uzC8g&pk=AM_KDho3f_sD1RenjgufC-iN&tp=niI43gmo-Ok&as=A8tPcX4EVXSE_PlIrWMi-Q!YePOWbhP_65i-W7OHi8L7Q&mc=bWFpbg",
+"http://foo.bar?ss=OZVsVoktxbEm1nGoOSPx8w!QTR6fteBiP126CGh5UQgxw&tp=niI43gmo-Ok&si=AF!AD!AB&sh=5VpjDg&sc=b25l",
+"http://foo.bar?si=AF!AD!AC&sh=4CYtlg&tp=niI43gmo-Ok&ss=HwdayhDdE5DIuPZGS6a3kw!pDztiCun4py7M9ushcMwYQ&sc=dHdv",
+"http://foo.bar?tp=niI43gmo-Ok&si=AF!AD!AD&ss=D3LdeCFBydsy1ZSn24Rd8Q!h0-z_hPH1vWczjP63S0khQ&sh=pxZ1MA&sc=dGhyZWU",
+"http://foo.bar?sh=MUK1dQ&tp=niI43gmo-Ok&ss=x6fl7dxWDkJ5AxyMILdHEQ!qgU9bC194w46Rz6BVgh5xQ&si=AF!AD!AE&sc=Zm91cg",
+"http://foo.bar?sh=dnLt0w&tp=niI43gmo-Ok&ss=P8Tc_6LAj2wpiSCLf0u-4g!XE41dWwtPn7prYUfvMnoVg&si=AF!AD!AF&sc=Zml2ZQ",
+"http://foo.bar?mt=TBvxikcLA-bvZ0tx&pk=ADsQ11z_X9VhVuomlDPbHEC9&tp=H22HUQy5CWU&ai=AF!AC!CI&vf=b7G-mA&as=smlF348J0AUBqojj1c9Q-Q!AK8_enF4p8GgzHmTlaM9LA&mc=bWFpbg",
+"http://foo.bar?tp=H22HUQy5CWU&ss=aa35M-2S4WX8r0lrLx2mKg!QGOiGe9ObLE9kMVgozCRDw&si=AF!AC!AB&sh=BwYCiA&sc=b25l",
+"http://foo.bar?sh=teV5KA&ss=ANy-MeruvVPetQOYKKiZTw!unWlwxtWz-UfwrK1yRVE5Q&si=AF!AC!AC&tp=H22HUQy5CWU&sc=dHdv",
+"http://foo.bar?ss=0V8Rt2oOhsGxYbyGk2JDqg!gngoEB8cBTlsxYXMu4rFGQ&tp=H22HUQy5CWU&sh=209QSA&si=AF!AC!AD&sc=dGhyZWU",
+"http://foo.bar?si=AF!AC!AE&ss=fVwcDZGueA_OPTLiTm3Kww!QXqGWPzgEC4IMFMoul-v7g&sh=zD6PdQ&tp=H22HUQy5CWU&sc=Zm91cg",
+"http://foo.bar?tp=H22HUQy5CWU&ss=XHr7Ed0oASKxswlaAoIvyg!W-e8oMxHoCKzdOU0e3wNpg&sh=opSmFQ&si=AF!AC!AF&sc=Zml2ZQ"
+    };
 
     Random rnd = new Random();
     int ordering[] = new int[ itemArr.length ];
-    final boolean scramble = false;
+    final boolean scramble = true;
 
     public FakeScanner() {
         for (int j = 0; j < itemArr.length; j++) {
