@@ -409,7 +409,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 			sha1_final( c, digest );
 			vlSetWord32( verify, digest[0] );
 		}
-		if( !vlEqual( verify, arecord->verify ) ) { LOGFAIL; rc = -8; goto EXIT; }
+		if( !vlEqual( verify, arecord->verify ) ) { LOGFAIL; rc = RC_MESSAGE; goto EXIT; }
 	}
 
 EXIT:
