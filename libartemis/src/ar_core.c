@@ -52,12 +52,12 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	gfPoint* shareArr = 0;
 	word16* shareIDArr = 0;
 
-	if( !inbuf ) { LOGFAIL; rc = -1; goto EXIT; }
-	if( !clueTbl ) { LOGFAIL; rc = -1; goto EXIT; }
-	if( inbuflen == 0 ) { rc = -1; goto EXIT; }
+	if( !inbuf ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !clueTbl ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( inbuflen == 0 ) { rc = RC_NULL; goto EXIT; }
 
-	if( !arecord_out ) { LOGFAIL; rc = -1; goto EXIT; }
-	if( !srecordtbl_out ) { LOGFAIL; rc = -1; goto EXIT; }
+	if( !arecord_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !srecordtbl_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	*arecord_out = 0;
 	*srecordtbl_out = 0;
@@ -235,8 +235,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			sha1_final( c, digest );
 			vlSetWord64( authhash, digest[0], digest[1] ); // signed with 64bit hash
 		}
-		rc = ar_shamir_sign( &authsig, priSigningkey, authhash );
-		if( rc != 0 ) { LOGFAIL; rc = -1; goto EXIT; }
+		if( rc = ar_shamir_sign( &authsig, priSigningkey, authhash ) ) { LOGFAIL; goto EXIT; }
 	}
 
 	cpCopy( &arecord_out[0]->authsig, &authsig );
@@ -306,8 +305,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 				sha1_final( c, digest );
 				vlSetWord64( saltedsharehash, digest[0], digest[1] ); // signed with 64bit hash
 			}
-			rc = ar_shamir_sign( &sharesig, priSigningkey, saltedsharehash );
-			if( rc != 0 ) { LOGFAIL; rc = -1; goto EXIT; }
+			if( rc = ar_shamir_sign( &sharesig, priSigningkey, saltedsharehash ) ) { LOGFAIL; goto EXIT; }
 		}
 
 		cpClear( &(*srecordtbl_out)[i]->sharesig );
@@ -341,15 +339,15 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	gfPoint* shareArr = 0;
 	word16* shareIDArr = 0;
 
-	if( !buf_out ) { LOGFAIL; rc = -1; goto EXIT; }
+	if( !buf_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	*buf_out = 0;
 
-	if( !arecord ) { LOGFAIL; rc = -1; goto EXIT; }
+	if( !arecord ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 	
 	if( numSRecords < arecord->threshold ) { LOGFAIL; rc = -3; goto EXIT; }
 	
-	if( !srecordtbl ) { LOGFAIL; rc = -1; goto EXIT; }
+	if( !srecordtbl ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	///////////
 	// check topic consistiency: internally to ARecord, then compared to all SRecords
@@ -441,7 +439,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 	// add marking for 'fail' to all
 	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
 
-	if( !arecord ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !arecord ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	// check internal topic consistiency for ARecord
 
@@ -481,7 +479,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 	// set 'fail' markings
 	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
 
-	if( !arecord ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !arecord ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	// check authsignature to ensure data integreity
 

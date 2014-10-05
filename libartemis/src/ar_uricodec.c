@@ -252,21 +252,24 @@ int ar_uri_locate_location( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord 
 {
 	int rc = 0;
 	
-	if( !ppFirst || !ppLast || !szRecord ) { LOGFAIL; return -1; }
-	if( strlen( szRecord ) < 10 ) { LOGFAIL; return -1; }
+	if( !ppFirst ) { LOGFAIL; return RC_NULL; }
+	if( !ppLast ) { LOGFAIL; return RC_NULL; }
+	if( !szRecord ) { LOGFAIL; return RC_NULL; }
+
+	if( strlen( szRecord ) < 10 ) { LOGFAIL; return RC_INSUFFICIENT; }
 
 	*ppFirst = *ppLast = 0;
 
 	byteptr s, e;
 	s = e = 0;
 	s = strstr( szRecord, "http://" );
-	if( s == 0 ) { LOGFAIL; return -1; }
+	if( s == 0 ) { LOGFAIL; return RC_ARG; }
 	s += 7;
 	e = strchr( s, '?' );
-	if( e == 0 ) { LOGFAIL; return -1; }
+	if( e == 0 ) { LOGFAIL; return RC_ARG; }
 	e--;
 
-	if( s > e ) { LOGFAIL; return -1; }
+	if( s > e ) { LOGFAIL; return RC_ARG; }
 
 	*ppFirst = s;
 	*ppLast = e;
@@ -294,10 +297,10 @@ int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, bytep
 {
 	int rc = 0;
 
-	if( !pType ) { LOGFAIL; return -1; }
-	if( !pShares ) { LOGFAIL; return -1; }
-	if( !pThreshold ) { LOGFAIL; return -1; }
-	if( !szRecord ) { LOGFAIL; return -1; }
+	if( !pType ) { LOGFAIL; return RC_NULL; }
+	if( !pShares ) { LOGFAIL; return RC_NULL; }
+	if( !pThreshold ) { LOGFAIL; return RC_NULL; }
+	if( !szRecord ) { LOGFAIL; return RC_NULL; }
 
 	*pType = *pShares = *pThreshold = 0;
 
@@ -317,9 +320,10 @@ int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, bytep
 		else if( token == 'si=1' )	{             pThreshold_start = ss.data_first; }
 		if( pShare_start != 0 && pThreshold_start != 0 ) { break; }
 	}
-	if( pShare_start == 0 && pThreshold_start == 0 ) { LOGFAIL; return -1; }
-	if( rc = ar_util_6Bto12B( pShares, pShare_start ) ) { LOGFAIL; return -1; }
-	if( rc = ar_util_6Bto12B( pThreshold, pThreshold_start ) ) { LOGFAIL; return -1; }
+	if( pShare_start == 0 && pThreshold_start == 0 ) { LOGFAIL; return RC_ARG; }
+
+	if( rc = ar_util_6Bto12B( pShares, pShare_start ) ) { LOGFAIL; return rc; }
+	if( rc = ar_util_6Bto12B( pThreshold, pThreshold_start ) ) { LOGFAIL; return rc; }
 
 	return rc;
 }
@@ -328,8 +332,8 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 {
 	int rc = 0;
 
-	if( !buf ) { LOGFAIL; goto FAIL; }
-	if( !pARecord ) { LOGFAIL; goto FAIL; }
+	if( !buf ) { LOGFAIL; rc = RC_NULL; goto FAIL; }
+	if( !pARecord ) { LOGFAIL; rc = RC_NULL; goto FAIL; }
 
 	size_t msgoffset = pARecord->loclen + pARecord->cluelen;
 
@@ -510,12 +514,13 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 {
 	int rc = 0;
 
-	if( !arecord_out ) { LOGFAIL; return -1; }
+	if( !arecord_out ) { LOGFAIL; return RC_NULL; }
 
 	*arecord_out = 0;
 
-	if( !szRecord ) { LOGFAIL; return -1; }
-	if( strlen( szRecord ) < 10 ) { LOGFAIL; return -1; }
+	if( !szRecord ) { LOGFAIL; return RC_NULL; }
+
+	if( strlen( szRecord ) < 10 ) { LOGFAIL; return RC_INSUFFICIENT; }
 
 	size_t bufsize = 0;
 	ar_uri_parse_vardatalen( &bufsize, szRecord );
@@ -624,12 +629,13 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 {
 	int rc = 0;
 
-	if( !srecord_out ) { LOGFAIL; return -1; }
+	if( !srecord_out ) { LOGFAIL; return RC_NULL; }
 
 	*srecord_out = 0;
 
-	if( !szRecord ) { LOGFAIL; return -1; }
-	if( strlen( szRecord ) < 10 ) { LOGFAIL; return -1; }
+	if( !szRecord ) { LOGFAIL; return RC_NULL; }
+
+	if( strlen( szRecord ) < 10 ) { LOGFAIL; return RC_INSUFFICIENT; }
 
 	size_t bufsize = 0;
 	ar_uri_parse_vardatalen( &bufsize, szRecord );

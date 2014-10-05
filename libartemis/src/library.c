@@ -165,19 +165,18 @@ int library_uri_clue( byteptr* clue_out, byteptr szShare )
 	byteptr pFirst = 0;
 	byteptr pLast = 0;
 	
-	if( !clue_out ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !clue_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 	
 	*clue_out = 0;
 	
-	if( !szShare ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !szShare ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	if( rc = ar_uri_locate_clue( &pFirst, &pLast, szShare ) ) { LOGFAIL; goto EXIT; }
 
 	size_t clen = pLast - pFirst + 1; // but, overestimates because of b64 encoding
 	if( clen > 0 )
 	{
-		*clue_out = malloc( clen + 1 ); // +1 for \0
-		if( *clue_out == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
+		if( !(*clue_out = malloc( clen + 1 )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; } // +1 for \0
 		
 		size_t deltalen = 0;
 		if( rc = ar_util_6BAto8BA( &deltalen, *clue_out, clen, pFirst, clen ) ) { LOGFAIL; goto EXIT; }
@@ -198,11 +197,11 @@ int library_uri_location( byteptr* location_out, byteptr szShare )
 	byteptr pFirst = 0;
 	byteptr pLast = 0;
 	
-	if( !location_out ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !location_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	*location_out = 0;
 	
-	if( !szShare ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !szShare ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 	
 	if( rc = ar_uri_locate_location( &pFirst, &pLast, szShare ) ) { LOGFAIL; goto EXIT; }
 
@@ -226,11 +225,11 @@ int library_uri_topic( byteptr* topic_out, byteptr szShare )
 	byteptr pFirst = 0;
 	byteptr pLast = 0;
 	
-	if( !topic_out ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !topic_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	*topic_out = 0;
 	
-	if( !szShare ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !szShare ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 	
 	if( rc = ar_uri_locate_topic( &pFirst, &pLast, szShare ) ) { LOGFAIL; goto EXIT; }
 
@@ -251,10 +250,10 @@ int library_uri_info( word16* pType, word16* pShares, word16* pThreshold, bytept
 {
 	int rc = 0;
 	
-	if( !pType ) { LOGFAIL; rc=-1; goto EXIT; }
-	if( !pShares ) { LOGFAIL; rc=-1; goto EXIT; }
-	if( !pThreshold ) { LOGFAIL; rc=-1; goto EXIT; }
-	if( !szShare ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !pType ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !pShares ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !pThreshold ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !szShare ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	*pType = *pShares = *pThreshold = 0;
 
@@ -276,17 +275,17 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	bytetbl clueTbl = 0;
 	byteptr clueArr_rw = 0;
 
-	if( !recordArr_out ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !recordArr_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	*recordArr_out = 0;
 	
-	if( !szLocation ) { LOGFAIL; rc=-1; goto EXIT; }
-	if( !clueArr ) { LOGFAIL; rc=-1; goto EXIT; }
-	if( !message ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !szLocation ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !clueArr ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !message ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
-	if( threshold == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
-	if( shares == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
-	if( threshold > shares ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( threshold == 0 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
+	if( shares == 0 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
+	if( threshold > shares ) { LOGFAIL; rc = RC_ARG; goto EXIT; }
 	
 	// change delimiters of clueArr
 	if( !(clueArr_rw = strdup( clueArr )) ) { LOGFAIL; rc=-9; goto EXIT; }
@@ -365,12 +364,12 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 	word16 srecordCount = 0;
 	word16 srecordInit = 0;
 
-	if( !message_out ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !message_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	*message_out = 0;
 
-	if( !location ) { LOGFAIL; rc=-1; goto EXIT; }
-	if( !recordArr ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !location ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !recordArr ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	{
 		size_t shareArrLen = strlen( recordArr );
@@ -455,13 +454,13 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 
 	if( invalidBoolArr_out_opt ) { *invalidBoolArr_out_opt = 0; }
 	
-	if( !szLocation ) { LOGFAIL; rc=-1; goto EXIT; }
-	if( !szRecordArr ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !szLocation ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !szRecordArr ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
 
 	{
 		size_t shareArrLen = strlen( szRecordArr );
 
-		if( shareArrLen < 10 ) { LOGFAIL; rc=-1; goto EXIT; }
+		if( shareArrLen < 10 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
 
 		// dup and change delim 
 

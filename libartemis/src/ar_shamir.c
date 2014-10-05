@@ -97,7 +97,7 @@ int ar_shamir_sign( cpPair* sig, const vlPoint vlPrivateKey, const vlPoint mac )
 		vlSetWord64( session, ar_util_rnd32(), ar_util_rnd32() );
 		cpSign( vlPrivateKey, session, mac, sig );
 	} while ( sig->r[0] == 0 && i++ < maxLoops );
-	return (sig->r[0] == 0) ? -1 : 0;
+	return (sig->r[0] == 0) ? RC_INTERNAL : 0;
 }
 
 void ar_shamir_test()

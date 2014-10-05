@@ -75,7 +75,7 @@ static int vl_to_txt( char* buf, size_t bufsize, vlPoint v )
 
 int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len )
 {
-	if( !table_out ) { LOGFAIL; return -1; }
+	if( !table_out ) { LOGFAIL; return RC_NULL; }
 
 	size_t numentries = +1 +1; // +1 first entry, +1 0 (last) entry
 	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) numentries++; } // interior \0 only, not terminating one
@@ -94,7 +94,7 @@ int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len )
 
 int ar_util_12Bto6B( byteptr out, word16 in )
 {
-	if( in > (1 << 12) - 1) { return -1; }
+	if( in > (1 << 12) - 1) { return RC_ARG; }
 	out[0] = b64charout[ ( in >> 6 ) & 63 ];
 	out[1] = b64charout[ ( in ) & 63 ];
 	return 0;
@@ -409,8 +409,8 @@ void ar_util_test()
 int ar_util_strcat( byteptr dst, size_t dstsize, byteptr src )
 {
 	size_t len = 0;
-	while( *dst ) { dst++; if( ++len > dstsize-1 ) { return -1; } }
-	while( *src ) { *dst = *src; src++; dst++; if( ++len > dstsize-1 ) { return -1; } }
+	while( *dst ) { dst++; if( ++len > dstsize-1 ) { return RC_BUFOVERFLOW; } }
+	while( *src ) { *dst = *src; src++; dst++; if( ++len > dstsize-1 ) { return RC_BUFOVERFLOW; } }
 	*dst = 0; 
 	return 0;
 }
@@ -419,8 +419,8 @@ int ar_util_strncat( byteptr dst, size_t dstsize, byteptr src, size_t srcsize )
 {
 	size_t len = 0;
 	size_t cpy = 0;
-	while( *dst ) { dst++; if( ++len > dstsize-1 ) { return -1; } }
-	while( *src ) { *dst = *src; src++; dst++; if( ++len > dstsize-1 ) { return -1; } if( ++cpy == srcsize ) { break; } }
+	while( *dst ) { dst++; if( ++len > dstsize-1 ) { return RC_BUFOVERFLOW; } }
+	while( *src ) { *dst = *src; src++; dst++; if( ++len > dstsize-1 ) { return RC_BUFOVERFLOW; } if( ++cpy == srcsize ) { break; } }
 	*dst = 0; 
 	return 0;
 }
