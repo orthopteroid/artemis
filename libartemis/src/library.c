@@ -158,28 +158,29 @@ int library_uri_clue( byteptr* clue_out, byteptr szShare )
 {
 	int rc = 0;
 	
-	if( !clue_out ) { LOGFAIL; return -1; }
-	if( !szShare ) { LOGFAIL; return -1; }
-
-	*clue_out = 0;
-	
 	byteptr pFirst = 0;
 	byteptr pLast = 0;
 	
-	if( rc = ar_uri_locate_clue( &pFirst, &pLast, szShare ) ) { LOGFAIL; goto FAIL; }
+	if( !clue_out ) { LOGFAIL; rc=-1; goto EXIT; }
+	
+	*clue_out = 0;
+	
+	if( !szShare ) { LOGFAIL; rc=-1; goto EXIT; }
+
+	if( rc = ar_uri_locate_clue( &pFirst, &pLast, szShare ) ) { LOGFAIL; goto EXIT; }
 
 	size_t clen = pLast - pFirst + 1; // but, overestimates because of b64 encoding
 	if( clen > 0 )
 	{
 		*clue_out = malloc( clen + 1 ); // +1 for \0
-		if( *clue_out == 0 ) { LOGFAIL; rc=-1; goto FAIL; }
+		if( *clue_out == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
 		
 		size_t deltalen = 0;
-		if( rc = ar_util_6BAto8BA( &deltalen, *clue_out, clen, pFirst, clen ) ) { LOGFAIL; goto FAIL; }
+		if( rc = ar_util_6BAto8BA( &deltalen, *clue_out, clen, pFirst, clen ) ) { LOGFAIL; goto EXIT; }
 		if( rc == 0 ) { (*clue_out)[ deltalen ] = 0; }
 	}
 	
-FAIL:
+EXIT:
 
 	if( rc && *clue_out ) { free( *clue_out ); *clue_out = 0; }
 	
@@ -190,23 +191,24 @@ int library_uri_location( byteptr* location_out, byteptr szShare )
 {
 	int rc = 0;
 	
-	if( !location_out ) { LOGFAIL; return -1; }
-	if( !szShare ) { LOGFAIL; return -1; }
-
-	*location_out = 0;
-	
 	byteptr pFirst = 0;
 	byteptr pLast = 0;
 	
-	if( rc = ar_uri_locate_location( &pFirst, &pLast, szShare ) ) { LOGFAIL; goto FAIL; }
+	if( !location_out ) { LOGFAIL; rc=-1; goto EXIT; }
+
+	*location_out = 0;
+	
+	if( !szShare ) { LOGFAIL; rc=-1; goto EXIT; }
+	
+	if( rc = ar_uri_locate_location( &pFirst, &pLast, szShare ) ) { LOGFAIL; goto EXIT; }
 
 	if( pFirst != 0 )
 	{
 		*location_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
-		if( !*location_out ) { LOGFAIL; rc=-9; goto FAIL; }
+		if( !*location_out ) { LOGFAIL; rc=-9; goto EXIT; }
 	}
 	
-FAIL:
+EXIT:
 	
 	if( rc && *location_out ) { free( *location_out ); *location_out = 0; }
 	
@@ -217,23 +219,24 @@ int library_uri_topic( byteptr* topic_out, byteptr szShare )
 {
 	int rc = 0;
 	
-	if( !topic_out ) { LOGFAIL; return -1; }
-	if( !szShare ) { LOGFAIL; return -1; }
-
-	*topic_out = 0;
-	
 	byteptr pFirst = 0;
 	byteptr pLast = 0;
 	
-	if( rc = ar_uri_locate_topic( &pFirst, &pLast, szShare ) ) { LOGFAIL; goto FAIL; }
+	if( !topic_out ) { LOGFAIL; rc=-1; goto EXIT; }
+
+	*topic_out = 0;
+	
+	if( !szShare ) { LOGFAIL; rc=-1; goto EXIT; }
+	
+	if( rc = ar_uri_locate_topic( &pFirst, &pLast, szShare ) ) { LOGFAIL; goto EXIT; }
 
 	if( pFirst != 0 )
 	{
 		*topic_out = (unsigned char*)strndup( pFirst, pLast - pFirst +1 ); // +1 converts to length
-		if( !*topic_out ) { LOGFAIL; rc=-9; goto FAIL; }
+		if( !*topic_out ) { LOGFAIL; rc=-9; goto EXIT; }
 	}
 	
-FAIL:
+EXIT:
 	
 	if( rc && *topic_out ) { free( *topic_out ); *topic_out = 0; }
 	
@@ -244,16 +247,16 @@ int library_uri_info( word16* pType, word16* pShares, word16* pThreshold, bytept
 {
 	int rc = 0;
 	
-	if( !pType ) { LOGFAIL; return -1; }
-	if( !pShares ) { LOGFAIL; return -1; }
-	if( !pThreshold ) { LOGFAIL; return -1; }
-	if( !szShare ) { LOGFAIL; return -1; }
+	if( !pType ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !pShares ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !pThreshold ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !szShare ) { LOGFAIL; rc=-1; goto EXIT; }
 
 	*pType = *pShares = *pThreshold = 0;
 
-	if( rc = ar_uri_parse_info( pType, pShares, pThreshold, szShare ) ) { LOGFAIL; goto FAIL; }
+	if( rc = ar_uri_parse_info( pType, pShares, pThreshold, szShare ) ) { LOGFAIL; goto EXIT; }
 	
-FAIL:
+EXIT:
 	
 	return rc;
 }
@@ -264,32 +267,32 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 {
 	int rc = 0;
 
-	if( !recordArr_out ) { LOGFAIL; return -1; }
-
-	*recordArr_out = 0;
-	
-	if( !szLocation || !clueArr || !message ) { LOGFAIL; return -1; }
-
-	if( threshold == 0 || shares == 0 || threshold > shares ) { LOGFAIL; return -1; }
-	
 	arAuthptr arecord = 0;
 	arSharetbl srecordtbl = 0;
 	bytetbl clueTbl = 0;
 	byteptr clueArr_rw = 0;
 
+	if( !recordArr_out ) { LOGFAIL; rc=-1; goto EXIT; }
+
+	*recordArr_out = 0;
+	
+	if( !szLocation || !clueArr || !message ) { LOGFAIL; rc=-1; goto EXIT; }
+
+	if( threshold == 0 || shares == 0 || threshold > shares ) { LOGFAIL; rc=-1; goto EXIT; }
+	
 	// change delimiters of clueArr
 	clueArr_rw = strdup( clueArr ); // make writable version
-	if( !clueArr_rw ) { LOGFAIL; rc=-1; goto FAILCRYPT; }
+	if( !clueArr_rw ) { LOGFAIL; rc=-1; goto EXIT; }
 
 	size_t cluePtrArrLen = strlen( clueArr_rw );
 	for( size_t i = 0; i < cluePtrArrLen; i++ ) { if( clueArr_rw[i]=='\n' ) { clueArr_rw[i]='\0'; } }
-	if( rc = ar_util_buildByteTbl( &clueTbl, clueArr_rw, cluePtrArrLen ) ) { LOGFAIL; goto FAILCRYPT; }
+	if( rc = ar_util_buildByteTbl( &clueTbl, clueArr_rw, cluePtrArrLen ) ) { LOGFAIL; goto EXIT; }
 
 	size_t loclen = szLocation ? strlen( szLocation ) : 0;
-	if( loclen == 0 ) { LOGFAIL; rc=-1; goto FAILCRYPT; }
+	if( loclen == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
 
 	size_t messlen = message ? strlen( message ) : 0;
-	if( messlen == 0 ) { LOGFAIL; rc=-1; goto FAILCRYPT; }
+	if( messlen == 0 ) { LOGFAIL; rc=-1; goto EXIT; }
 
 	// alloc arecord
 	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
@@ -305,7 +308,7 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	}
 
 	// +1 to include \0
-	if( rc = ar_core_create( &arecord, &srecordtbl, shares, threshold, message, (word16)messlen + 1, clueTbl, szLocation ) ) { LOGFAIL; goto FAILCRYPT; }
+	if( rc = ar_core_create( &arecord, &srecordtbl, shares, threshold, message, (word16)messlen + 1, clueTbl, szLocation ) ) { LOGFAIL; goto EXIT; }
 
 	// calc outbuf size
 
@@ -313,20 +316,20 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	ar_uri_bufsize_a( &bufsize, arecord );
 	for( int i = 0; i < shares; i++ ) { size_t s=0; ar_uri_bufsize_s( &s, srecordtbl[i] ); bufsize += s; }
 
-	if( !(*recordArr_out = malloc( bufsize )) ) { LOGFAIL; rc=-9; goto FAILCRYPT; }
+	if( !(*recordArr_out = malloc( bufsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
 	memset( *recordArr_out, 0, bufsize );
 
 	// concat to output buffer
 
 	(*recordArr_out)[0] = 0;
-	if( rc = ar_uri_create_a( (*recordArr_out), bufsize, arecord ) ) { LOGFAIL; goto FAILCRYPT; }
+	if( rc = ar_uri_create_a( (*recordArr_out), bufsize, arecord ) ) { LOGFAIL; goto EXIT; }
 	for( word16 s=0; s!=shares; s++ )
 	{
-		if( rc = ar_util_strcat( (*recordArr_out), bufsize, "\n" ) ) { LOGFAIL; goto FAILCRYPT; }
-		if( rc = ar_uri_create_s( (*recordArr_out), bufsize, srecordtbl[s] ) ) { LOGFAIL; goto FAILCRYPT; }
+		if( rc = ar_util_strcat( (*recordArr_out), bufsize, "\n" ) ) { LOGFAIL; goto EXIT; }
+		if( rc = ar_uri_create_s( (*recordArr_out), bufsize, srecordtbl[s] ) ) { LOGFAIL; goto EXIT; }
 	}
 
-FAILCRYPT:
+EXIT:
 
 	if( arecord ) free( arecord );
 	if( srecordtbl ) {
@@ -342,73 +345,76 @@ FAILCRYPT:
 int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordArr )
 {
 	int rc = 0;
-
-	if( !message_out ) { LOGFAIL; return -1; }
-
-	*message_out = 0;
-
-	if( !location ) { LOGFAIL; return -1; }
-	if( !recordArr ) { LOGFAIL; return -1; }
-
-	size_t shareArrLen = strlen( recordArr );
-
-	if( shareArrLen < 10 ) { LOGFAIL; return -1; }
+	scanstate ss;
 
 	arAuth* pARecord = 0;
 	arShareptr* srecordtbl = 0;
-	scanstate ss;
-
 	byteptr arecordLoc = 0;
 	byteptr recordArr_rw = 0;
-
-	// dup and change delim 
-
-	if( !(recordArr_rw = strdup( recordArr )) ) { LOGFAIL; rc=-9; goto FAIL; }
-
-	for( size_t i = 0; i < shareArrLen; i++ ) { if( recordArr_rw[i] == '\n' ) { recordArr_rw[i]=0; } }
-
-	// count shares
 
 	word16 arecordCount = 0;
 	word16 srecordCount = 0;
 	word16 srecordInit = 0;
 
-	ss_init( &ss, recordArr_rw, shareArrLen );
-	while( (rc = ss_scan( &ss )) == 1 )
+	if( !message_out ) { LOGFAIL; rc=-1; goto EXIT; }
+
+	*message_out = 0;
+
+	if( !location ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !recordArr ) { LOGFAIL; rc=-1; goto EXIT; }
+
 	{
-		if( ss.type == 1 ) { arecordCount++; } else { srecordCount++; }
-	}
-	if( rc < 0 ) { LOGFAIL; goto FAIL; }
+		size_t shareArrLen = strlen( recordArr );
 
-	if( arecordCount != 1 ) { LOGFAIL; rc=-2; goto FAIL; }
-	if( srecordCount < 2 ) { LOGFAIL; rc=-2; goto FAIL; }
+		if( shareArrLen < 10 ) { LOGFAIL; rc=-1; goto EXIT; }
 
-	// create share-objects
+		// dup and change delim 
 
-	size_t tblsize = sizeof(arShareptr) * srecordCount;
-	if( !(srecordtbl = malloc( tblsize )) ) { LOGFAIL; rc=-9; goto FAIL; }
-	memset( srecordtbl, 0, tblsize );
+		if( !(recordArr_rw = strdup( recordArr )) ) { LOGFAIL; rc=-9; goto EXIT; }
 
-	ss_init( &ss, recordArr_rw, shareArrLen );
-	while( (rc = ss_scan( &ss )) == 1 )
-	{
-		if( ss.type == 1 ) {
-			if( rc = ar_uri_parse_a( &pARecord, ss.s_record ) ) { LOGFAIL; goto FAIL; }
-			if( rc = library_uri_location( &arecordLoc, ss.s_record ) ) { LOGFAIL; goto FAIL; }
-		} else {
-			if( rc = ar_uri_parse_s( &(srecordtbl[ srecordInit++ ]), ss.s_record ) ) { LOGFAIL; goto FAIL; }
+		for( size_t i = 0; i < shareArrLen; i++ ) { if( recordArr_rw[i] == '\n' ) { recordArr_rw[i]=0; } }
+
+		// count shares
+
+		ss_init( &ss, recordArr_rw, shareArrLen );
+		while( (rc = ss_scan( &ss )) == 1 )
+		{
+			if( ss.type == 1 ) { arecordCount++; } else { srecordCount++; }
 		}
-	}
-	if( rc < 0 ) { LOGFAIL; goto FAIL; }
-	if( srecordInit != srecordCount ) { LOGFAIL; rc=-2; goto FAIL; }
+		if( rc < 0 ) { LOGFAIL; goto EXIT; }
 
-	if( strcmp( arecordLoc, location ) != 0 ) { LOGFAIL; rc=-2; goto FAIL; }
+		if( arecordCount != 1 ) { LOGFAIL; rc=-2; goto EXIT; }
+		if( srecordCount < 2 ) { LOGFAIL; rc=-2; goto EXIT; }
+
+		// create share-objects
+
+		{
+			size_t tblsize = sizeof(arShareptr) * srecordCount;
+			if( !(srecordtbl = malloc( tblsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
+			memset( srecordtbl, 0, tblsize );
+		}
+
+		ss_init( &ss, recordArr_rw, shareArrLen );
+		while( (rc = ss_scan( &ss )) == 1 )
+		{
+			if( ss.type == 1 ) {
+				if( rc = ar_uri_parse_a( &pARecord, ss.s_record ) ) { LOGFAIL; goto EXIT; }
+				if( rc = library_uri_location( &arecordLoc, ss.s_record ) ) { LOGFAIL; goto EXIT; }
+			} else {
+				if( rc = ar_uri_parse_s( &(srecordtbl[ srecordInit++ ]), ss.s_record ) ) { LOGFAIL; goto EXIT; }
+			}
+		}
+		if( rc < 0 ) { LOGFAIL; goto EXIT; }
+		if( srecordInit != srecordCount ) { LOGFAIL; rc=-2; goto EXIT; }
+	}
+	
+	if( strcmp( arecordLoc, location ) != 0 ) { LOGFAIL; rc=-2; goto EXIT; }
 
 	// decrypt
 
-	if( rc = ar_core_decrypt( message_out, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; goto FAIL; }
+	if( rc = ar_core_decrypt( message_out, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; goto EXIT; }
 
-FAIL:
+EXIT:
 
 	if( arecordLoc ) free( arecordLoc );
 	if( pARecord ) free( pARecord );
@@ -422,81 +428,94 @@ FAIL:
 	return rc;
 }
 
-int library_uri_validate( byteptr* invalidBoolArr_out, byteptr szLocation, byteptr szRecordArr )
+int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, byteptr szRecordArr )
 {
 	int rc = 0;
-
-	if( invalidBoolArr_out ) { *invalidBoolArr_out = 0; }
-	if( !szLocation ) { LOGFAIL; return -1; }
-	if( !szRecordArr ) { LOGFAIL; return -1; }
-
-	size_t shareArrLen = strlen( szRecordArr );
-
-	if( shareArrLen < 10 ) { LOGFAIL; return -1; }
+	scanstate ss;
 
 	arAuth* pARecord = 0;
 	arShareptr* srecordtbl = 0;
-	scanstate ss;
-
 	byteptr arecordLoc = 0;
 	byteptr recordArr_rw = 0;
-
-	// dup and change delim 
-
-	if( !(recordArr_rw = strdup( szRecordArr )) ) { LOGFAIL; rc=-9; goto FAIL; }
-
-	for( size_t i = 0; i < shareArrLen; i++ ) { if( recordArr_rw[i] == '\n' ) { recordArr_rw[i]=0; } }
-
-	// count shares
 
 	word16 arecordCount = 0;
 	word16 srecordCount = 0;
 	word16 srecordInit = 0;
 
-	ss_init( &ss, recordArr_rw, shareArrLen );
-	while( (rc = ss_scan( &ss )) == 1 )
-	{
-		if( ss.type == 1 ) { arecordCount++; } else { srecordCount++; }
-	}
-	if( rc < 0 ) { LOGFAIL; goto FAIL; }
-
-	if( arecordCount != 1 ) { LOGFAIL; rc=-2; goto FAIL; }
-	if( srecordCount < 2 ) { LOGFAIL; rc=-2; goto FAIL; }
-
-	// create share-objects
-
-	size_t tblsize = sizeof(arShareptr) * srecordCount;
-	if( !(srecordtbl = malloc( tblsize )) ) { LOGFAIL; rc=-9; goto FAIL; }
-	memset( srecordtbl, 0, tblsize );
-
-	ss_init( &ss, recordArr_rw, shareArrLen );
-	while( (rc = ss_scan( &ss )) == 1 )
-	{
-		if( ss.type == 1 ) {
-			if( rc = ar_uri_parse_a( &pARecord, ss.s_record ) ) { LOGFAIL; goto FAIL; }
-			if( rc = library_uri_location( &arecordLoc, ss.s_record ) ) { LOGFAIL; goto FAIL; }
-		} else {
-			if( rc = ar_uri_parse_s( &(srecordtbl[ srecordInit++ ]), ss.s_record ) ) { LOGFAIL; goto FAIL; }
-		}
-	}
-	if( rc < 0 ) { LOGFAIL; goto FAIL; }
-	if( srecordInit != srecordCount ) { LOGFAIL; rc=-2; goto FAIL; }
+	if( invalidBoolArr_out_opt ) { *invalidBoolArr_out_opt = 0; }
 	
+	if( !szLocation ) { LOGFAIL; rc=-1; goto EXIT; }
+	if( !szRecordArr ) { LOGFAIL; rc=-1; goto EXIT; }
+
+	{
+		size_t shareArrLen = strlen( szRecordArr );
+
+		if( shareArrLen < 10 ) { LOGFAIL; rc=-1; goto EXIT; }
+
+		// dup and change delim 
+
+		if( !(recordArr_rw = strdup( szRecordArr )) ) { LOGFAIL; rc=-9; goto EXIT; }
+
+		for( size_t i = 0; i < shareArrLen; i++ ) { if( recordArr_rw[i] == '\n' ) { recordArr_rw[i]=0; } }
+
+		// count shares
+
+		ss_init( &ss, recordArr_rw, shareArrLen );
+		while( (rc = ss_scan( &ss )) == 1 )
+		{
+			if( ss.type == 1 ) { arecordCount++; } else { srecordCount++; }
+		}
+		if( rc < 0 ) { LOGFAIL; goto EXIT; }
+
+		if( arecordCount != 1 ) { LOGFAIL; rc=-2; goto EXIT; }
+		if( srecordCount < 2 ) { LOGFAIL; rc=-2; goto EXIT; }
+
+		// create share-objects
+
+		{
+			size_t tblsize = sizeof(arShareptr) * srecordCount;
+			if( !(srecordtbl = malloc( tblsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
+			memset( srecordtbl, 0, tblsize );
+		}
+
+		ss_init( &ss, recordArr_rw, shareArrLen );
+		while( (rc = ss_scan( &ss )) == 1 )
+		{
+			if( ss.type == 1 ) {
+				if( rc = ar_uri_parse_a( &pARecord, ss.s_record ) ) { LOGFAIL; goto EXIT; }
+				if( rc = library_uri_location( &arecordLoc, ss.s_record ) ) { LOGFAIL; goto EXIT; }
+			} else {
+				if( rc = ar_uri_parse_s( &(srecordtbl[ srecordInit++ ]), ss.s_record ) ) { LOGFAIL; goto EXIT; }
+			}
+		}
+		if( rc < 0 ) { LOGFAIL; goto EXIT; }
+		if( srecordInit != srecordCount ) { LOGFAIL; rc=-2; goto EXIT; }
+	}
+
 	// validate
 
-	if( strcmp( arecordLoc, szLocation ) != 0 ) { LOGFAIL; rc=-2; goto FAIL; }
+	if( strcmp( arecordLoc, szLocation ) != 0 ) { LOGFAIL; rc=-2; goto EXIT; }
 
-	if( rc = ar_core_check_topic( 0, pARecord, 0, 0 ) ) { LOGFAIL; rc = (rc==-2) ? -2 : rc; goto FAIL; } // conv failure code
+	if( rc = ar_core_check_topic( 0, pARecord, 0, 0 ) ) { LOGFAIL; rc = (rc==-2) ? -2 : rc; goto EXIT; } // conv failure code
 
-	if( rc = ar_core_check_signature( 0, pARecord, 0, 0 ) ) { LOGFAIL; rc = (rc==-2) ? -3 : rc; goto FAIL; } // conv failure code
+	if( rc = ar_core_check_signature( 0, pARecord, 0, 0 ) ) { LOGFAIL; rc = (rc==-2) ? -3 : rc; goto EXIT; } // conv failure code
 
-	if( !(*invalidBoolArr_out = malloc( srecordCount )) ) { LOGFAIL; rc=-9; goto FAIL; }
+	{
+		byteptr pBoolArr = 0;
+		
+		if( invalidBoolArr_out_opt )
+		{
+			if( !(pBoolArr = malloc( srecordCount )) ) { LOGFAIL; rc=-9; goto EXIT; }
+		}
+		
+		if( rc = ar_core_check_topic( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; rc = (rc==-2) ? -4 : rc; goto EXIT; } // conv failure code
+		
+		if( rc = ar_core_check_signature( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; rc = (rc==-2) ? -5 : rc; goto EXIT; } // conv failure code
 
-	if( rc = ar_core_check_topic( (*invalidBoolArr_out), pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; rc = (rc==-2) ? -4 : rc; goto FAIL; } // conv failure code
+		*invalidBoolArr_out_opt = pBoolArr;
+	}
 
-	if( rc = ar_core_check_signature( (*invalidBoolArr_out), pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; rc = (rc==-2) ? -5 : rc; goto FAIL; } // conv failure code
-
-FAIL:
+EXIT:
 
 	if( arecordLoc ) free( arecordLoc );
 	if( pARecord ) free( pARecord );
