@@ -62,8 +62,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	*arecord_out = 0;
 	*srecordtbl_out = 0;
 
-	if( numShares < 2 ) { LOGFAIL; rc = -2; goto EXIT; }
-	if( numShares < numThres ) { LOGFAIL; rc = -2; goto EXIT; }
+	if( numShares < 2 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
+	if( numShares < numThres ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
 
 	///////////
 	// alloc tmp storage
@@ -76,7 +76,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	// general vars
 
 	size_t loclen = location ? strlen( location ) : 0;
-	if( loclen == 0 ) { LOGFAIL; rc=-2; goto EXIT; }
+	if( loclen == 0 ) { LOGFAIL; rc = RC_LOCATION; goto EXIT; }
 
 	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
 	size_t msgoffset = loclen + acluelen; // msg comes after clue + location
@@ -352,22 +352,12 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	///////////
 	// check topic consistiency: internally to ARecord, then compared to all SRecords
 
-	if( rc = ar_core_check_topic( 0, arecord, srecordtbl, numSRecords ) )
-	{
-		LOGFAIL;
-		if( rc == -2 ) { rc = -4; } else if( rc == -3 ) { rc = -5; } // remap err
-		goto EXIT;
-	}
+	if( rc = ar_core_check_topic( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL; goto EXIT; }
 
 	////////////
 	// check authsignature to ensure location, clue, topic and pubkey have consistient pairing
 
-	if( rc = ar_core_check_signature( 0, arecord, srecordtbl, numSRecords ) )
-	{
-		LOGFAIL;
-		if( rc == -2 ) { rc = -6; } else if( rc == -3 ) { rc = -7; } // remap err
-		goto EXIT;
-	}
+	if( rc = ar_core_check_signature( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL; goto EXIT; }
 
 	///
 
@@ -450,7 +440,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 		sha1_digest( digest, arecord->buf, arecord->msglen + arecord->loclen + arecord->cluelen );
 		vlSetWord64( topic, digest[0], digest[1] );
 	}
-	if( !vlEqual( arecord->topic, topic ) ) { LOGFAIL; rc = -2; goto EXIT; }
+	if( !vlEqual( arecord->topic, topic ) ) { LOGFAIL; rc = RC_TOPIC; goto EXIT; }
 
 	if( srecordtbl_opt && numSRecords > 0 )
 	{
@@ -461,7 +451,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 			int fail = !vlEqual( topic, srecordtbl_opt[i]->topic );
 
 			// return nz rc if there is any failure
-			if( fail ) { LOGFAIL; rc = -3; if( !buf_opt ) { goto EXIT; } }
+			if( fail ) { LOGFAIL; rc = RC_TOPIC; if( !buf_opt ) { goto EXIT; } }
 			else {
 				if( buf_opt ) { buf_opt[i] = 0; } // clear individual fail markings
 			}
@@ -511,7 +501,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 			sha1_final( c, digest );
 			vlSetWord64( authhash, digest[0], digest[1] );
 		}
-		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { LOGFAIL; rc = -2; goto EXIT; }
+		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { LOGFAIL; rc = RC_SIGATURE; goto EXIT; }
 	}
 
 	// check sharesignatures to ensure data integreity
@@ -551,7 +541,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 			int fail = !cpVerify( arecord->pubkey, saltedsharehash, &pSRecord->sharesig );
 
 			// return nz rc if there is any failure
-			if( fail ) { LOGFAIL; rc = -3; if( !buf_opt ) { goto EXIT; } }
+			if( fail ) { LOGFAIL; rc = RC_SIGATURE; if( !buf_opt ) { goto EXIT; } }
 			else {
 				if( buf_opt ) { buf_opt[i] = 0; } // remove individual fail markings
 			}
@@ -601,24 +591,24 @@ void ar_core_test()
 	srecordtbl[1]->topic[0] = 0; // break topic of share 2
 
 	rc = ar_core_check_topic( checkarr, arecord, srecordtbl, 2 );
-	TESTASSERT( rc == -3 );
+	TESTASSERT( rc != 0 );
 	TESTASSERT( !checkarr[0] );
 	TESTASSERT( checkarr[1] );
 
 	rc = ar_core_check_signature( checkarr, arecord, srecordtbl, 2 );
-	TESTASSERT( rc == -3 );
+	TESTASSERT( rc != 0 );
 	TESTASSERT( !checkarr[0] );
 	TESTASSERT( checkarr[1] );
 
 	arecord->topic[0] = 0; // break auth record topic
 
 	rc = ar_core_check_topic( checkarr, arecord, srecordtbl, 2 );
-	TESTASSERT( rc == -2 );
+	TESTASSERT( rc != 0 );
 	TESTASSERT( checkarr[0] ); // all fail
 	TESTASSERT( checkarr[1] );
 
 	rc = ar_core_check_signature( checkarr, arecord, srecordtbl, 2 );
-	TESTASSERT( rc == -2 );
+	TESTASSERT( rc != 0 );
 	TESTASSERT( checkarr[0] ); // all fail
 	TESTASSERT( checkarr[1] );
 

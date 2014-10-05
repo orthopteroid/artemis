@@ -116,7 +116,7 @@ int ar_util_8BAto4BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 	size_t i=0, j=0;
 	while( i != insize )
 	{
-		if( j + 1 >= bufsize ) { LOGFAIL; rc = -2; break; }
+		if( j + 1 >= bufsize ) { LOGFAIL; rc = RC_BUFOVERFLOW; break; }
 		char c = in[i];
 		buf[j++] = b16charout[ ( c >> 4 ) & 15 ];
 		buf[j++] = b16charout[ ( c ) & 15 ];
@@ -132,7 +132,7 @@ int ar_util_4BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 	size_t i=0, j=0;
 	while( i != insize )
 	{
-		if( j >= bufsize ) { LOGFAIL; rc = -2; break; }
+		if( j >= bufsize ) { LOGFAIL; rc = RC_BUFOVERFLOW; break; }
 		char c = 0;
 		c |= ( b16charin[ in[i++] - 0x30 ] & 15 ) << 4;
 		c |= ( b16charin[ in[i++] - 0x30 ] & 15 );
@@ -153,7 +153,7 @@ int ar_util_8BAto6BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 		char3 |= (word32)( in[i++] ) <<  8;	if( i == insize ) { p=1; goto PAD; }
 		char3 |= (word32)( in[i++] );
 PAD:
-		if( j + 4 - p >= bufsize ) { LOGFAIL; rc = -2; break; } // ? for buf[0,bufsize)
+		if( j + 4 - p >= bufsize ) { LOGFAIL; rc = RC_BUFOVERFLOW; break; } // ? for buf[0,bufsize)
 		buf[j++] = b64charout[ ( char3 >> 18 ) & 63 ];
 		buf[j++] = b64charout[ ( char3 >> 12 ) & 63 ];
 		if( p < 2 ) { buf[j++] = b64charout[ ( char3 >>  6 ) & 63 ]; }
@@ -170,12 +170,12 @@ int ar_util_6BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 	while( i != insize )
 	{
 		word32 char3 = 0;
-		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 18; if( i == insize ) { LOGFAIL; rc = -2; break; }
+		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 18; if( i == insize ) { LOGFAIL; rc = RC_BUFOVERFLOW; break; }
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 12; if( i == insize ) { p=2; goto PAD; }
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) <<  6; if( i == insize ) { p=1; goto PAD; }
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 );
 PAD:
-		if( j + 3 - p > bufsize ) { LOGFAIL; rc = -2; break; } // '> only' for buf[0,bufsize)
+		if( j + 3 - p > bufsize ) { LOGFAIL; rc = RC_BUFOVERFLOW; break; } // '> only' for buf[0,bufsize)
 		buf[j++] = (byte)( ( char3 >> 16 ) & 255 );
 		if( p < 2 ) { buf[j++] = (byte)( ( char3 >>  8 ) & 255 ); }
 		if( p < 1 ) { buf[j++] = (byte)( ( char3       ) & 255 ); }
@@ -202,7 +202,7 @@ int ar_util_16BAto4BA( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr 
 	size_t j=0, i=0;
 	while( i != insize )
 	{
-		if( j + 3 >= bufsize ) { LOGFAIL; rc = -2; break; }
+		if( j + 3 >= bufsize ) { LOGFAIL; rc = RC_BUFOVERFLOW; break; }
 		// note: reading input memory backwards so we output high chars to low memy
 		buf[ j++ ] = b16charout[ ( in[insize-1-i] >> 12 ) & 0x0F ];
 		buf[ j++ ] = b16charout[ ( in[insize-1-i] >>  8 ) & 0x0F ];
@@ -219,7 +219,7 @@ int ar_util_4BAto16BA( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr 
 	int rc=0;
 	size_t i=0, j=0;
 	while( i != insize ) {
-		if( j == bufsize ) { LOGFAIL; rc = -2; break; }
+		if( j == bufsize ) { LOGFAIL; rc = RC_BUFOVERFLOW; break; }
 		word16 w = 0;
 		// note: reading input memory backwards so we output low words to low memy
 		w |= (word16)( b16charin[ in[insize-i-1] - 0x30 ] & 0x0F );			i++;	if( i == insize ) { goto EOS; }
@@ -239,7 +239,7 @@ int ar_util_16BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr 
 	size_t i=0, j=0;
 	while( i != insize )
 	{
-		if( j == bufsize ) { LOGFAIL; rc = -2; break; }
+		if( j == bufsize ) { LOGFAIL; rc = RC_BUFOVERFLOW; break; }
 		// note: reading input memory backwards so we output high words to low memy
 		buf[ j++ ] = ( in[insize-i-1] >> 8 ) & 0xFF;
 		buf[ j++ ] = ( in[insize-i-1] ) & 0xFF;
@@ -255,7 +255,7 @@ int ar_util_8BAto16BA( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr 
 	size_t i=0, j=0;
 	while( i != insize )
 	{
-		if( j == bufsize ) { LOGFAIL; rc = -2; break; }
+		if( j == bufsize ) { LOGFAIL; rc = RC_BUFOVERFLOW; break; }
 		word16 w = 0;
 		// note: reading input memory backwards so we output low words to low memy
 		w |= (word16)( in[insize-i-1] );		i++;	if( i == insize ) { goto EOS; }

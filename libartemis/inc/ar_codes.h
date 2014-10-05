@@ -18,7 +18,7 @@
 #define RC_TOPIC -11
 #define RC_SIGATURE -12
 #define RC_LOCATION -13
-#define RC_VERIFY -14
+#define RC_MESSAGE -14
 
 #define RC_INTERNAL -99
 

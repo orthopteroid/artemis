@@ -44,13 +44,13 @@ static int ss_scan( ssptr pss )
 	if( pss->s_record >= pss->end ) { pss->type = 0; return 0; } // stopping condition
 
 	while( *(pss->e_record) != '\0' ) { pss->e_record++; } // scan \0 delimited string
-	if( pss->e_record > pss->end ) { LOGFAIL; return -2; } // blew buffer
+	if( pss->e_record > pss->end ) { LOGFAIL; return RC_BUFOVERFLOW; } // blew buffer
 	*(pss->e_record) = 0; // \0 term the string
 
 	pss->type = 0;
 	if( strstr( pss->s_record, "ai=" ) )			{ pss->type = 1; }
 	else if( strstr( pss->s_record, "si=" ) )		{ pss->type = 2; }
-	if( pss->type == 0 ) { LOGFAIL; return -2; } // bad record
+	if( pss->type == 0 ) { LOGFAIL; return RC_ARG; } // bad record
 
 	return 1; // continuing condition
 }
@@ -295,10 +295,10 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	if( rc = ar_util_buildByteTbl( &clueTbl, clueArr_rw, cluePtrArrLen ) ) { LOGFAIL; goto EXIT; }
 
 	size_t loclen = szLocation ? strlen( szLocation ) : 0;
-	if( loclen == 0 ) { LOGFAIL; rc=-2; goto EXIT; }
+	if( loclen == 0 ) { LOGFAIL; rc = RC_LOCATION; goto EXIT; }
 
 	size_t messlen = message ? strlen( message ) : 0;
-	if( messlen == 0 ) { LOGFAIL; rc=-2; goto EXIT; }
+	if( messlen == 0 ) { LOGFAIL; rc = RC_MESSAGE; goto EXIT; }
 
 	// alloc arecord
 	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
@@ -374,7 +374,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 	{
 		size_t shareArrLen = strlen( recordArr );
 
-		if( shareArrLen < 10 ) { LOGFAIL; rc=-2; goto EXIT; }
+		if( shareArrLen < 10 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
 
 		// dup and change delim 
 
@@ -391,8 +391,8 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 		}
 		if( rc < 0 ) { LOGFAIL; goto EXIT; }
 
-		if( arecordCount != 1 ) { LOGFAIL; rc=-2; goto EXIT; }
-		if( srecordCount < 2 ) { LOGFAIL; rc=-2; goto EXIT; }
+		if( arecordCount != 1 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
+		if( srecordCount < 2 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
 
 		// create share-objects
 
@@ -413,10 +413,10 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 			}
 		}
 		if( rc < 0 ) { LOGFAIL; goto EXIT; }
-		if( srecordInit != srecordCount ) { LOGFAIL; rc=-2; goto EXIT; }
+		if( srecordInit != srecordCount ) { LOGFAIL; rc = RC_INTERNAL; goto EXIT; }
 	}
 	
-	if( strcmp( arecordLoc, location ) != 0 ) { LOGFAIL; rc=-2; goto EXIT; }
+	if( strcmp( arecordLoc, location ) != 0 ) { LOGFAIL; rc = RC_LOCATION; goto EXIT; }
 
 	// decrypt
 
@@ -477,8 +477,8 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 		}
 		if( rc < 0 ) { LOGFAIL; goto EXIT; }
 
-		if( arecordCount != 1 ) { LOGFAIL; rc=-2; goto EXIT; }
-		if( srecordCount < 2 ) { LOGFAIL; rc=-2; goto EXIT; }
+		if( arecordCount != 1 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
+		if( srecordCount < 2 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
 
 		// create share-objects
 
@@ -499,16 +499,16 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 			}
 		}
 		if( rc < 0 ) { LOGFAIL; goto EXIT; }
-		if( srecordInit != srecordCount ) { LOGFAIL; rc=-2; goto EXIT; }
+		if( srecordInit != srecordCount ) { LOGFAIL; rc = RC_INTERNAL; goto EXIT; }
 	}
 
 	// validate
 
-	if( strcmp( arecordLoc, szLocation ) != 0 ) { LOGFAIL; rc=-2; goto EXIT; }
+	if( strcmp( arecordLoc, szLocation ) != 0 ) { LOGFAIL; rc = RC_INTERNAL; goto EXIT; }
 
-	if( rc = ar_core_check_topic( 0, pARecord, 0, 0 ) ) { LOGFAIL; rc = (rc==-2) ? -2 : rc; goto EXIT; } // conv failure code
+	if( rc = ar_core_check_topic( 0, pARecord, 0, 0 ) ) { LOGFAIL; goto EXIT; } // conv failure code
 
-	if( rc = ar_core_check_signature( 0, pARecord, 0, 0 ) ) { LOGFAIL; rc = (rc==-2) ? -3 : rc; goto EXIT; } // conv failure code
+	if( rc = ar_core_check_signature( 0, pARecord, 0, 0 ) ) { LOGFAIL; goto EXIT; } // conv failure code
 
 	{
 		byteptr pBoolArr = 0;
@@ -519,9 +519,9 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 		}
 		*invalidBoolArr_out_opt = pBoolArr; // reassign before possible failures below
 		
-		if( rc = ar_core_check_topic( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; rc = (rc==-2) ? -4 : rc; goto EXIT; } // conv failure code
+		if( rc = ar_core_check_topic( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; goto EXIT; } // conv failure code
 		
-		if( rc = ar_core_check_signature( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; rc = (rc==-2) ? -5 : rc; goto EXIT; } // conv failure code
+		if( rc = ar_core_check_signature( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL; goto EXIT; } // conv failure code
 	}
 
 EXIT:
@@ -574,7 +574,7 @@ void library_test()
 	// now break something
 	recordArr[ 3 + strlen(recordArr) / 2 ]++;
 	rc = library_uri_validate( &validation, location, recordArr );
-	TESTASSERT( rc == -3 );
+	TESTASSERT( rc != 0 );
 	free( validation );
 	
 	free( recordArr );
