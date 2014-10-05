@@ -84,12 +84,12 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	size_t abufused = loclen + inbuflen + acluelen;
 	size_t astructsize = sizeof(arAuth) + abufused;
-	if( !(arecord_out[0] = malloc( astructsize )) ) { LOGFAIL; goto EXIT; }
+	if( !(arecord_out[0] = malloc( astructsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
 	memset( arecord_out[0], 0, astructsize );
 	arecord_out[0]->bufmax = abufused;
 
 	size_t stblsize = sizeof(arShareptr) * numShares;
-	if( !((*srecordtbl_out) = malloc( stblsize ) )) { LOGFAIL; goto EXIT; }
+	if( !((*srecordtbl_out) = malloc( stblsize ) )) { LOGFAIL; rc=-9; goto EXIT; }
 	memset( (*arecord_out), 0, stblsize );
 
 	for( int i=0; i<numShares; i++ )
@@ -98,7 +98,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		size_t sbufused = loclen + scluelen;
 		size_t sstructsize = sizeof(arShare) + sbufused;
 
-		if( !((*srecordtbl_out)[i] = malloc( sstructsize )) ) { LOGFAIL; goto EXIT; }
+		if( !((*srecordtbl_out)[i] = malloc( sstructsize )) ) { LOGFAIL; rc=-9; goto EXIT; }
 		memset( (*srecordtbl_out)[i], 0, sstructsize );
 		(*srecordtbl_out)[i]->bufmax = sbufused;
 	}
@@ -427,7 +427,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 	// add marking for 'fail' to all
 	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
 
-	if( !arecord ) { LOGFAIL; return -1; }
+	if( !arecord ) { LOGFAIL; rc=-1; goto EXIT; }
 
 	// check internal topic consistiency for ARecord
 
@@ -438,7 +438,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 		sha1_digest( digest, arecord->buf, arecord->msglen + arecord->loclen + arecord->cluelen );
 		vlSetWord64( topic, digest[0], digest[1] );
 	}
-	if( !vlEqual( arecord->topic, topic ) ) { rc = -2; goto EXIT; }
+	if( !vlEqual( arecord->topic, topic ) ) { LOGFAIL; rc = -2; goto EXIT; }
 
 	if( srecordtbl_opt && numSRecords > 0 )
 	{
@@ -449,7 +449,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 			int fail = !vlEqual( topic, srecordtbl_opt[i]->topic );
 
 			// return nz rc if there is any failure
-			if( fail ) { rc = -3; if( !buf_opt ) { goto EXIT; } }
+			if( fail ) { LOGFAIL; rc = -3; if( !buf_opt ) { goto EXIT; } }
 			else {
 				if( buf_opt ) { buf_opt[i] = 0; } // clear individual fail markings
 			}
@@ -467,7 +467,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 	// set 'fail' markings
 	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
 
-	if( !arecord ) { LOGFAIL; return -1; }
+	if( !arecord ) { LOGFAIL; rc=-1; goto EXIT; }
 
 	// check authsignature to ensure data integreity
 
@@ -499,7 +499,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 			sha1_final( c, digest );
 			vlSetWord64( authhash, digest[0], digest[1] );
 		}
-		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { rc = -2; goto EXIT; }
+		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { LOGFAIL; rc = -2; goto EXIT; }
 	}
 
 	// check sharesignatures to ensure data integreity
@@ -539,7 +539,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 			int fail = !cpVerify( arecord->pubkey, saltedsharehash, &pSRecord->sharesig );
 
 			// return nz rc if there is any failure
-			if( fail ) { rc = -3; if( !buf_opt ) { goto EXIT; } }
+			if( fail ) { LOGFAIL; rc = -3; if( !buf_opt ) { goto EXIT; } }
 			else {
 				if( buf_opt ) { buf_opt[i] = 0; } // remove individual fail markings
 			}
