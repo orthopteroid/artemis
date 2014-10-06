@@ -52,31 +52,31 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	gfPoint* shareArr = 0;
 	word16* shareIDArr = 0;
 
-	if( !inbuf ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
-	if( !clueTbl ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
-	if( inbuflen == 0 ) { rc = RC_NULL; goto EXIT; }
-
-	if( !arecord_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
-	if( !srecordtbl_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !arecord_out ) { rc = RC_NULL; LOGFAIL( rc ); return rc; }
+	if( !srecordtbl_out ) { rc = RC_NULL; LOGFAIL( rc ); return rc; }
 
 	*arecord_out = 0;
 	*srecordtbl_out = 0;
 
-	if( numShares < 2 ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
-	if( numShares < numThres ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
+	if( !inbuf ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !clueTbl ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( inbuflen == 0 ) { rc = RC_NULL; goto EXIT; }
+
+	if( numShares < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( numShares < numThres ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 
 	///////////
 	// alloc tmp storage
 
-	if( !(shareArr = malloc( sizeof(gfPoint) * numShares )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
-	if( !(shareIDArr = malloc( sizeof(word16) * numShares )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
-	if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
+	if( !(shareArr = malloc( sizeof(gfPoint) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+	if( !(shareIDArr = malloc( sizeof(word16) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+	if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
 	///////////
 	// general vars
 
 	size_t loclen = location ? strlen( location ) : 0;
-	if( loclen == 0 ) { LOGFAIL; rc = RC_LOCATION; goto EXIT; }
+	if( loclen == 0 ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
 
 	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
 	size_t msgoffset = loclen + acluelen; // msg comes after clue + location
@@ -86,12 +86,12 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	size_t abufused = loclen + inbuflen + acluelen;
 	size_t astructsize = sizeof(arAuth) + abufused;
-	if( !(arecord_out[0] = malloc( astructsize )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
+	if( !(arecord_out[0] = malloc( astructsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	memset( arecord_out[0], 0, astructsize );
 	arecord_out[0]->bufmax = abufused;
 
 	size_t stblsize = sizeof(arShareptr) * numShares;
-	if( !((*srecordtbl_out) = malloc( stblsize ) )) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
+	if( !((*srecordtbl_out) = malloc( stblsize ) )) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	memset( (*arecord_out), 0, stblsize );
 
 	for( int i=0; i<numShares; i++ )
@@ -100,7 +100,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		size_t sbufused = loclen + scluelen;
 		size_t sstructsize = sizeof(arShare) + sbufused;
 
-		if( !((*srecordtbl_out)[i] = malloc( sstructsize )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
+		if( !((*srecordtbl_out)[i] = malloc( sstructsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 		memset( (*srecordtbl_out)[i], 0, sstructsize );
 		(*srecordtbl_out)[i]->bufmax = sbufused;
 	}
@@ -235,7 +235,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			sha1_final( c, digest );
 			vlSetWord64( authhash, digest[0], digest[1] ); // signed with 64bit hash
 		}
-		if( rc = ar_shamir_sign( &authsig, priSigningkey, authhash ) ) { LOGFAIL; goto EXIT; }
+		if( rc = ar_shamir_sign( &authsig, priSigningkey, authhash ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 	cpCopy( &arecord_out[0]->authsig, &authsig );
@@ -305,7 +305,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 				sha1_final( c, digest );
 				vlSetWord64( saltedsharehash, digest[0], digest[1] ); // signed with 64bit hash
 			}
-			if( rc = ar_shamir_sign( &sharesig, priSigningkey, saltedsharehash ) ) { LOGFAIL; goto EXIT; }
+			if( rc = ar_shamir_sign( &sharesig, priSigningkey, saltedsharehash ) ) { LOGFAIL( rc ); goto EXIT; }
 		}
 
 		cpClear( &(*srecordtbl_out)[i]->sharesig );
@@ -314,8 +314,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	// double-check
 
-	if( rc = ar_core_check_topic( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL; goto EXIT; }
-	if( rc = ar_core_check_signature( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL; goto EXIT; }
+	if( rc = ar_core_check_topic( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_core_check_signature( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 
@@ -339,30 +339,30 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	gfPoint* shareArr = 0;
 	word16* shareIDArr = 0;
 
-	if( !buf_out ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !buf_out ) { rc = RC_NULL; LOGFAIL( rc ); return rc; }
 
 	*buf_out = 0;
 
-	if( !arecord ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	
-	if( numSRecords < arecord->threshold ) { LOGFAIL; rc = RC_INSUFFICIENT; goto EXIT; }
+	if( numSRecords < arecord->threshold ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 	
-	if( !srecordtbl ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !srecordtbl ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
 	///////////
 	// check topic consistiency: internally to ARecord, then compared to all SRecords
 
-	if( rc = ar_core_check_topic( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL; goto EXIT; }
+	if( rc = ar_core_check_topic( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	////////////
 	// check authsignature to ensure location, clue, topic and pubkey have consistient pairing
 
-	if( rc = ar_core_check_signature( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL; goto EXIT; }
+	if( rc = ar_core_check_signature( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	///
 
-	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
-	if( !(shareIDArr = malloc( sizeof(word16) * numSRecords )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
+	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+	if( !(shareIDArr = malloc( sizeof(word16) * numSRecords )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	
 	for( int i=0; i<numSRecords; i++ )
 	{
@@ -372,7 +372,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 
 	///
 
-	if( !(*buf_out = malloc( arecord->msglen )) ) { LOGFAIL; rc = RC_MALLOC; goto EXIT; }
+	if( !(*buf_out = malloc( arecord->msglen )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
 	{	
 		byteptr cryptext = arecord->buf + arecord->loclen + arecord->cluelen;
@@ -409,7 +409,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 			sha1_final( c, digest );
 			vlSetWord32( verify, digest[0] );
 		}
-		if( !vlEqual( verify, arecord->verify ) ) { LOGFAIL; rc = RC_MESSAGE; goto EXIT; }
+		if( !vlEqual( verify, arecord->verify ) ) { rc = RC_MESSAGE; LOGFAIL( rc ); goto EXIT; }
 	}
 
 EXIT:
@@ -429,7 +429,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 	// add marking for 'fail' to all
 	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
 
-	if( !arecord ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
 	// check internal topic consistiency for ARecord
 
@@ -440,7 +440,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 		sha1_digest( digest, arecord->buf, arecord->msglen + arecord->loclen + arecord->cluelen );
 		vlSetWord64( topic, digest[0], digest[1] );
 	}
-	if( !vlEqual( arecord->topic, topic ) ) { LOGFAIL; rc = RC_TOPIC; goto EXIT; }
+	if( !vlEqual( arecord->topic, topic ) ) { rc = RC_TOPIC; LOGFAIL( rc ); goto EXIT; }
 
 	if( srecordtbl_opt && numSRecords > 0 )
 	{
@@ -451,7 +451,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 			int fail = !vlEqual( topic, srecordtbl_opt[i]->topic );
 
 			// return nz rc if there is any failure
-			if( fail ) { LOGFAIL; rc = RC_TOPIC; if( !buf_opt ) { goto EXIT; } }
+			if( fail ) { rc = RC_TOPIC; LOGFAIL( rc ); if( !buf_opt ) { goto EXIT; } }
 			else {
 				if( buf_opt ) { buf_opt[i] = 0; } // clear individual fail markings
 			}
@@ -469,7 +469,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 	// set 'fail' markings
 	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
 
-	if( !arecord ) { LOGFAIL; rc = RC_NULL; goto EXIT; }
+	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
 	// check authsignature to ensure data integreity
 
@@ -501,7 +501,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 			sha1_final( c, digest );
 			vlSetWord64( authhash, digest[0], digest[1] );
 		}
-		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { LOGFAIL; rc = RC_SIGATURE; goto EXIT; }
+		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 	}
 
 	// check sharesignatures to ensure data integreity
@@ -541,7 +541,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 			int fail = !cpVerify( arecord->pubkey, saltedsharehash, &pSRecord->sharesig );
 
 			// return nz rc if there is any failure
-			if( fail ) { LOGFAIL; rc = RC_SIGATURE; if( !buf_opt ) { goto EXIT; } }
+			if( fail ) { rc = RC_SIGNATURE; LOGFAIL( rc ); if( !buf_opt ) { goto EXIT; } }
 			else {
 				if( buf_opt ) { buf_opt[i] = 0; } // remove individual fail markings
 			}
@@ -569,7 +569,7 @@ void ar_core_test()
 
 	byte checkarr[2] = {0,0};
 
-	if( !(cleartextin = malloc( strlen(reftextin)+1 )) ) { LOGFAIL; goto EXIT; }
+	if( !(cleartextin = malloc( strlen(reftextin)+1 )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	strcpy_s( cleartextin, strlen(reftextin)+1, reftextin );
 
 	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, "foo.bar" ); // +1 to include \0

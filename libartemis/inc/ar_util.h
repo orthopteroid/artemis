@@ -48,6 +48,10 @@ int ar_util_strncat( byteptr dst, size_t dstsize, byteptr src, size_t srcsize );
 
 ////////
 
+const char* ar_util_rclookup( int rc );
+
+////////
+
 word32 ar_util_rnd32();
 
 ////////

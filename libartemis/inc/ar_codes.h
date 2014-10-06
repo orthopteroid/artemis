@@ -3,23 +3,15 @@
 #ifndef _AR_CODES_H_
 #define _AR_CODES_H_
 
-// return codes are signed
-// -ve codes are errors, +ve codes can be useful values.
-
 #define ISOK(c)			((c)>=0)
 
-#define RC_OK 0
-#define RC_NULL -1
-#define RC_MALLOC -2
-#define RC_BUFOVERFLOW -3
-#define RC_ARG -4
+#undef RC_XXX
+#define RC_XXX(a,b) a = b,
 
-#define RC_INSUFFICIENT -10
-#define RC_TOPIC -11
-#define RC_SIGATURE -12
-#define RC_LOCATION -13
-#define RC_MESSAGE -14
+enum {
 
-#define RC_INTERNAL -99
+#include "ar_codes.x"
+
+};
 
 #endif // _AR_CODES_H_

@@ -5,6 +5,8 @@
 
 #include "ec_types.h"
 
+#define SHOW_FAILURES
+
 #if defined(_WINDOWS)
 
 	#define _CRTDBG_MAP_ALLOC
@@ -34,11 +36,19 @@
 
 	DLLDECL int library_istest();
 
+	#if defined(_DEBUG)
+		DLLDECL char* RC_LOOKUP( int rc );
+	#endif
+
 	#if !defined(LOGFAIL)
 		#if defined(_DEBUG)
-			#define LOGFAIL do { if( !library_istest() ) { __debugbreak(); } } while( 0 )
+			#if defined(SHOW_FAILURES)
+				#define LOGFAIL(c) do { if( !library_istest() ) { __debugbreak(); } else printf("LOGFAIL %s at %s line %d\n", ar_util_rclookup(c), __FILE__, __LINE__); } while( 0 )
+			#else
+				#define LOGFAIL(c) do { if( !library_istest() ) { __debugbreak(); } } while( 0 )
+			#endif
 		#else // debug
-			#define LOGFAIL (0)
+			#define LOGFAIL(c) (0)
 		#endif // debug
 	#endif
 
@@ -99,12 +109,12 @@
 
 	#if !defined(LOGFAIL)
 		#if defined(NDK_DEBUG)
-			#define LOGFAIL __android_log_print(ANDROID_LOG_INFO, "libartemis", "LOGFAIL %s line %d", __FILE__, __LINE__ )
+			#define LOGFAIL(c) __android_log_print(ANDROID_LOG_INFO, "libartemis", "LOGFAIL %s at %s line %d", RC_LOOKUP(c), __FILE__, __LINE__ )
 		#elif defined(_DEBUG)
 			#include <assert.h>
-			#define LOGFAIL do { printf( "LOGFAIL %s line %d\n", __FILE__, __LINE__ ); if( !library_istest() ) { assert(0); } } while(0)
+			#define LOGFAIL(c) do { printf( "LOGFAIL %d at %s line %d\n", ar_util_rclookup(c), __FILE__, __LINE__ ); if( !library_istest() ) { assert(0); } } while(0)
 		#else // debug
-			#define LOGFAIL (0)
+			#define LOGFAIL(c) (0)
 		#endif // debug
 	#endif
 

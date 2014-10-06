@@ -73,7 +73,7 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 	gfPoint x;
 	gfPoint* gfShareIDArr = 0;
 
-	if( !(gfShareIDArr = malloc( numShares * sizeof(gfPoint) )) ) { LOGFAIL; goto EXIT; }
+	if( !(gfShareIDArr = malloc( numShares * sizeof(gfPoint) )) ) { int rc = RC_MALLOC; LOGFAIL( rc ); return; }
 
 	for( int i=0; i< numShares; i++ )
 	{
@@ -82,8 +82,6 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 
 	gfSetLUnit( x, 0 ); // calc y at x = 0
 	eval_lagrange( key, x, gfShareIDArr, shareArr, numShares );
-
-EXIT:
 
 	if( gfShareIDArr ) free( gfShareIDArr );
 }

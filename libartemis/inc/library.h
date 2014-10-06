@@ -36,6 +36,8 @@ DLLDECL word32 library_vmajor();
 DLLDECL word32 library_vminor();
 DLLDECL word32 library_keylength();
 
+DLLDECL const char* library_rclookup( int rc );
+
 void library_test();
 
 #endif // _library_H_

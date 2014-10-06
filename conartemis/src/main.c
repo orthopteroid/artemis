@@ -116,7 +116,7 @@ HELP:
 		byteptr shareArr = 0;
 
 		size_t bufsize = 1024;
-		if( !(shareArr = malloc( bufsize )) ) { ASSERT(0); rc = RC_MALLOC; goto EXIT; }
+		if( !(shareArr = malloc( bufsize )) ) { ASSERT(0); rc = RC_MALLOC; goto FAIL_DECRYPT; }
 
 		size_t shareArrLen = 0;
 		while( 1 )
@@ -129,16 +129,16 @@ HELP:
 				size_t newbufsize = bufsize * 2;
 				rc = (shareArr = realloc_zero( shareArr, bufsize, newbufsize )) ? 0 : RC_MALLOC;
 				bufsize = newbufsize;
-				if( rc ) { printf("# decrypt error\n"); goto EXIT; }
+				if( rc ) { printf("# decrypt error\n"); goto FAIL_DECRYPT; }
 			}
 		}
 
 		rc = library_uri_decoder( &message_out, location, shareArr );
-		if( rc ) { printf("# decrypt error\n"); goto EXIT; }
+		if( rc ) { printf("# decrypt error\n"); goto FAIL_DECRYPT; }
 
 		printf( "%s\n", message_out );
 
-EXIT:
+FAIL_DECRYPT:
 
 		if( message_out ) library_free( &message_out );
 		if( shareArr ) free( shareArr );
@@ -151,11 +151,11 @@ EXIT:
 		for( size_t i = 0; i < clueStrLen; i++ ) { if( clueData[i]=='|' ) { clueData[i]='\n'; } }
 
 		rc = library_uri_encoder( &recordArr, shares, threshold, location, clueData, messageArg );
-		if( rc ) { printf("# encrypt error\n"); goto FAILCRYPT; }
+		if( rc ) { printf("# encrypt error\n"); goto FAIL_CRYPT; }
 
 		printf( "%s\n", recordArr );
 
-FAILCRYPT:
+FAIL_CRYPT:
 
 		if( recordArr ) library_free( &recordArr );
 	}
