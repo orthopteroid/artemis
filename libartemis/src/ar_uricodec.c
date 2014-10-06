@@ -14,6 +14,8 @@
 	#include "ar_core.h" // for testing
 #endif
 
+//#define ENABLE_FUZZCHECKS
+
 #define DELIM_INIT( f, t ) { (f) ? '?' : '&', 0xff & ((t) >> 24), 0xff & ((t) >> 16), 0xff & ((t) >> 8), 0 }
 
 //////////////////////
@@ -911,12 +913,6 @@ void ar_uri_test()
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
-		{
-			rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares -1 ); // fail
-			TESTASSERT( rc != 0 );
-			if( cleartext_out ) free( cleartext_out );
-		}
-
 		rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
 		TESTASSERT( rc == 0 );
 
@@ -927,6 +923,46 @@ void ar_uri_test()
 		free( arecord );
 		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl[i] ); }
 		free( srecordtbl );
+
+		{
+			// test failure with too few shares
+			rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares -1 );
+			TESTASSERT( rc != 0 );
+			if( cleartext_out ) free( cleartext_out );
+		}
+
+#if defined(ENABLE_FUZZCHECKS)
+
+		{
+			// test failure from uri corruption
+			for( int j=0; j<20; j++)
+			{
+				free( arecord_ );
+				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }
+
+				byteptr buf[3];
+				buf[0]=(byteptr)strdup( bufa );
+				buf[1]=(byteptr)strdup( bufs0 );
+				buf[2]=(byteptr)strdup( bufs1 );
+
+				byteptr p = buf[ ar_util_rnd32() % 3 ];
+				size_t ll = strlen( p );
+				p[ ar_util_rnd32() % ll ] = p[ ar_util_rnd32() % ll ];
+				p[ ar_util_rnd32() % ll ]++;
+
+				rc = ar_uri_parse_a( &arecord_, buf[0] );
+				rc = ar_uri_parse_s( &srecordtbl_[0], buf[1] );
+				rc = ar_uri_parse_s( &srecordtbl_[1], buf[2] );
+				rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
+
+				free( cleartext_out );
+				free( buf[0] );
+				free( buf[1] );
+				free( buf[2] );
+			}
+		}
+
+#endif // ENABLE_FUZZCHECKS
 
 		free( arecord_ );
 		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }
