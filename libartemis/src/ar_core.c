@@ -344,11 +344,14 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	*buf_out = 0;
 
 	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
-	
+	if( !srecordtbl ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	for( int i = 0; i < numSRecords; i++ )
+	{
+		if( !srecordtbl[i] ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	}
+
 	if( numSRecords < arecord->threshold ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 	
-	if( !srecordtbl ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
-
 	///////////
 	// check topic consistiency: internally to ARecord, then compared to all SRecords
 
