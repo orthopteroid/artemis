@@ -5,7 +5,7 @@
 
 #include "ec_types.h"
 
-#define SHOW_FAILURES
+//#define SHOW_FAILURES
 
 #if defined(_WINDOWS)
 
