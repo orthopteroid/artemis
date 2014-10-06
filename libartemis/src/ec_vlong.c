@@ -35,6 +35,9 @@
 #include <time.h>
 
 #include "platform.h"
+#include "ar_util.h"
+#include "ar_codes.h"
+
 #include "ec_param.h"
 #include "ec_vlong.h"
 
@@ -42,6 +45,7 @@ int vlEqual (const vlPoint p, const vlPoint q)
 {
 	ASSERT (p != NULL);
 	ASSERT (q != NULL);
+
 	return memcmp (p, q, (p[0] + 1) * sizeof (word16)) == 0 ? 1 : 0;
 } /* vlEqual */
 
@@ -49,6 +53,7 @@ int vlEqual (const vlPoint p, const vlPoint q)
 void vlClear (vlPoint p)
 {
 	ASSERT (p != NULL);
+
 	memset (p, 0, sizeof (vlPoint));
 } /* vlClear */
 
@@ -58,6 +63,7 @@ void vlCopy (vlPoint p, const vlPoint q)
 {
 	ASSERT (p != NULL);
 	ASSERT (q != NULL);
+
 	memcpy (p, q, (q[0] + 1) * sizeof (word16));
 } /* vlCopy */
 
@@ -65,12 +71,14 @@ void vlCopy (vlPoint p, const vlPoint q)
 word16 vlGetWord16(vlPoint p, word16 i)
 {
 	ASSERT (p != NULL);
+
 	return ( i <= p[0] ) ? p[ p[0] - i ] : 0; // orthopteroid
 }
 
 void vlSetWord16(vlPoint p, word16 u)
 {
 	ASSERT (p != NULL);
+
 	vlClear( p );
 	p[0] = 1;
 	p[1] = u;
@@ -80,6 +88,7 @@ void vlSetWord16(vlPoint p, word16 u)
 void vlSetWord32(vlPoint p, word32 u)
 {
 	ASSERT (p != NULL);
+
 	vlClear( p );
 	p[0] = 2;
 	p[1] = ( u >> 16 ) & 0xFFFF; p[2] = u & 0xFFFF;
@@ -89,6 +98,7 @@ void vlSetWord32(vlPoint p, word32 u)
 void vlSetWord64(vlPoint p, word32 h, word32 l)
 {
 	ASSERT (p != NULL);
+
 	vlClear( p );
 	p[0] = 4;
 	p[1] = ( h >> 16 ) & 0xFFFF; p[2] = h & 0xFFFF;
@@ -99,6 +109,7 @@ void vlSetWord64(vlPoint p, word32 h, word32 l)
 void vlSetWord128(vlPoint p, word32 hh, word32 hl, word32 lh, word32 ll)
 {
 	ASSERT (p != NULL);
+
 	vlClear( p );
 	p[0] = 8;
 	p[1] = ( hh >> 16 ) & 0xFFFF; p[2] = hh & 0xFFFF;
@@ -115,6 +126,7 @@ int vlNumBits (const vlPoint k)
 	word16 m, w;
 
 	ASSERT (k != NULL);
+
 	if (k[0] == 0) {
 		return 0;
 	}
@@ -132,6 +144,7 @@ int vlTakeBit (const vlPoint k, word16 i)
 	/* evaluates to the i-th bit of k */
 {
 	ASSERT (k != NULL);
+
 	if (i >= (k[0] << 4)) {
 		return 0;
 	}
@@ -146,6 +159,7 @@ void vlAdd (vlPoint u, const vlPoint v)
 
 	ASSERT (u != NULL);
 	ASSERT (v != NULL);
+
 	/* clear high words of u if necessary: */
 	for (i = u[0] + 1; i <= v[0]; i++) {
 		u[i] = 0;
@@ -181,6 +195,7 @@ void vlSubtract (vlPoint u, const vlPoint v)
 
 	ASSERT (u != NULL);
 	ASSERT (v != NULL);
+
 	for (i = 1; i <= v[0]; i++) {
 		tmp = 0x10000UL + (word32)u[i] - (word32)v[i] - carry;
 		carry = 1;
@@ -207,6 +222,7 @@ void vlShortLshift (vlPoint p, int n)
 	word16 i, T=0;
 
 	ASSERT (p != NULL);
+
 	if (p[0] == 0) {
 		return;
 	}
@@ -230,6 +246,7 @@ void vlShortRshift (vlPoint p, int n)
 	word16 i;
 
 	ASSERT (p != NULL);
+
 	if (p[0] == 0) {
 		return;
 	}
@@ -252,11 +269,8 @@ int vlShortMultiply (vlPoint p, const vlPoint q, word16 d)
 
 	ASSERT (p != NULL);
 	ASSERT (q != NULL);
-	if (q[0] > VL_UNITS) {
-		ASSERT( 0 );
-		puts("# libartemis: internal multiplication error\n");
-		return -1;
-	}
+
+	if (q[0] > VL_UNITS) { LOGFAIL( RC_INTERNAL ); return -1; }
 	if (d > 1) {
 		t = 0L;
 		for (i = 1; i <= q[0]; i++) {
@@ -285,6 +299,7 @@ int vlGreater (const vlPoint p, const vlPoint q)
 
 	ASSERT (p != NULL);
 	ASSERT (q != NULL);
+
 	if (p[0] > q[0]) return 1;
 	if (p[0] < q[0]) return 0;
 	for (i = p[0]; i > 0; i--) {
@@ -303,6 +318,7 @@ void vlRemainder (vlPoint u, const vlPoint v)
 	ASSERT (u != NULL);
 	ASSERT (v != NULL);
 	ASSERT (v[0] != 0);
+
 	vlCopy( t, v );
 	while ( vlGreater( u, t ) )
 	{
@@ -338,6 +354,7 @@ void vlMulMod (vlPoint u, const vlPoint v, const vlPoint w, const vlPoint m)
 	ASSERT (w != NULL);
 	ASSERT (m != NULL);
 	ASSERT (m[0] != 0);
+
 	vlClear( u );
 	vlCopy( t, w );
 	for (i=1;i<=v[0];i+=1)

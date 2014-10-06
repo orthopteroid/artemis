@@ -10,6 +10,9 @@
 #include <time.h>
 
 #include "platform.h"
+#include "ar_codes.h"
+#include "ar_util.h"
+
 #include "ec_curve.h"
 #include "ec_field.h"
 #include "ec_param.h"
@@ -82,10 +85,10 @@ int ecCalcY (ecPoint *p, int ybit)
 	gfAdd(a, p->x, a); /* now a == beta */
 
 	/* check if a solution exists: */
-	if( gfTrace(a) != 0 ) { ASSERT(0); gfClear(a); gfClear(t); return 0; }
+	if( gfTrace(a) != 0 ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 0; }
 
 	/* solve equation t^2 + t + beta = 0 so that gfYbit(t) == ybit: */
-	if( gfSolveQuad(t, a) == 1 ) { ASSERT(0); gfClear(a); gfClear(t); return 0; }
+	if( gfSolveQuad(t, a) == 1 ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 0; }
 
 	if( gfYbit (t) != ybit ) { t[1] ^= 1; }
 

@@ -19,6 +19,9 @@
 #include <time.h>
 
 #include "platform.h"
+#include "ar_util.h"
+#include "ar_codes.h"
+
 #include "ec_field.h"
 #include "ec_param.h"
 #include "ec_vlong.h"
@@ -183,9 +186,13 @@ void gfMultiply (gfPoint r, const gfPoint p, const gfPoint q)
 	ltemp x, log_pi, log_qj;
 	lunit lg[GF_K + 2]; /* this table should be cleared after use */
 
-	ASSERT (logt != NULL && expt != NULL);
-	if( !p || !q || !r ) { ASSERT(0); return; }
-	if( p == r || q == r ) { ASSERT(0); return; }
+	ASSERT( logt );
+	ASSERT( expt );
+	ASSERT( p );
+	ASSERT( q );
+	ASSERT( r );
+
+	if( p == r || q == r ) { LOGFAIL( RC_INTERNAL ); return; }
 
 	if (p[0] && q[0]) {
 		/* precompute logt[q[j]] to reduce table lookups: */
@@ -223,9 +230,11 @@ void gfSquare (gfPoint r, const gfPoint p)
 	int i;
 	ltemp x;
 
-	ASSERT (logt != NULL && expt != NULL);
-	ASSERT (r != NULL);
-	ASSERT (p != NULL);
+	ASSERT( logt );
+	ASSERT( expt );
+	ASSERT( r );
+	ASSERT( p );
+
 	if (p[0]) {
 		/* in what follows, note that (x != 0) => (x^2 = exp((2 * log(x)) % TOGGLE)): */
 		i = p[0];
@@ -257,9 +266,11 @@ void gfSmallDiv (gfPoint p, lunit b)
 	int i;
 	ltemp x, lb = logt[b];
 
-	ASSERT (logt != NULL && expt != NULL);
-	ASSERT (p != NULL);
-	ASSERT (b != 0);
+	ASSERT( logt );
+	ASSERT( expt );
+	ASSERT( p );
+	ASSERT( b );
+
 	for (i = p[0]; i; i--) {
 		if ((x = logt[p[i]]) != TOGGLE) { /* p[i] != 0 */
 			p[i] = expt[(x += TOGGLE - lb) >= TOGGLE ? x - TOGGLE : x];
@@ -273,7 +284,9 @@ static void gfAddMul (gfPoint a, ltemp alpha, ltemp j, gfPoint b)
 	ltemp i, x, la = logt[alpha];
 	lunit *aj = &a[j];
 
-	ASSERT (logt != NULL && expt != NULL);
+	ASSERT( logt );
+	ASSERT( expt );
+
 	while (a[0] < j + b[0]) {
 		a[0]++; a[a[0]] = 0;
 	}
@@ -295,10 +308,12 @@ int gfInvert (gfPoint b, const gfPoint a)
 	gfPoint c, f, g;
 	ltemp x, j, alpha;
 
-	ASSERT (logt != NULL && expt != NULL);
-	ASSERT (b != NULL);
-	ASSERT (a != NULL);
-	ASSERT (b != a); /* note that this test is not complete */
+	ASSERT( logt );
+	ASSERT( expt );
+	ASSERT( a );
+	ASSERT( b );
+	ASSERT( a != b ); /* note that this test is not complete */
+
 	if (a[0] == 0) {
 		/* a is not invertible */
 		return 1;
@@ -313,7 +328,7 @@ int gfInvert (gfPoint b, const gfPoint a)
 
 	for (;;) {
 		if (f[0] == 1) {
-			ASSERT (f[1] != 0);
+			if( f[1] == 0 ) { LOGFAIL( RC_INTERNAL ); }
 			gfSmallDiv (b, f[1]);
 			/* destroy potentially sensitive data: */
 			gfClear (c); gfClear (f); gfClear (g); x = j = alpha = 0;
@@ -333,7 +348,7 @@ SWAP_GF:
 	/* basically same code with b,c,f,g swapped */
 	for (;;) {
 		if (g[0] == 1) {
-			ASSERT (g[1] != 0);
+			if( g[1] == 0 ) { LOGFAIL( RC_INTERNAL ); }
 			gfSmallDiv (c, g[1]);
 			gfCopy (b, c);
 			/* destroy potentially sensitive data: */
@@ -359,8 +374,10 @@ void gfSquareRoot (gfPoint p, lunit b)
 	int i;
 	gfPoint q;
 
-	ASSERT (logt != NULL && expt != NULL);
-	ASSERT (p != NULL);
+	ASSERT( logt );
+	ASSERT( expt );
+	ASSERT( p );
+
 	q[0] = 1; q[1] = b;
 	if ((GF_M - 1) & 1) {
 		/* GF_M - 1 is odd */
@@ -399,8 +416,10 @@ int gfTrace (const gfPoint p)
 	These properties are exploited in this fast algorithm by George Barwood.
 */
 
-	ASSERT (logt != NULL && expt != NULL);
-	ASSERT (p != NULL);
+	ASSERT( logt );
+	ASSERT( expt );
+	ASSERT( p );
+
 #if (GF_TM0 == 1) && (GF_TM1 == 1)
 	/* unit trace mask */
 	return p[0] ? p[1] & 1 : 0;
@@ -432,22 +451,27 @@ int gfSolveQuad (gfPoint p, const gfPoint beta)
 {
 	int i;
 #if (GF_M & 1) == 0
+
 	gfPoint d, t, nzt;
+
 #endif /* ?((GF_M & 1) == 0) */
 
-	ASSERT (logt != NULL && expt != NULL);
-	ASSERT (p != NULL);
-	ASSERT (beta != NULL);
-	ASSERT (p != beta); /* note that this test is not complete */
+	ASSERT( logt );
+	ASSERT( expt );
+	ASSERT( p );
+	ASSERT( beta );
+	ASSERT( p != beta ); /* note that this test is not complete */
 
 	/* check if a solution exists: */
-	if(gfTrace( beta ) != 0 ) { ASSERT(0); return 1; }
+	if( gfTrace( beta ) != 0 ) { LOGFAIL( RC_INTERNAL ); return 1; }
+
 #if (GF_M & 1) == 0
+
 	p[0] = 0;
 	gfCopy(d, beta);
 	nzt[0] = 1;
 	nzt[1] = GF_NZT; /* field element with nonzero trace */
-	if( gfTrace(nzt) == 0 ) { ASSERT(0); return 1; }
+	if( gfTrace(nzt) == 0 ) { LOGFAIL( RC_INTERNAL ); return 1; }
 	for (i = 1; i < GF_M; i++) {
 		gfSquare (p, p);
 		gfSquare (d, d);
@@ -458,14 +482,18 @@ int gfSolveQuad (gfPoint p, const gfPoint beta)
 	/* destroy potentially sensitive information: */
 	gfClear (d);
 	gfClear (t);
+
 #else /* GF_M is odd: compute half-trace */
+
 	gfCopy (p, beta);
 	for (i = 0; i < GF_M/2; i++) {
 		gfSquare (p, p);
 		gfSquare (p, p);
 		gfAdd (p, p, beta);
 	}
+
 #endif /* ?((GF_M & 1) == 0) */
+
 	return 0;
 } /* gfSolveQuad */
 
@@ -473,7 +501,8 @@ int gfSolveQuad (gfPoint p, const gfPoint beta)
 int gfYbit (const gfPoint p)
 	/* evaluates to the rightmost (least significant) bit of p (or an error code) */
 {
-	ASSERT (p != NULL);
+	ASSERT( p );
+
 	return p[0] ? (int) (p[1] & 1) : 0;
 } /* gfYbit */
 
@@ -484,8 +513,9 @@ void gfPack (const gfPoint p, vlPoint k)
 	int i;
 	vlPoint a;
 
-	ASSERT (p != NULL);
-	ASSERT (k != NULL);
+	ASSERT( p );
+	ASSERT( k );
+
 	vlClear (k); a[0] = 1;
 	for (i = p[0]; i > 0; i--) {
 		vlShortLshift (k, GF_L); /* this only works if GF_L <= 16 */
@@ -501,8 +531,9 @@ void gfUnpack (gfPoint p, const vlPoint k)
 	vlPoint x;
 	lunit n;
 
-	ASSERT (p != NULL);
-	ASSERT (k != NULL);
+	ASSERT( p );
+	ASSERT( k );
+
 	vlCopy (x, k);
 	for (n = 0; x[0]; n++) {
 		p[n+1] = (lunit) (x[1] & TOGGLE);
