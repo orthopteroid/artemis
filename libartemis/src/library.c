@@ -185,7 +185,8 @@ int library_uri_clue( byteptr* clue_out, byteptr szShare )
 		
 		size_t deltalen = 0;
 		if( rc = ar_util_6BAto8BA( &deltalen, *clue_out, clen, pFirst, clen ) ) { LOGFAIL( rc ); goto EXIT; }
-		if( rc == 0 ) { (*clue_out)[ deltalen ] = 0; } // TODO: add 'goto' and leave output in known state
+
+		(*clue_out)[ deltalen ] = 0;
 	}
 	
 EXIT:
