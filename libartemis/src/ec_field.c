@@ -117,7 +117,9 @@ void gfCopy (gfPoint p, const gfPoint q)
 {
 	ASSERT (p != NULL);
 	ASSERT (q != NULL);
-	memcpy (p, q, (q[0] + 1) * sizeof (lunit));
+	size_t b = (q[0] + 1) * sizeof(lunit);
+	if( b > sizeof(gfPoint) ) { LOGFAIL( RC_INTERNAL ); b = sizeof(gfPoint); }
+	memcpy( p, q, b );
 } /* gfCopy */
 
 

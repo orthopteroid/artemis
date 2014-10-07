@@ -71,9 +71,9 @@ void vlClear (vlPoint p)
 void vlCopy (vlPoint p, const vlPoint q)
 	/* sets p := q */
 {
-	if( q[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
-
-	memcpy (p, q, (q[0] + 1) * sizeof (word16));
+	size_t b = (q[0] + 1) * sizeof( word16 );
+	if( b > sizeof(vlPoint) ) { LOGFAIL( RC_INTERNAL ); b = sizeof(vlPoint); }
+	memcpy( p, q, b );
 } /* vlCopy */
 
 
