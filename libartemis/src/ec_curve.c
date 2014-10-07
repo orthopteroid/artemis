@@ -22,10 +22,13 @@ extern const vlPoint prime_order;
 extern const ecPoint curve_point;
 
 
+
 int ecCheck (const ecPoint *p)
 	/* confirm that y^2 + x*y = x^3 + EC_B for point p */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !gfIsValid( p->y ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	gfPoint t1, t2, t3, b;
 
@@ -45,6 +48,8 @@ int ecEqual (const ecPoint *p, const ecPoint *q)
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return 0; }
 	if( !q ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !gfIsValid( q->y ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	return gfEqual (p->x, q->x) && gfEqual (p->y, q->y);
 } /* ecEqual */
@@ -75,6 +80,7 @@ int ecCalcY (ecPoint *p, int ybit)
 	/* given the x coordinate of p, evaluate y such that y^2 + x*y = x^3 + EC_B */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	gfPoint a, b, t;
 
@@ -82,7 +88,6 @@ int ecCalcY (ecPoint *p, int ybit)
 
 	/* simple sqrt if elliptic equation reduces to y^2 = EC_B: */
 	if( p->x[0] == 0 ) { gfSquareRoot (p->y, EC_B); return 1; }
-	if( p->x[0] > GF_POINT_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; } // CHECK: sqrt( GF_K )?
 
 	/* evaluate alpha = x^3 + b = (x^2)*x + EC_B: */
 	gfSquare (t, p->x); /* keep t = x^2 for beta evaluation */
@@ -115,7 +120,11 @@ void ecAdd (ecPoint *p, const ecPoint *q)
 	/* sets p := p + q */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( !q ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( !q ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( !gfIsValid( p->y ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( !gfIsValid( q->x ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( !gfIsValid( q->y ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
 
 	gfPoint lambda, t, tx, ty, x3;
 
@@ -165,7 +174,9 @@ void ecSub (ecPoint *p, const ecPoint *r)
 	/* sets p := p - r */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( !r ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( !r ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( !gfIsValid( r->x ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( !gfIsValid( r->y ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
 
 	ecPoint t;
 
@@ -190,11 +201,13 @@ void ecDouble (ecPoint *p)
 	/* sets p := 2*p */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( !gfIsValid( p->y ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
 
 	gfPoint lambda, t1, t2;
 
 	/* evaluate lambda = x + y/x: */
-	if( 1 == gfInvert (t1, p->x) ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( 1 == gfInvert (t1, p->x) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
 	gfMultiply (lambda, p->y, t1);
 	gfAdd (lambda, lambda, p->x);
 	/* evaluate x3 = lambda^2 + lambda: */
@@ -214,7 +227,7 @@ void ecMultiply (ecPoint *p, const vlPoint k)
 	/* sets p := k*p */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( k[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
 
 	vlPoint h;
 	int z, hi, ki;
@@ -223,7 +236,7 @@ void ecMultiply (ecPoint *p, const vlPoint k)
 
 	gfCopy(r.x, p->x); p->x[0] = 0;
 	gfCopy(r.y, p->y); p->y[0] = 0;
-	if( vlShortMultiply(h, k, 3) ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( vlShortMultiply(h, k, 3) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
 	z = vlNumBits(h) - 1; /* so vlTakeBit (h, z) == 1 */
 	i = 1;
 	for (;;) {
@@ -242,6 +255,8 @@ int ecYbit (const ecPoint *p)
 	/* evaluates to 0 if p->x == 0, otherwise to gfYbit (p->y / p->x) */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !gfIsValid( p->y ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	gfPoint t1, t2;
 
@@ -278,7 +293,7 @@ int ecUnpack (ecPoint *p, const vlPoint k)
 	/* unpacks a vlPoint into a curve point */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return 1; }
-	if( k[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 1; }
+	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
 
 	int yb;
 	vlPoint a;

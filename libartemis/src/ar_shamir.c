@@ -70,6 +70,13 @@ void ar_shamir_splitsecret( gfPoint* shareArr, word16* shareIDArr, word16 numSha
 void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr, word16 numShares )
 	/* Calc key from numbered shares */
 {
+	key[0] = 0;
+
+	for( int i=0; i< numShares; i++ )
+	{
+		if( !gfIsValid( shareArr[i] ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	}
+
 	gfPoint x;
 	gfPoint* gfShareIDArr = 0;
 
@@ -88,6 +95,12 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 
 int ar_shamir_sign( cpPair* sig, const vlPoint vlPrivateKey, const vlPoint mac )
 {
+	int rc = 0;
+
+	if( !vlIsValid( vlPrivateKey ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+	if( !vlIsValid( mac ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+	if( vlIsZero( mac ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+
 	const int maxLoops = 100;
 	int i = 0;
 	do {
@@ -95,7 +108,12 @@ int ar_shamir_sign( cpPair* sig, const vlPoint vlPrivateKey, const vlPoint mac )
 		vlSetWord64( session, ar_util_rnd32(), ar_util_rnd32() );
 		cpSign( vlPrivateKey, session, mac, sig );
 	} while ( sig->r[0] == 0 && i++ < maxLoops );
-	return (sig->r[0] == 0) ? RC_INTERNAL : 0;
+
+	if( vlIsZero( sig->r ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+
+EXIT:
+
+	return rc;
 }
 
 void ar_shamir_test()
