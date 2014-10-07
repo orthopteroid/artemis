@@ -292,7 +292,7 @@ void gfSmallDiv (gfPoint p, lunit b)
 	}
 } /* gfSmallDiv */
 
-
+// TODO: from profiling, lowest hanging fruit for optimizing...
 static void gfAddMul (gfPoint a, ltemp alpha, ltemp j, gfPoint b)
 {
 	if( !gfIsValid( a ) ) { LOGFAIL( RC_INTERNAL ); gfClear( a ); return; }
