@@ -18,6 +18,10 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform.h"
+#include "ar_codes.h"
+#include "ar_util.h"
+
 #include "ec_curve.h"
 #include "ec_vlong.h"
 #include "ec_crypt.h"
@@ -69,6 +73,12 @@ void cpSign(const vlPoint vlPrivateKey, const vlPoint k, const vlPoint vlMac, cp
 
 int cpVerify(const vlPoint vlPublicKey, const vlPoint vlMac, cpPair * sig )
 {
+	if( vlPublicKey[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( vlMac[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !sig ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( sig->r[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( sig->s[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+
 	ecPoint t1,t2;
 	vlPoint t3,t4;
 	

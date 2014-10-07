@@ -220,6 +220,9 @@ int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 {
 	int rc = 0;
 	
+	if( !szRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !ar_util_isvalid7bit( szRecord ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+
 	*ppFirst = *ppLast = 0;
 	
 	parsestate2 ss;
@@ -233,6 +236,8 @@ int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 		{ *ppFirst = ss.data_first; *ppLast = ss.data_last; break; }
 	}
 
+EXIT:
+
 	return rc;	
 }
 
@@ -240,6 +245,9 @@ int ar_uri_locate_topic( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 {
 	int rc = 0;
 	
+	if( !szRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !ar_util_isvalid7bit( szRecord ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+
 	*ppFirst = *ppLast = 0;
 	
 	parsestate2 ss;
@@ -253,6 +261,8 @@ int ar_uri_locate_topic( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 		{ *ppFirst = ss.data_first; *ppLast = ss.data_last; break; }
 	}
 
+EXIT:
+
 	return rc;	
 }
 
@@ -265,6 +275,7 @@ int ar_uri_locate_location( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord 
 	if( !szRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
 	if( strlen( szRecord ) < 10 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( !ar_util_isvalid7bit( szRecord ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	*ppFirst = *ppLast = 0;
 
@@ -311,6 +322,8 @@ int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, bytep
 	if( !pShares ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !pThreshold ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !szRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	if( !ar_util_isvalid7bit( szRecord ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	*pType = *pShares = *pThreshold = 0;
 
@@ -531,6 +544,7 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 	if( !szRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
 	if( strlen( szRecord ) < 10 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( !ar_util_isvalid7bit( szRecord ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t bufsize = 0;
 	ar_uri_parse_vardatalen( &bufsize, szRecord );
@@ -646,6 +660,7 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 	if( !szRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
 	if( strlen( szRecord ) < 10 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( !ar_util_isvalid7bit( szRecord ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t bufsize = 0;
 	ar_uri_parse_vardatalen( &bufsize, szRecord );

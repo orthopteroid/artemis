@@ -43,8 +43,8 @@
 
 int vlEqual (const vlPoint p, const vlPoint q)
 {
-	ASSERT (p != NULL);
-	ASSERT (q != NULL);
+	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 1; }
+	if( q[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 1; }
 
 	return memcmp (p, q, (p[0] + 1) * sizeof (word16)) == 0 ? 1 : 0;
 } /* vlEqual */
@@ -52,8 +52,6 @@ int vlEqual (const vlPoint p, const vlPoint q)
 
 void vlClear (vlPoint p)
 {
-	ASSERT (p != NULL);
-
 	memset (p, 0, sizeof (vlPoint));
 } /* vlClear */
 
@@ -61,8 +59,7 @@ void vlClear (vlPoint p)
 void vlCopy (vlPoint p, const vlPoint q)
 	/* sets p := q */
 {
-	ASSERT (p != NULL);
-	ASSERT (q != NULL);
+	if( q[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
 
 	memcpy (p, q, (q[0] + 1) * sizeof (word16));
 } /* vlCopy */
@@ -70,15 +67,13 @@ void vlCopy (vlPoint p, const vlPoint q)
 
 word16 vlGetWord16(vlPoint p, word16 i)
 {
-	ASSERT (p != NULL);
+	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	return ( i <= p[0] ) ? p[ p[0] - i ] : 0; // orthopteroid
 }
 
 void vlSetWord16(vlPoint p, word16 u)
 {
-	ASSERT (p != NULL);
-
 	vlClear( p );
 	p[0] = 1;
 	p[1] = u;
@@ -87,8 +82,6 @@ void vlSetWord16(vlPoint p, word16 u)
 
 void vlSetWord32(vlPoint p, word32 u)
 {
-	ASSERT (p != NULL);
-
 	vlClear( p );
 	p[0] = 2;
 	p[1] = ( u >> 16 ) & 0xFFFF; p[2] = u & 0xFFFF;
@@ -97,8 +90,6 @@ void vlSetWord32(vlPoint p, word32 u)
 
 void vlSetWord64(vlPoint p, word32 h, word32 l)
 {
-	ASSERT (p != NULL);
-
 	vlClear( p );
 	p[0] = 4;
 	p[1] = ( h >> 16 ) & 0xFFFF; p[2] = h & 0xFFFF;
@@ -108,8 +99,6 @@ void vlSetWord64(vlPoint p, word32 h, word32 l)
 
 void vlSetWord128(vlPoint p, word32 hh, word32 hl, word32 lh, word32 ll)
 {
-	ASSERT (p != NULL);
-
 	vlClear( p );
 	p[0] = 8;
 	p[1] = ( hh >> 16 ) & 0xFFFF; p[2] = hh & 0xFFFF;
@@ -122,19 +111,14 @@ void vlSetWord128(vlPoint p, word32 hh, word32 hl, word32 lh, word32 ll)
 int vlNumBits (const vlPoint k)
 	/* evaluates to the number of bits of k (index of most significant bit, plus one) */
 {
-	int i;
-	word16 m, w;
+	if( k[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( k[0] == 0 ) { return 0; }
 
-	ASSERT (k != NULL);
-
-	if (k[0] == 0) {
-		return 0;
-	}
-	w = k[k[0]]; /* last unit of k */
-	for (i = (int)(k[0] << 4), m = 0x8000U; m; i--, m >>= 1) {
-		if (w & m) {
-			return i;
-		}
+	word16 m = 0;
+	word16 w = k[k[0]]; /* last unit of k */
+	for( int i = (int)(k[0] << 4), m = 0x8000U; m; i--, m >>= 1 )
+	{
+		if( w & m ) { return i; }
 	}
 	return 0;
 } /* vlNumBits */
@@ -143,7 +127,7 @@ int vlNumBits (const vlPoint k)
 int vlTakeBit (const vlPoint k, word16 i)
 	/* evaluates to the i-th bit of k */
 {
-	ASSERT (k != NULL);
+	if( k[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	if (i >= (k[0] << 4)) {
 		return 0;
@@ -154,11 +138,11 @@ int vlTakeBit (const vlPoint k, word16 i)
 
 void vlAdd (vlPoint u, const vlPoint v)
 {
+	if( u[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( v[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+
 	word16 i;
 	word32 t;
-
-	ASSERT (u != NULL);
-	ASSERT (v != NULL);
 
 	/* clear high words of u if necessary: */
 	for (i = u[0] + 1; i <= v[0]; i++) {
@@ -190,13 +174,14 @@ void vlAdd (vlPoint u, const vlPoint v)
 void vlSubtract (vlPoint u, const vlPoint v)
 {
 	/* Assume u >= v */
+
+	if( u[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( v[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+
 	word32 carry = 0, tmp;
-	int i;
-
-	ASSERT (u != NULL);
-	ASSERT (v != NULL);
-
-	for (i = 1; i <= v[0]; i++) {
+	int i = 0;
+	for( i = 1; i <= v[0]; i++ )
+	{
 		tmp = 0x10000UL + (word32)u[i] - (word32)v[i] - carry;
 		carry = 1;
 		if (tmp >= 0x10000UL) {
@@ -205,13 +190,13 @@ void vlSubtract (vlPoint u, const vlPoint v)
 		}
 		u[i] = (word16) tmp;
 	}
-	if (carry) {
-		while (u[i] == 0) {
-			i++;
-		}
+	if( carry )
+	{
+		while( u[i] == 0 ) { i++; }
 		u[i]--;
 	}
-	while (u[u[0]] == 0 && u[0]) {
+	while( u[u[0]] == 0 && u[0] )
+	{
 		u[0]--;
 	}
 } /* vlSubtract */
@@ -219,13 +204,9 @@ void vlSubtract (vlPoint u, const vlPoint v)
 
 void vlShortLshift (vlPoint p, int n)
 {
-	word16 i, T=0;
+	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( p[0] == 0 ) { return; }
 
-	ASSERT (p != NULL);
-
-	if (p[0] == 0) {
-		return;
-	}
 	/* this will only work if 0 <= n <= 16 */
 	if (p[p[0]] >> (16 - n)) {
 		/* check if there is enough space for an extra unit: */
@@ -234,7 +215,9 @@ void vlShortLshift (vlPoint p, int n)
 			p[p[0]] = 0; /* just make room for one more unit */
 		}
 	}
-	for (i = p[0]; i > 1; i--) {
+
+	for( word16 i = p[0]; i > 1; i-- )
+	{
 		p[i] = (p[i] << n) | (p[i - 1] >> (16 - n));
 	}
 	p[1] <<= n;
@@ -243,17 +226,15 @@ void vlShortLshift (vlPoint p, int n)
 
 void vlShortRshift (vlPoint p, int n)
 {
-	word16 i;
+	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( p[0] == 0 ) { return; }
 
-	ASSERT (p != NULL);
-
-	if (p[0] == 0) {
-		return;
-	}
 	/* this will only work if 0 <= n <= 16 */
-	for (i = 1; i < p[0]; i++) {
+	for( word16 i = 1; i < p[0]; i++ )
+	{
 		p[i] = (p[i + 1] << (16 - n)) | (p[i] >> n);
 	}
+
 	p[p[0]] >>= n;
 	if (p[p[0]] == 0) {
 		--p[0];
@@ -267,10 +248,8 @@ int vlShortMultiply (vlPoint p, const vlPoint q, word16 d)
 	int i;
 	word32 t;
 
-	ASSERT (p != NULL);
-	ASSERT (q != NULL);
+	if( q[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return -1; }
 
-	if (q[0] > VL_UNITS) { LOGFAIL( RC_INTERNAL ); return -1; }
 	if (d > 1) {
 		t = 0L;
 		for (i = 1; i <= q[0]; i++) {
@@ -293,16 +272,15 @@ int vlShortMultiply (vlPoint p, const vlPoint q, word16 d)
 } /* vlShortMultiply */
 
 
-int vlGreater (const vlPoint p, const vlPoint q)
+int vlGreater(const vlPoint p, const vlPoint q)
 {
-	int i;
-
-	ASSERT (p != NULL);
-	ASSERT (q != NULL);
+	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( q[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	if (p[0] > q[0]) return 1;
 	if (p[0] < q[0]) return 0;
-	for (i = p[0]; i > 0; i--) {
+	for( int i = p[0]; i > 0; i-- )
+	{
 		if (p[i] > q[i]) return 1;
 		if (p[i] < q[i]) return 0;
 	}
@@ -310,14 +288,14 @@ int vlGreater (const vlPoint p, const vlPoint q)
 } /* vlGreater */
 
 
-void vlRemainder (vlPoint u, const vlPoint v)
+void vlRemainder(vlPoint u, const vlPoint v)
 {
 	vlPoint t;
 	int shift = 0;
 
-	ASSERT (u != NULL);
-	ASSERT (v != NULL);
-	ASSERT (v[0] != 0);
+	if( u[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( v[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( v[0] == 0 ) { LOGFAIL( RC_INTERNAL ); return; }
 
 	vlCopy( t, v );
 	while ( vlGreater( u, t ) )
@@ -346,22 +324,21 @@ void vlRemainder (vlPoint u, const vlPoint v)
 
 void vlMulMod (vlPoint u, const vlPoint v, const vlPoint w, const vlPoint m)
 {
-	vlPoint t;
-	int i,j;
-	
-	ASSERT (u != NULL);
-	ASSERT (v != NULL);
-	ASSERT (w != NULL);
-	ASSERT (m != NULL);
-	ASSERT (m[0] != 0);
-
 	vlClear( u );
+
+	if( v[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( w[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( m[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( m[0] == 0 ) { LOGFAIL( RC_INTERNAL ); return; }
+
+	vlPoint t;	
 	vlCopy( t, w );
-	for (i=1;i<=v[0];i+=1)
+
+	for( int i=1; i<=v[0]; i+=1 )
 	{
-		for (j=0;j<16;j+=1)
+		for( int j=0; j<16; j+=1 )
 		{
-			if ( v[i] & (1u<<j) )
+			if( v[i] & (1u<<j) )
 			{
 				vlAdd( u, t );
 				vlRemainder( u, m );

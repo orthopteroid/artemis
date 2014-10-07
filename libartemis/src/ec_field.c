@@ -513,10 +513,8 @@ void gfPack (const gfPoint p, vlPoint k)
 	int i;
 	vlPoint a;
 
-	ASSERT( p );
-	ASSERT( k );
-
-	vlClear (k); a[0] = 1;
+	vlClear(k);
+	a[0] = 1;
 	for (i = p[0]; i > 0; i--) {
 		vlShortLshift (k, GF_L); /* this only works if GF_L <= 16 */
 		a[1] = p[i];
@@ -528,11 +526,10 @@ void gfPack (const gfPoint p, vlPoint k)
 void gfUnpack (gfPoint p, const vlPoint k)
 	/* unpacks a vlPoint into a field point */
 {
+	if( k[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+
 	vlPoint x;
 	lunit n;
-
-	ASSERT( p );
-	ASSERT( k );
 
 	vlCopy (x, k);
 	for (n = 0; x[0]; n++) {

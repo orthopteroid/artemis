@@ -43,7 +43,7 @@ static void eval_lagrange( gfPoint y, gfPoint x, gfPoint* xArr, gfPoint* yArr, w
 		{
             if( i == j ) continue;
 			gfAdd( ximxj, xArr[ i ], xArr[ j ] );			// same as '-' in GF(2^n)
-			gfInvert( ximxjInv, ximxj );					// same as '/' in GF(2^n)
+			if( 1 == gfInvert( ximxjInv, ximxj ) ) { LOGFAIL( RC_INTERNAL ); return; }	// same as '/' in GF(2^n)
 			gfMultiply( prod, xArr[ j ], ximxjInv );
 			gfCopy( tmp, l ); gfMultiply( l, tmp, prod );	// l *= ...
         }
