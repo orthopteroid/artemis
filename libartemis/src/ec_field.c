@@ -137,7 +137,9 @@ void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 			p[i] = q[i] ^ r[i];
 		}
 		/* invariant: i == r[0] + 1 */
-		memcpy (&p[i], &q[i], (q[0] - r[0]) * sizeof (lunit));
+		if( &p[i] != &q[i] ) { // skip unnecessary memcpy
+			memcpy( &p[i], &q[i], (q[0] - r[0]) * sizeof(lunit) );
+		}
 		/* deg(p) inherits the value of deg(q): */
 		p[0] = q[0];
 	} else if (q[0] < r[0]) {
@@ -146,7 +148,9 @@ void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 			p[i] = q[i] ^ r[i];
 		}
 		/* invariant: i == q[0] + 1 */
-		memcpy (&p[i], &r[i], (r[0] - q[0]) * sizeof (lunit));
+		if( &p[i] != &r[i] ) { // skip unnecessary memcpy
+			memcpy( &p[i], &r[i], (r[0] - q[0]) * sizeof(lunit) );
+		}
 		/* deg(p) inherits the value of deg(r): */
 		p[0] = r[0];
 	} else { /* deg(q) == deg(r) */
