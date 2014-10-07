@@ -54,8 +54,12 @@ const char* ar_util_rclookup( int rc );
 
 word32 ar_util_rnd32();
 
-////////
+int ar_util_istest();
+void ar_util_settest();
+
+int ar_util_isvalid7bit( byteptr szRecord );
 
 void ar_util_test();
+
 
 #endif // _ar_util_H_

@@ -18,8 +18,6 @@
 	#define printf(...) __android_log_print(ANDROID_LOG_DEBUG, "TAG", __VA_ARGS__);
 #endif
 
-static int testflag = 0;
-
 /////////////////////////
 
 typedef struct {
@@ -127,18 +125,12 @@ int library_isdebug()
 
 int library_istest()
 {
-#if defined(_DEBUG)
-	return testflag;
-#else // _DEBUG
-	return 0;
-#endif // _DEBUG
+	return ar_util_istest();
 }
 
 void library_settest()
 {
-#if defined(_DEBUG)
-	testflag = 1;
-#endif // _DEBUG
+	ar_util_settest();
 }
 
 int library_isdemo()

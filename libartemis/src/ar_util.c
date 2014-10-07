@@ -13,6 +13,8 @@
 
 #include "ar_util.h"
 
+static int testflag = 0;
+
 static char b16charout[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 static byte b16charin[]  = {0,1,2,3,4,5,6,7,8,9,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F}; // OFFSET 0x30
 
@@ -72,6 +74,24 @@ EXIT:
 }
 
 #endif // _DEBUG
+
+////////////////////
+
+int ar_util_istest()
+{
+#if defined(_DEBUG)
+	return testflag;
+#else // _DEBUG
+	return 0;
+#endif // _DEBUG
+}
+
+void ar_util_settest()
+{
+#if defined(_DEBUG)
+	testflag = 1;
+#endif // _DEBUG
+}
 
 ////////////////////
 
@@ -487,3 +507,11 @@ word32 ar_util_rnd32()
 
 }
 
+int ar_util_isvalid7bit( byteptr szRecord )
+{
+	for( size_t i = 0 ; szRecord[i] != 0; i++ )
+	{
+		if( szRecord[i] & 0x80 ) { return 0; }
+	}
+	return 1;
+}
