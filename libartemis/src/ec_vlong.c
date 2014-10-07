@@ -55,10 +55,13 @@ int vlIsZero(const vlPoint p)
 
 int vlEqual (const vlPoint p, const vlPoint q)
 {
-	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 1; }
-	if( q[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 1; }
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return 1; }
+	if( !vlIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); return 1; }
 
-	return memcmp (p, q, (p[0] + 1) * sizeof (word16)) == 0 ? 1 : 0;
+	if( p[0] != q[0] )
+		return 0;
+	else
+		return memcmp( p, q, (p[0] + 1) * sizeof(word16) ) ? 0 : 1;
 } /* vlEqual */
 
 

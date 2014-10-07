@@ -90,9 +90,13 @@ int gfIsValid(const gfPoint p)
 int gfEqual (const gfPoint p, const gfPoint q)
 	/* evaluates to 1 if p == q, otherwise 0 (or an error code) */
 {
-	ASSERT (p != NULL);
-	ASSERT (q != NULL);
-	return memcmp (p, q, sizeof(lunit) * (p[0] + 1)) ? 0 : 1;
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !gfIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+
+	if( p[0] != q[0] )
+		return 0;
+	else
+		return memcmp( p, q, (p[0] + 1) * sizeof(lunit) ) ? 0 : 1;
 } /* gfEqual */
 
 
