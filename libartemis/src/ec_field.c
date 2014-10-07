@@ -82,11 +82,6 @@ void gfQuit (void)
 	}
 } /* gfQuit */
 
-int gfIsValid(const gfPoint p)
-{
-	return p[0] < GF_POINT_UNITS;
-}
-
 int gfEqual (const gfPoint p, const gfPoint q)
 	/* evaluates to 1 if p == q, otherwise 0 (or an error code) */
 {
@@ -122,7 +117,7 @@ void gfCopy (gfPoint p, const gfPoint q)
 	memcpy( p, q, b );
 } /* gfCopy */
 
-
+// TODO: optimize
 void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 	/* sets p := q + r */
 {
@@ -167,7 +162,7 @@ void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 	}
 } /* gfAdd */
 
-
+// TODO: optimize
 void gfReduce (gfPoint p)
 	/* reduces p mod the irreducible trinomial x^GF_K + x^GF_T + 1 */
 {
@@ -243,7 +238,7 @@ void gfMultiply (gfPoint r, const gfPoint p, const gfPoint q)
 	memset( lg, 0, sizeof(lg) );
 } /* gfMultiply */
 
-
+// TODO: optimize
 void gfSquare (gfPoint r, const gfPoint p)
 	/* sets r := p^2 mod (x^GF_K + x^GF_T + 1) */
 {
@@ -292,7 +287,7 @@ void gfSmallDiv (gfPoint p, lunit b)
 	}
 } /* gfSmallDiv */
 
-// TODO: from profiling, lowest hanging fruit for optimizing...
+
 static void gfAddMul (gfPoint a, ltemp alpha, ltemp j, gfPoint b)
 {
 	if( !gfIsValid( a ) ) { LOGFAIL( RC_INTERNAL ); gfClear( a ); return; }
@@ -530,10 +525,10 @@ void gfPack (const gfPoint p, vlPoint k)
 } /* gfPack */
 
 
-void gfUnpack (gfPoint p, const vlPoint k)
+int gfUnpack (gfPoint p, const vlPoint k)
 	/* unpacks a vlPoint into a field point */
 {
-	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return; }
+	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return 1; }
 
 	vlPoint x;
 	lunit n;
@@ -544,5 +539,7 @@ void gfUnpack (gfPoint p, const vlPoint k)
 		vlShortRshift (x, GF_L); /* this only works if GF_L <= 16 */
 	}
 	p[0] = n;
+
+	return 0;
 } /* gfUnpack */
 

@@ -281,8 +281,8 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	if( !clueArr ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !message ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
-	if( threshold == 0 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
-	if( shares == 0 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( threshold == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+	if( shares == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 	if( threshold > shares ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 	
 	// change delimiters of clueArr
@@ -293,10 +293,10 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	if( rc = ar_util_buildByteTbl( &clueTbl, clueArr_rw, cluePtrArrLen ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	size_t loclen = szLocation ? strlen( szLocation ) : 0;
-	if( loclen == 0 ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
+	if( loclen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t messlen = message ? strlen( message ) : 0;
-	if( messlen == 0 ) { rc = RC_MESSAGE; LOGFAIL( rc ); goto EXIT; }
+	if( messlen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	// alloc arecord
 	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
@@ -372,7 +372,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 	{
 		size_t shareArrLen = strlen( recordArr );
 
-		if( shareArrLen < 10 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+		if( shareArrLen < 10 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 		// dup and change delim 
 
@@ -389,8 +389,8 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 		}
 		if( rc < 0 ) { LOGFAIL( rc ); goto EXIT; }
 
-		if( arecordCount != 1 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
-		if( srecordCount < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+		if( arecordCount != 1 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+		if( srecordCount < 2 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 		// create share-objects
 
@@ -458,7 +458,7 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 	{
 		size_t shareArrLen = strlen( szRecordArr );
 
-		if( shareArrLen < 10 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+		if( shareArrLen < 10 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 		// dup and change delim 
 
@@ -475,8 +475,8 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 		}
 		if( rc < 0 ) { LOGFAIL( rc ); goto EXIT; }
 
-		if( arecordCount != 1 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
-		if( srecordCount < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+		if( arecordCount != 1 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+		if( srecordCount < 2 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 		// create share-objects
 
@@ -569,12 +569,16 @@ void library_test()
 	TESTASSERT( rc == 0 );
 	free( validation );
 	
+#if defined(ENABLE_TESTFAIL)
+
 	// now break something
 	recordArr[ 3 + strlen(recordArr) / 2 ]++;
 	rc = library_uri_validate( &validation, location, recordArr );
 	TESTASSERT( rc != 0 );
 	free( validation );
-	
+
+#endif // ENABLE_TESTFAIL
+
 	free( recordArr );
 	free( message );
 

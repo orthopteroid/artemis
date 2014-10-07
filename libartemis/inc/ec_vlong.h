@@ -11,9 +11,10 @@
 // little endian format, i think
 typedef word16 vlPoint [VL_UNITS + 2];
 
+#define vlIsValid(p) (p[0] < VL_UNITS)
+
 void vlClear (vlPoint p);
 
-int vlIsValid(const vlPoint p);
 int vlIsZero(const vlPoint p);
 
 word16 vlGetWord16(vlPoint p, word16 i);

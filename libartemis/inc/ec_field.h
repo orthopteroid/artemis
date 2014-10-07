@@ -30,6 +30,9 @@
 // little endian format, i think
 typedef lunit gfPoint [GF_POINT_UNITS];
 
+
+#define gfIsValid(p) (p[0] < GF_POINT_UNITS)
+
 /* interface functions: */
 
 int  gfInit (void);
@@ -37,8 +40,6 @@ int  gfInit (void);
 
 void gfQuit (void);
 	/* perform housekeeping for library termination */
-
-int gfIsValid(const gfPoint p);
 
 void gfSetLUnit(gfPoint p, lunit u);
 	/* sets p := u */
@@ -86,7 +87,7 @@ int  gfYbit (const gfPoint p);
 void gfPack (const gfPoint p, vlPoint k);
 	/* packs a field point into a vlPoint */
 
-void gfUnpack (gfPoint p, const vlPoint k);
+int gfUnpack (gfPoint p, const vlPoint k);
 	/* unpacks a vlPoint into a field point */
 
 int  gfSelfTest (int test_count);

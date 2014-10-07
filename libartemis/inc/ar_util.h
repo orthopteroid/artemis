@@ -4,6 +4,7 @@
 #define _ar_util_H_
 
 #include "ec_types.h"
+#include "ec_vlong.h"
 
 int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len );
 
@@ -53,6 +54,13 @@ const char* ar_util_rclookup( int rc );
 ////////
 
 word32 ar_util_rnd32();
+
+////////
+
+int ar_util_vl2txt( char* buf, size_t bufsize, vlPoint v );
+int ar_util_txt2vl( vlPoint v, char* buf, size_t bufsize );
+
+////////
 
 int ar_util_istest();
 void ar_util_settest();

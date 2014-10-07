@@ -79,15 +79,15 @@ void ecCopy (ecPoint *p, const ecPoint *q)
 int ecCalcY (ecPoint *p, int ybit)
 	/* given the x coordinate of p, evaluate y such that y^2 + x*y = x^3 + EC_B */
 {
-	if( !p ) { LOGFAIL( RC_INTERNAL ); return 0; }
-	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !p ) { LOGFAIL( RC_INTERNAL ); return 1; }
+	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); return 1; }
 
 	gfPoint a, b, t;
 
 	b[0] = 1; b[1] = EC_B;
 
 	/* simple sqrt if elliptic equation reduces to y^2 = EC_B: */
-	if( p->x[0] == 0 ) { gfSquareRoot (p->y, EC_B); return 1; }
+	if( p->x[0] == 0 ) { gfSquareRoot (p->y, EC_B); return 0; }
 
 	/* evaluate alpha = x^3 + b = (x^2)*x + EC_B: */
 	gfSquare (t, p->x); /* keep t = x^2 for beta evaluation */
@@ -97,11 +97,11 @@ int ecCalcY (ecPoint *p, int ybit)
 
 	/* evaluate beta = alpha/x^2 = x + EC_B/x^2 */
 	gfSmallDiv(t, EC_B);
-	if( 1 == gfInvert(a, t) ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 0; }
+	if( 1 == gfInvert(a, t) ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 1; }
 	gfAdd(a, p->x, a); /* now a == beta */
 
 	/* check if a solution exists: */
-	if( gfTrace(a) != 0 ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 0; }
+	if( gfTrace(a) != 0 ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 1; }
 
 	/* solve equation t^2 + t + beta = 0 so that gfYbit(t) == ybit: */
 	if( gfSolveQuad(t, a) == 1 ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 0; }
@@ -112,7 +112,7 @@ int ecCalcY (ecPoint *p, int ybit)
 	gfMultiply(p->y, p->x, t);
 
 	gfClear (a); gfClear (t);
-	return 1;
+	return 0;
 } /* ecCalcY */
 
 
@@ -136,7 +136,7 @@ void ecAdd (ecPoint *p, const ecPoint *q)
 				/* either p == q or p == -q: */
 				if (gfEqual (p->y, q->y)) {
 					/* points are equal; double p: */
-					ecDouble (p);
+					if( 1 == ecDouble( p ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
 				} else {
 					/* must be inverse: result is zero */
 					/* (should ASSERT that q->y = p->x + p->y) */
@@ -197,17 +197,17 @@ void ecNegate (ecPoint *p)
 
 #endif /* SELF_TESTING */
 
-void ecDouble (ecPoint *p)
+int ecDouble (ecPoint *p)
 	/* sets p := 2*p */
 {
-	if( !p ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( !gfIsValid( p->y ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
-	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( !p ) { LOGFAIL( RC_INTERNAL ); return 1; }
+	if( !gfIsValid( p->y ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
+	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
 
 	gfPoint lambda, t1, t2;
 
 	/* evaluate lambda = x + y/x: */
-	if( 1 == gfInvert (t1, p->x) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( 1 == gfInvert (t1, p->x) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
 	gfMultiply (lambda, p->y, t1);
 	gfAdd (lambda, lambda, p->x);
 	/* evaluate x3 = lambda^2 + lambda: */
@@ -220,14 +220,14 @@ void ecDouble (ecPoint *p)
 	gfAdd (p->y, p->y, t1);
 	/* deposit the value of x3: */
 	gfCopy (p->x, t1);
+	return 0;
 } /* ecDouble */
 
-
-void ecMultiply (ecPoint *p, const vlPoint k)
+int ecMultiply (ecPoint *p, const vlPoint k)
 	/* sets p := k*p */
 {
-	if( !p ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( !p ) { LOGFAIL( RC_INTERNAL ); return 1; }
+	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
 
 	vlPoint h;
 	int z, hi, ki;
@@ -236,7 +236,7 @@ void ecMultiply (ecPoint *p, const vlPoint k)
 
 	gfCopy(r.x, p->x); p->x[0] = 0;
 	gfCopy(r.y, p->y); p->y[0] = 0;
-	if( vlShortMultiply(h, k, 3) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return; }
+	if( vlShortMultiply(h, k, 3) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
 	z = vlNumBits(h) - 1; /* so vlTakeBit (h, z) == 1 */
 	i = 1;
 	for (;;) {
@@ -246,8 +246,10 @@ void ecMultiply (ecPoint *p, const vlPoint k)
 		if( hi == 0 && ki == 1 ) { ecSub (p, &r); }
 		if( i >= z ) { break; }
 		i++;
-		ecDouble(&r);
+		if( 1 == ecDouble(&r) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
 	}
+
+	return 0;
 } /* ecMultiply */
 
 
@@ -301,12 +303,12 @@ int ecUnpack (ecPoint *p, const vlPoint k)
 	vlCopy(a, k);
 	yb = a[0] ? a[1] & 1 : 0;
 	vlShortRshift(a, 1);
-	gfUnpack(p->x, a);
+	if( 1 == gfUnpack( p->x, a ) ) { LOGFAIL( RC_INTERNAL ); return 1; }
 
 	if( p->x[0] || yb ) { return ecCalcY(p, yb); }
 
 	p->y[0] = 0;
-	return 1;
+	return 0;
 } /* ecUnpack */
 
 int ecSelfTest (int test_count)

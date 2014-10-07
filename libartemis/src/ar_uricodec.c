@@ -14,39 +14,9 @@
 	#include "ar_core.h" // for testing
 #endif
 
-//#define ENABLE_FUZZCHECKS
-
 #define DELIM_INIT( f, t ) { (f) ? '?' : '&', 0xff & ((t) >> 24), 0xff & ((t) >> 16), 0xff & ((t) >> 8), 0 }
 
 //////////////////////
-
-static int txt_to_vl( vlPoint v, char* buf, size_t bufsize )
-{
-	int rc = 0;
-	word16 words = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
-	vlClear( v );
-	size_t deltalen = 0;
-	char tmp[ sizeof(vlPoint) + 2 ] = {0};
-	if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_8BAto16BA( &deltalen, &v[1], words, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
-	v[0] = (word16)deltalen;
-EXIT:
-	return rc;
-}
-
-// concatenates into buf
-static int vl_to_txt_cat( char* buf, size_t bufsize, vlPoint v )
-{
-	int rc = 0;
-	size_t deltalen = 0;
-	size_t buflen = strlen(buf);
-	char tmp[ sizeof( vlPoint) + 2 ] = {0};
-	if( rc = ar_util_16BAto8BA( &deltalen, tmp, sizeof(vlPoint), v+1, v[0] ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_8BAto6BA( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
-	buf[ buflen + deltalen ] = 0;
-EXIT:
-	return rc;
-}
 
 typedef struct
 {
@@ -274,7 +244,7 @@ int ar_uri_locate_location( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord 
 	if( !ppLast ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !szRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
-	if( strlen( szRecord ) < 10 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( strlen( szRecord ) < 10 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 	if( !ar_util_isvalid7bit( szRecord ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	*ppFirst = *ppLast = 0;
@@ -406,7 +376,7 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 		{
 		default: rc = RC_ARG; LOGFAIL( rc ); break;
 		case 'tp=\0':
-			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ai=\0':
 			if( rc = ar_util_12Bto6B( sz, pARecord->shares ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -419,15 +389,15 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'vf=\0':
-			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->verify ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->verify ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'pk=\0':
-			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->pubkey ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->pubkey ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'as=\0':
-			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.r ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->authsig.r ) ) { LOGFAIL( rc ); goto EXIT; }
 			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = vl_to_txt_cat( buf, bufsize, pARecord->authsig.s ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->authsig.s ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'mc=\0':
 			if( pARecord->cluelen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
@@ -497,7 +467,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 		{
 		default: rc = RC_ARG; LOGFAIL( rc ); break;
 		case 'tp=\0':
-			if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'si=\0':
 			if( rc = ar_util_12Bto6B( sz, pSRecord->shares ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -510,12 +480,12 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'sh=\0':
-			if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->share ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->share ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ss=\0':
-			if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.r ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->sharesig.r ) ) { LOGFAIL( rc ); goto EXIT; }
 			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = vl_to_txt_cat( buf, bufsize, pSRecord->sharesig.s ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->sharesig.s ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'sc=\0':
 			if( pSRecord->cluelen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
@@ -543,7 +513,7 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 
 	if( !szRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
-	if( strlen( szRecord ) < 10 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( strlen( szRecord ) < 10 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 	if( !ar_util_isvalid7bit( szRecord ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t bufsize = 0;
@@ -585,7 +555,7 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
 		case 'tp=0': // topic
-			if( rc = txt_to_vl( (*arecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_txt2vl( (*arecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ai=0': // arecord info - shares
 			if( rc = ar_util_6Bto12B( &(*arecord_out)->shares, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -597,16 +567,16 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 			if( rc = ar_util_6Bto12B( &(*arecord_out)->fieldsize, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'vf=0': // <verify>
-			if( rc = txt_to_vl( (*arecord_out)->verify, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_txt2vl( (*arecord_out)->verify, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'pk=0': // <pubkey>
-			if( rc = txt_to_vl( (*arecord_out)->pubkey, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_txt2vl( (*arecord_out)->pubkey, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'as=0': // <authsig> - r
-			if( rc = txt_to_vl( (*arecord_out)->authsig.r, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_txt2vl( (*arecord_out)->authsig.r, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'as=1': // <authsig> - s
-			if( rc = txt_to_vl( (*arecord_out)->authsig.s, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_txt2vl( (*arecord_out)->authsig.s, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'mt=0': // <messagetext>
 			pMessage = pss->data_first;
@@ -659,7 +629,7 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 
 	if( !szRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
-	if( strlen( szRecord ) < 10 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( strlen( szRecord ) < 10 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 	if( !ar_util_isvalid7bit( szRecord ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t bufsize = 0;
@@ -701,7 +671,7 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
 		case 'tp=0': // topic
-			if( rc = txt_to_vl( (*srecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_txt2vl( (*srecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'si=0': // srecord info - shares
 			if( rc = ar_util_6Bto12B( &(*srecord_out)->shares, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -713,13 +683,13 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 			if( rc = ar_util_6Bto12B( &(*srecord_out)->shareid, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'sh=0': // share
-			if( rc = txt_to_vl( (*srecord_out)->share, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_txt2vl( (*srecord_out)->share, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ss=0': // <asharesig> - r
-			if( rc = txt_to_vl( (*srecord_out)->sharesig.r, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_txt2vl( (*srecord_out)->sharesig.r, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ss=1': // <sharesig> - s
-			if( rc = txt_to_vl( (*srecord_out)->sharesig.s, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_txt2vl( (*srecord_out)->sharesig.s, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'sc=0': // <shareclue>
 			pClue = pss->data_first;
@@ -939,14 +909,14 @@ void ar_uri_test()
 		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl[i] ); }
 		free( srecordtbl );
 
+#if defined(ENABLE_TESTFAIL)
+
 		{
 			// test failure with too few shares
 			rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares -1 );
 			TESTASSERT( rc != 0 );
 			if( cleartext_out ) free( cleartext_out );
 		}
-
-#if defined(ENABLE_FUZZCHECKS)
 
 		{
 			// test failure from uri corruption
@@ -972,6 +942,7 @@ void ar_uri_test()
 					rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
 					if( !rc )
 					{
+						// sometimes there won't be failures, because a delim may be replaced with another delim for instance
 						TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
 					}
 
@@ -984,7 +955,7 @@ void ar_uri_test()
 			free( buf[1] );
 		}
 
-#endif // ENABLE_FUZZCHECKS
+#endif // ENABLE_TESTFAIL
 
 		free( arecord_ );
 		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }

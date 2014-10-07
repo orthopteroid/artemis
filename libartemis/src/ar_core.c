@@ -76,7 +76,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	// general vars
 
 	size_t loclen = location ? strlen( location ) : 0;
-	if( loclen == 0 ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
+	if( loclen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
 	size_t msgoffset = loclen + acluelen; // msg comes after clue + location
@@ -369,7 +369,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	
 	for( int i=0; i<numSRecords; i++ )
 	{
-		gfUnpack( shareArr[i], srecordtbl[i]->share );
+		if( 1 == gfUnpack( shareArr[i], srecordtbl[i]->share ) ) { rc = RC_SHARD; LOGFAIL( rc ); goto EXIT; }
 		shareIDArr[i] = srecordtbl[i]->shareid;
 	}
 
@@ -443,7 +443,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 		sha1_digest( digest, arecord->buf, arecord->msglen + arecord->loclen + arecord->cluelen );
 		vlSetWord64( topic, digest[0], digest[1] );
 	}
-	if( !vlEqual( arecord->topic, topic ) ) { rc = RC_TOPIC; LOGFAIL( rc ); goto EXIT; }
+	if( !vlEqual( arecord->topic, topic ) ) { rc = RC_AUTH_TOPIC; LOGFAIL( rc ); goto EXIT; }
 
 	if( srecordtbl_opt && numSRecords > 0 )
 	{
@@ -504,7 +504,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 			sha1_final( c, digest );
 			vlSetWord64( authhash, digest[0], digest[1] );
 		}
-		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
+		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { rc = RC_AUTH_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 	}
 
 	// check sharesignatures to ensure data integreity
@@ -588,6 +588,8 @@ void ar_core_test()
 
 	TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
 
+#if defined(ENABLE_TESTFAIL)
+
 	///////////////////
 	// now start breaking things....
 
@@ -614,6 +616,8 @@ void ar_core_test()
 	TESTASSERT( rc != 0 );
 	TESTASSERT( checkarr[0] ); // all fail
 	TESTASSERT( checkarr[1] );
+
+#endif // ENABLE_TESTFAIL
 
 EXIT:
 

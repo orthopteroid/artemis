@@ -31,7 +31,7 @@ void cpMakePublicKey (vlPoint vlPublicKey, const vlPoint vlPrivateKey)
 	ecPoint ecPublicKey;
 
 	ecCopy (&ecPublicKey, &curve_point);
-	ecMultiply (&ecPublicKey, vlPrivateKey);
+	if( 1 == ecMultiply( &ecPublicKey, vlPrivateKey ) ) { LOGFAIL( RC_INTERNAL ); return; }
 	ecPack (&ecPublicKey, vlPublicKey);
 } /* cpMakePublicKey */
 
@@ -40,8 +40,12 @@ void cpEncodeSecret (const vlPoint vlPublicKey, vlPoint vlMessage, vlPoint vlSec
 {
 	ecPoint q;
 
-	ecCopy (&q, &curve_point); ecMultiply (&q, vlSecret); ecPack (&q, vlMessage);
-	ecUnpack (&q, vlPublicKey); ecMultiply (&q, vlSecret);	gfPack (q.x, vlSecret);
+	ecCopy (&q, &curve_point);
+	if( 1 == ecMultiply( &q, vlSecret ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	ecPack (&q, vlMessage);
+	ecUnpack (&q, vlPublicKey);
+	if( 1 == ecMultiply( &q, vlSecret ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	gfPack (q.x, vlSecret);
 } /* cpMakeSecret */
 
 
@@ -50,7 +54,7 @@ void cpDecodeSecret (const vlPoint vlPrivateKey, const vlPoint vlMessage, vlPoin
 	ecPoint q;
 
 	ecUnpack (&q, vlMessage);	
-	ecMultiply (&q, vlPrivateKey);
+	if( 1 == ecMultiply( &q, vlPrivateKey ) ) { LOGFAIL( RC_INTERNAL ); return; }
 	gfPack(q.x, d);
 } /* ecDecodeSecret */
 
@@ -61,7 +65,7 @@ void cpSign(const vlPoint vlPrivateKey, const vlPoint k, const vlPoint vlMac, cp
 	
 	vlClear( tmp );
 	ecCopy( &q, &curve_point );
-	ecMultiply( &q, k);
+	if( 1 == ecMultiply( &q, k ) ) { LOGFAIL( RC_INTERNAL ); return; }
 	gfPack(q.x, sig->r);
 	vlAdd( sig->r, vlMac );
 	vlRemainder( sig->r, prime_order );
@@ -84,9 +88,9 @@ int cpVerify(const vlPoint vlPublicKey, const vlPoint vlMac, cpPair * sig )
 	vlPoint t3,t4;
 	
 	ecCopy( &t1, &curve_point );
-	ecMultiply( &t1, sig->s );
-	if( ecUnpack( &t2, vlPublicKey ) == 0 ) { return 0; }
-	ecMultiply( &t2, sig->r );
+	if( 1 == ecMultiply( &t1, sig->s ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( 1 == ecUnpack( &t2, vlPublicKey ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( 1 == ecMultiply( &t2, sig->r ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 	ecAdd( &t1, &t2 );
 	gfPack( t1.x, t4 );
 	vlRemainder( t4, prime_order );

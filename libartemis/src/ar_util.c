@@ -40,42 +40,6 @@ static byte b64charin[]  = {
 }; // start at 0x2D
 
 ////////////////////
-// for testing
-
-#if defined(_DEBUG)
-
-#include "ec_vlong.h"
-
-static int txt_to_vl( vlPoint v, char* buf )
-{
-	int rc = 0;
-	word16 words = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
-	vlClear( v );
-	size_t deltalen = 0;
-	char tmp[ sizeof(vlPoint) + 2 ] = {0};
-	if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, strlen(buf) ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_8BAto16BA( &deltalen, &v[1], words, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
-	v[0] = (word16)deltalen;
-EXIT:
-	return rc;
-}
-
-// does not concatenate into buf
-static int vl_to_txt( char* buf, size_t bufsize, vlPoint v )
-{
-	int rc = 0;
-	size_t deltalen = 0;
-	char tmp[ sizeof( vlPoint) + 2 ] = {0};
-	if( rc = ar_util_16BAto8BA( &deltalen, tmp, sizeof(vlPoint), v+1, v[0] ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_8BAto6BA( &deltalen, buf, bufsize, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
-	buf[ deltalen ] = 0;
-EXIT:
-	return rc;
-}
-
-#endif // _DEBUG
-
-////////////////////
 
 int ar_util_istest()
 {
@@ -361,6 +325,38 @@ EXIT:
 
 //////////////////
 
+int ar_util_txt2vl( vlPoint v, char* buf, size_t bufsize )
+{
+	int rc = 0;
+	word16 words = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
+	vlClear( v );
+	size_t deltalen = 0;
+	char tmp[ sizeof(vlPoint) + 2 ] = {0};
+	if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_8BAto16BA( &deltalen, &v[1], words, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	v[0] = (word16)deltalen;
+	if( !vlIsValid( v ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); vlClear( v ); goto EXIT; }
+EXIT:
+	return rc;
+}
+
+// concatenates into buf
+int ar_util_vl2txt( char* buf, size_t bufsize, vlPoint v )
+{
+	int rc = 0;
+	if( !vlIsValid( v ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+	size_t deltalen = 0;
+	size_t buflen = strlen(buf);
+	char tmp[ sizeof( vlPoint) + 2 ] = {0};
+	if( rc = ar_util_16BAto8BA( &deltalen, tmp, sizeof(vlPoint), v+1, v[0] ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_8BAto6BA( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	buf[ buflen + deltalen ] = 0;
+EXIT:
+	return rc;
+}
+
+//////////////////
+
 void ar_util_test()
 {
 
@@ -432,10 +428,10 @@ void ar_util_test()
 		v0[2]=0x00ff;
 
 		buf[0]=0;
-		rc = vl_to_txt( buf, 1024, v0 );
+		rc = ar_util_vl2txt( buf, 1024, v0 );
 		ASSERT( rc == 0 );
 
-		rc = txt_to_vl( v1, buf );
+		rc = ar_util_txt2vl( v1, buf, strlen(buf) );
 		ASSERT( rc == 0 );
 
 		ASSERT( vlEqual( v0, v1 ) );

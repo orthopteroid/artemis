@@ -38,10 +38,10 @@ void ecSub (ecPoint *p, const ecPoint *r);
 void ecNegate (ecPoint *p);
 	/* sets p := -p */
 
-void ecDouble (ecPoint *p);
+int ecDouble (ecPoint *p);
 	/* sets p := 2*p */
 
-void ecMultiply (ecPoint *p, const vlPoint k);
+int ecMultiply (ecPoint *p, const vlPoint k);
 	/* sets p := k*p */
 
 int ecYbit (const ecPoint *p);

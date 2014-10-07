@@ -41,11 +41,6 @@
 #include "ec_param.h"
 #include "ec_vlong.h"
 
-int vlIsValid(const vlPoint p)
-{
-	return p[0] < VL_UNITS;
-}
-
 int vlIsZero(const vlPoint p)
 {
 	if( p[0] == 0 ) { return 1; }

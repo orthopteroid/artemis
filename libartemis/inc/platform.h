@@ -5,6 +5,7 @@
 
 #include "ec_types.h"
 
+//#define ENABLE_TESTFAIL
 //#define SHOW_FAILURES
 
 #if defined(_WINDOWS)
