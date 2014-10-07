@@ -950,26 +950,30 @@ void ar_uri_test()
 
 		{
 			// test failure from uri corruption
-			byteptr buf[3];
+			byteptr buf[2];
 			buf[0]=(byteptr)strdup( bufa );
 			buf[1]=(byteptr)strdup( bufs0 );
-			buf[2]=(byteptr)strdup( bufs1 );
 
-			for( int j=0; j<100; j++)
+			for( int j=0; j<400; j++)
 			{
 				free( arecord_ );
 				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }
 
-				byteptr p = buf[ ar_util_rnd32() % 3 ];
+				byteptr p = buf[ ar_util_rnd32() & 0x01 ];
 				size_t ii = ar_util_rnd32() % strlen( p );
 				{
 					byte bb = p[ii];
-					p[ii] = ar_util_rnd32() & 0x7F; // dirty
+					p[ii] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
 
+					rc = 0;
 					rc = ar_uri_parse_a( &arecord_, buf[0] );
 					rc = ar_uri_parse_s( &srecordtbl_[0], buf[1] );
-					rc = ar_uri_parse_s( &srecordtbl_[1], buf[2] );
+					rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 );
 					rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
+					if( !rc )
+					{
+						TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
+					}
 
 					free( cleartext_out );
 
@@ -978,7 +982,6 @@ void ar_uri_test()
 			}
 			free( buf[0] );
 			free( buf[1] );
-			free( buf[2] );
 		}
 
 #endif // ENABLE_FUZZCHECKS
