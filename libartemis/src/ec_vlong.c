@@ -104,22 +104,28 @@ void vlSetWord32(vlPoint p, word32 u)
 
 void vlSetWord64(vlPoint p, word32 h, word32 l)
 {
-	vlClear( p );
-	p[0] = 4;
-	p[1] = ( h >> 16 ) & 0xFFFF; p[2] = h & 0xFFFF;
-	p[3] = ( l >> 16 ) & 0xFFFF; p[4] = l & 0xFFFF;
-	if( h == 0 && l == 0 ) p[0] = 0; // orthopteroid
+	if( h == 0 && l == 0 ) 
+		p[0] = 0;
+	else
+	{
+		p[0] = 4;
+		p[1] = ( h >> 16 ) & 0xFFFF; p[2] = h & 0xFFFF;
+		p[3] = ( l >> 16 ) & 0xFFFF; p[4] = l & 0xFFFF;
+	}
 }
 
 void vlSetWord128(vlPoint p, word32 hh, word32 hl, word32 lh, word32 ll)
 {
-	vlClear( p );
-	p[0] = 8;
-	p[1] = ( hh >> 16 ) & 0xFFFF; p[2] = hh & 0xFFFF;
-	p[3] = ( hl >> 16 ) & 0xFFFF; p[4] = hl & 0xFFFF;
-	p[5] = ( lh >> 16 ) & 0xFFFF; p[6] = lh & 0xFFFF;
-	p[7] = ( ll >> 16 ) & 0xFFFF; p[8] = ll & 0xFFFF;
-	if( hh == 0 && hl == 0 && lh == 0 && ll == 0 ) p[0] = 0; // orthopteroid
+	if( hh == 0 && hl == 0 && lh == 0 && ll == 0 )
+		p[0] = 0;
+	else
+	{
+		p[0] = 8;
+		p[1] = ( hh >> 16 ) & 0xFFFF; p[2] = hh & 0xFFFF;
+		p[3] = ( hl >> 16 ) & 0xFFFF; p[4] = hl & 0xFFFF;
+		p[5] = ( lh >> 16 ) & 0xFFFF; p[6] = lh & 0xFFFF;
+		p[7] = ( ll >> 16 ) & 0xFFFF; p[8] = ll & 0xFFFF;
+	}
 }
 
 int vlNumBits (const vlPoint k)
