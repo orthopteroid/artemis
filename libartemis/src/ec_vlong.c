@@ -41,6 +41,18 @@
 #include "ec_param.h"
 #include "ec_vlong.h"
 
+int vlIsValid(const vlPoint p)
+{
+	return p[0] < VL_UNITS;
+}
+
+int vlIsZero(const vlPoint p)
+{
+	if( p[0] == 0 ) { return 1; }
+	for( size_t i = 0; i < p[0]; i++ ) { if( p[ 1 + i ] ) { return 0; } }
+	return 1;
+}
+
 int vlEqual (const vlPoint p, const vlPoint q)
 {
 	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 1; }

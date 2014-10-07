@@ -82,6 +82,10 @@ void gfQuit (void)
 	}
 } /* gfQuit */
 
+int gfIsValid(const gfPoint p)
+{
+	return p[0] < GF_POINT_UNITS;
+}
 
 int gfEqual (const gfPoint p, const gfPoint q)
 	/* evaluates to 1 if p == q, otherwise 0 (or an error code) */

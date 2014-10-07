@@ -38,6 +38,8 @@ int  gfInit (void);
 void gfQuit (void);
 	/* perform housekeeping for library termination */
 
+int gfIsValid(const gfPoint p);
+
 void gfSetLUnit(gfPoint p, lunit u);
 	/* sets p := u */
 
