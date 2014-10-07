@@ -58,7 +58,8 @@ void cpSign(const vlPoint vlPrivateKey, const vlPoint k, const vlPoint vlMac, cp
 {
 	ecPoint q;
 	vlPoint tmp;
-				
+	
+	vlClear( tmp );
 	ecCopy( &q, &curve_point );
 	ecMultiply( &q, k);
 	gfPack(q.x, sig->r);
