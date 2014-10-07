@@ -103,7 +103,6 @@ int gfEqual (const gfPoint p, const gfPoint q)
 void gfClear (gfPoint p)
 	/* sets p := 0, clearing entirely the content of p */
 {
-	ASSERT (p != NULL);
 	memset (p, 0, sizeof(gfPoint));
 } /* gfClear */
 
@@ -111,7 +110,6 @@ void gfClear (gfPoint p)
 void gfSetLUnit (gfPoint p, lunit u)
 	/* sets p := u */
 {
-	ASSERT (p != NULL);
 	p[0] = 1; p[1] = u;
 	if( !u ) p[0] = 0; // orthopteroid
 } /* gfSetLUnit */
@@ -119,8 +117,6 @@ void gfSetLUnit (gfPoint p, lunit u)
 void gfCopy (gfPoint p, const gfPoint q)
 	/* sets p := q */
 {
-	ASSERT (p != NULL);
-	ASSERT (q != NULL);
 	size_t b = (q[0] + 1) * sizeof(lunit);
 	if( b > sizeof(gfPoint) ) { LOGFAIL( RC_INTERNAL ); b = sizeof(gfPoint); }
 	memcpy( p, q, b );
@@ -130,12 +126,11 @@ void gfCopy (gfPoint p, const gfPoint q)
 void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 	/* sets p := q + r */
 {
+	if( !gfIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return; }
+	if( !gfIsValid( r ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return; }
+
 	ltemp i;
 
-	ASSERT (logt != NULL && expt != NULL);
-	ASSERT (p != NULL);
-	ASSERT (q != NULL);
-	ASSERT (r != NULL);
 	if (q[0] > r[0]) {
 		/* xor the the common-degree coefficients: */
 		for (i = 1; i <= r[0]; i++) {
@@ -172,6 +167,8 @@ void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 void gfReduce (gfPoint p)
 	/* reduces p mod the irreducible trinomial x^GF_K + x^GF_T + 1 */
 {
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
+
 	int i;
 
 	for (i = p[0]; i > GF_K; i--) {
@@ -192,31 +189,34 @@ void gfReduce (gfPoint p)
 void gfMultiply (gfPoint r, const gfPoint p, const gfPoint q)
 	/* sets r := p * q mod (x^GF_K + x^GF_T + 1) */
 {
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; }
+	if( !gfIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; }
+
+	if( p == r ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; }
+	if( q == r ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; }
+
 	int i, j;
 	ltemp x, log_pi, log_qj;
-	lunit lg[GF_K + 2]; /* this table should be cleared after use */
+	lunit lg[ GF_POINT_UNITS ]; /* this table should be cleared after use */
 
-	ASSERT( logt );
-	ASSERT( expt );
-	ASSERT( p );
-	ASSERT( q );
-	ASSERT( r );
-
-	if( p == r ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( q == r ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( p[0] + q[0] > GF_POINT_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
-
-	if (p[0] && q[0]) {
+	if( p[0] && q[0] )
+	{
 		/* precompute logt[q[j]] to reduce table lookups: */
-		for (j = q[0]; j; j--) {
+		for( j = q[0]; j; j-- )
+		{
 			lg[j] = logt[q[j]];
 		}
+
 		/* perform multiplication: */
-		gfClear (r);
-		for (i = p[0]; i; i--) {
-			if ((log_pi = logt[p[i]]) != TOGGLE) { /* p[i] != 0 */
-				for (j = q[0]; j; j--) {
-					if ((log_qj = lg[j]) != TOGGLE) { /* q[j] != 0 */
+		gfClear( r );
+		for(i = p[0]; i; i-- )
+		{
+			if( (log_pi = logt[p[i]]) != TOGGLE ) /* p[i] != 0 */
+			{
+				for( j = q[0]; j; j-- )
+				{
+					if( (log_qj = lg[j]) != TOGGLE ) /* q[j] != 0 */
+					{
 					/*	r[i+j-1] ^= expt[(logt[p[i]] + logt[q[j]]) % TOGGLE]; */
 						r[i+j-1] ^= expt[(x = log_pi + log_qj) >= TOGGLE ? x - TOGGLE : x];
 					}
@@ -225,27 +225,28 @@ void gfMultiply (gfPoint r, const gfPoint p, const gfPoint q)
 		}
 		r[0] = p[0] + q[0] - 1;
 		/* reduce r mod (x^GF_K + x^GF_T + 1): */
-		gfReduce (r);
-	} else {
+		gfReduce( r );
+	}
+	else
+	{
 		/* set r to the null polynomial: */
 		r[0] = 0;
 	}
+
 	/* destroy potentially sensitive data: */
 	x = log_pi = log_qj = 0;
-	memset (lg, 0, sizeof (lg));
+
+	memset( lg, 0, sizeof(lg) );
 } /* gfMultiply */
 
 
 void gfSquare (gfPoint r, const gfPoint p)
 	/* sets r := p^2 mod (x^GF_K + x^GF_T + 1) */
 {
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; }
+
 	int i;
 	ltemp x;
-
-	ASSERT( logt );
-	ASSERT( expt );
-	ASSERT( r );
-	ASSERT( p );
 
 	if (p[0]) {
 		/* in what follows, note that (x != 0) => (x^2 = exp((2 * log(x)) % TOGGLE)): */
@@ -275,13 +276,10 @@ void gfSquare (gfPoint r, const gfPoint p)
 void gfSmallDiv (gfPoint p, lunit b)
 	/* sets p := (b^(-1))*p mod (x^GF_K + x^GF_T + 1) */
 {
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return; }
+
 	int i;
 	ltemp x, lb = logt[b];
-
-	ASSERT( logt );
-	ASSERT( expt );
-	ASSERT( p );
-	ASSERT( b );
 
 	for (i = p[0]; i; i--) {
 		if ((x = logt[p[i]]) != TOGGLE) { /* p[i] != 0 */
@@ -293,11 +291,11 @@ void gfSmallDiv (gfPoint p, lunit b)
 
 static void gfAddMul (gfPoint a, ltemp alpha, ltemp j, gfPoint b)
 {
+	if( !gfIsValid( a ) ) { LOGFAIL( RC_INTERNAL ); gfClear( a ); return; }
+	if( !gfIsValid( b ) ) { LOGFAIL( RC_INTERNAL ); gfClear( b ); return; }
+
 	ltemp i, x, la = logt[alpha];
 	lunit *aj = &a[j];
-
-	ASSERT( logt );
-	ASSERT( expt );
 
 	while (a[0] < j + b[0]) {
 		a[0]++; a[a[0]] = 0;
@@ -317,19 +315,17 @@ int gfInvert (gfPoint b, const gfPoint a)
 	/* sets b := a^(-1) mod (x^GF_K + x^GF_T + 1) */
 	/* warning: a and b must not overlap! */
 {
+	if( !gfIsValid( a ) ) { LOGFAIL( RC_INTERNAL ); gfClear( b ); return 1; } // check rc codepath
+
+	ASSERT( a != b ); /* note that this test is not complete */
+
 	gfPoint c, f, g;
 	ltemp x, j, alpha;
 
-	ASSERT( logt );
-	ASSERT( expt );
-	ASSERT( a );
-	ASSERT( b );
-	ASSERT( a != b ); /* note that this test is not complete */
+	b[0] = 0; // in case of error
 
-	if (a[0] == 0) {
-		/* a is not invertible */
-		return 1;
-	}
+	/* a is not invertible */
+	if (a[0] == 0) { return 1; }
 
 	/* initialize b := 1; c := 0; f := p; g := x^GF_K + x^GF_T + 1: */
 	b[0] = 1; b[1] = 1;
@@ -386,10 +382,6 @@ void gfSquareRoot (gfPoint p, lunit b)
 	int i;
 	gfPoint q;
 
-	ASSERT( logt );
-	ASSERT( expt );
-	ASSERT( p );
-
 	q[0] = 1; q[1] = b;
 	if ((GF_M - 1) & 1) {
 		/* GF_M - 1 is odd */
@@ -428,9 +420,7 @@ int gfTrace (const gfPoint p)
 	These properties are exploited in this fast algorithm by George Barwood.
 */
 
-	ASSERT( logt );
-	ASSERT( expt );
-	ASSERT( p );
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return 0; } // check rc codepath
 
 #if (GF_TM0 == 1) && (GF_TM1 == 1)
 	/* unit trace mask */
@@ -461,21 +451,20 @@ int gfTrace (const gfPoint p)
 int gfSolveQuad (gfPoint p, const gfPoint beta)
 	/* sets p to a solution of p^2 + p = beta */
 {
+	if( !gfIsValid( beta ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return 1; }
+
 	int i;
+
 #if (GF_M & 1) == 0
 
 	gfPoint d, t, nzt;
 
 #endif /* ?((GF_M & 1) == 0) */
 
-	ASSERT( logt );
-	ASSERT( expt );
-	ASSERT( p );
-	ASSERT( beta );
 	ASSERT( p != beta ); /* note that this test is not complete */
 
 	/* check if a solution exists: */
-	if( gfTrace( beta ) != 0 ) { LOGFAIL( RC_INTERNAL ); return 1; }
+	if( gfTrace( beta ) != 0 ) { LOGFAIL( RC_INTERNAL ); p[0] = 0; return 1; }
 
 #if (GF_M & 1) == 0
 
@@ -513,7 +502,7 @@ int gfSolveQuad (gfPoint p, const gfPoint beta)
 int gfYbit (const gfPoint p)
 	/* evaluates to the rightmost (least significant) bit of p (or an error code) */
 {
-	ASSERT( p );
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	return p[0] ? (int) (p[1] & 1) : 0;
 } /* gfYbit */
@@ -522,6 +511,8 @@ int gfYbit (const gfPoint p)
 void gfPack (const gfPoint p, vlPoint k)
 	/* packs a field point into a vlPoint */
 {
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( k ); return; }
+
 	int i;
 	vlPoint a;
 
@@ -538,7 +529,7 @@ void gfPack (const gfPoint p, vlPoint k)
 void gfUnpack (gfPoint p, const vlPoint k)
 	/* unpacks a vlPoint into a field point */
 {
-	if( k[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return; }
 
 	vlPoint x;
 	lunit n;

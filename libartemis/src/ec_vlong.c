@@ -70,7 +70,6 @@ void vlClear (vlPoint p)
 	memset (p, 0, sizeof (vlPoint));
 } /* vlClear */
 
-
 void vlCopy (vlPoint p, const vlPoint q)
 	/* sets p := q */
 {
@@ -82,7 +81,7 @@ void vlCopy (vlPoint p, const vlPoint q)
 
 word16 vlGetWord16(vlPoint p, word16 i)
 {
-	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	return ( i <= p[0] ) ? p[ p[0] - i ] : 0; // orthopteroid
 }
@@ -126,7 +125,7 @@ void vlSetWord128(vlPoint p, word32 hh, word32 hl, word32 lh, word32 ll)
 int vlNumBits (const vlPoint k)
 	/* evaluates to the number of bits of k (index of most significant bit, plus one) */
 {
-	if( k[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 	if( k[0] == 0 ) { return 0; }
 
 	word16 m = 0;
@@ -142,7 +141,7 @@ int vlNumBits (const vlPoint k)
 int vlTakeBit (const vlPoint k, word16 i)
 	/* evaluates to the i-th bit of k */
 {
-	if( k[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	if (i >= (k[0] << 4)) {
 		return 0;
@@ -153,8 +152,8 @@ int vlTakeBit (const vlPoint k, word16 i)
 
 void vlAdd (vlPoint u, const vlPoint v)
 {
-	if( u[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( v[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( !vlIsValid( v ) ) { LOGFAIL( RC_INTERNAL ); vlClear( u ); return; }
+	if( !vlIsValid( u ) ) { LOGFAIL( RC_INTERNAL ); vlClear( u ); return; }
 
 	word16 i;
 	word32 t;
@@ -188,10 +187,10 @@ void vlAdd (vlPoint u, const vlPoint v)
 
 void vlSubtract (vlPoint u, const vlPoint v)
 {
-	/* Assume u >= v */
+	if( !vlIsValid( v ) ) { LOGFAIL( RC_INTERNAL ); vlClear( u ); return; }
+	if( !vlIsValid( u ) ) { LOGFAIL( RC_INTERNAL ); vlClear( u ); return; }
 
-	if( u[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( v[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	/* Assume u >= v */
 
 	word32 carry = 0, tmp;
 	int i = 0;
@@ -219,7 +218,7 @@ void vlSubtract (vlPoint u, const vlPoint v)
 
 void vlShortLshift (vlPoint p, int n)
 {
-	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
 	if( p[0] == 0 ) { return; }
 
 	/* this will only work if 0 <= n <= 16 */
@@ -241,7 +240,7 @@ void vlShortLshift (vlPoint p, int n)
 
 void vlShortRshift (vlPoint p, int n)
 {
-	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
 	if( p[0] == 0 ) { return; }
 
 	/* this will only work if 0 <= n <= 16 */
@@ -260,10 +259,10 @@ void vlShortRshift (vlPoint p, int n)
 int vlShortMultiply (vlPoint p, const vlPoint q, word16 d)
 	/* sets p = q * d, where d is a single digit */
 {
+	if( !vlIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return -1; }
+
 	int i;
 	word32 t;
-
-	if( q[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return -1; }
 
 	if (d > 1) {
 		t = 0L;
@@ -289,8 +288,8 @@ int vlShortMultiply (vlPoint p, const vlPoint q, word16 d)
 
 int vlGreater(const vlPoint p, const vlPoint q)
 {
-	if( p[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
-	if( q[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( !vlIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	if (p[0] > q[0]) return 1;
 	if (p[0] < q[0]) return 0;
@@ -305,12 +304,12 @@ int vlGreater(const vlPoint p, const vlPoint q)
 
 void vlRemainder(vlPoint u, const vlPoint v)
 {
+	if( !vlIsValid( u ) ) { LOGFAIL( RC_INTERNAL ); vlClear( u ); return; }
+	if( !vlIsValid( v ) ) { LOGFAIL( RC_INTERNAL ); vlClear( u ); return; }
+	if( v[0] == 0 ) { LOGFAIL( RC_INTERNAL ); return; }
+
 	vlPoint t;
 	int shift = 0;
-
-	if( u[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( v[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( v[0] == 0 ) { LOGFAIL( RC_INTERNAL ); return; }
 
 	vlCopy( t, v );
 	while ( vlGreater( u, t ) )
@@ -339,11 +338,9 @@ void vlRemainder(vlPoint u, const vlPoint v)
 
 void vlMulMod (vlPoint u, const vlPoint v, const vlPoint w, const vlPoint m)
 {
-	vlClear( u );
-
-	if( v[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( w[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
-	if( m[0] > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( !vlIsValid( v ) ) { LOGFAIL( RC_INTERNAL ); vlClear( u ); return; }
+	if( !vlIsValid( w ) ) { LOGFAIL( RC_INTERNAL ); vlClear( u ); return; }
+	if( !vlIsValid( m ) ) { LOGFAIL( RC_INTERNAL ); vlClear( u ); return; }
 	if( m[0] == 0 ) { LOGFAIL( RC_INTERNAL ); return; }
 
 	vlPoint t;	
