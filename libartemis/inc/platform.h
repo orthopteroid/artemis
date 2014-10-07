@@ -109,8 +109,13 @@
 		#if defined(NDK_DEBUG)
 			#define LOGFAIL(c) __android_log_print(ANDROID_LOG_INFO, "libartemis", "LOGFAIL %s at %s line %d", RC_LOOKUP(c), __FILE__, __LINE__ )
 		#elif defined(_DEBUG)
-			#include <assert.h>
-			#define LOGFAIL(c) do { printf( "LOGFAIL %d at %s line %d\n", ar_util_rclookup(c), __FILE__, __LINE__ ); if( !ar_util_istest() ) { assert(0); } } while(0)
+			#if defined(SHOW_FAILURES)
+				#include <assert.h>
+				#define LOGFAIL(c) do { printf( "LOGFAIL %s at %s line %d\n", ar_util_rclookup(c), __FILE__, __LINE__ ); if( !ar_util_istest() ) { assert(0); } } while(0)
+			#else
+				#include <assert.h>
+				#define LOGFAIL(c) do { if( !ar_util_istest() ) { printf( "LOGFAIL %s at %s line %d\n", ar_util_rclookup(c), __FILE__, __LINE__ ); assert(0); } } while(0)
+			#endif
 		#else // debug
 			#define LOGFAIL(c) (0)
 		#endif // debug
