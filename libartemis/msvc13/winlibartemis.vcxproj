@@ -92,10 +92,12 @@
       <ExceptionHandling>false</ExceptionHandling>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>/LIBPATH:"C:\Program Files (x86)\gevorkyan.org\MicroProfiler" %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -108,10 +110,12 @@
       <ExceptionHandling>false</ExceptionHandling>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>/LIBPATH:"C:\Program Files (x86)\gevorkyan.org\MicroProfiler" %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -184,6 +188,7 @@
     <ClInclude Include="winlibartemis.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\Program Files (x86)\gevorkyan.org\MicroProfiler\micro-profiler.initializer.cpp" />
     <ClCompile Include="..\src\ar_core.c" />
     <ClCompile Include="..\src\ar_shamir.c" />
     <ClCompile Include="..\src\ar_uricodec.c" />
