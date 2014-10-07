@@ -192,7 +192,9 @@ void gfMultiply (gfPoint r, const gfPoint p, const gfPoint q)
 	ASSERT( q );
 	ASSERT( r );
 
-	if( p == r || q == r ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( p == r ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( q == r ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( p[0] + q[0] > GF_POINT_UNITS ) { LOGFAIL( RC_INTERNAL ); return; }
 
 	if (p[0] && q[0]) {
 		/* precompute logt[q[j]] to reduce table lookups: */

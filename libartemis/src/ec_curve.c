@@ -82,7 +82,7 @@ int ecCalcY (ecPoint *p, int ybit)
 
 	/* simple sqrt if elliptic equation reduces to y^2 = EC_B: */
 	if( p->x[0] == 0 ) { gfSquareRoot (p->y, EC_B); return 1; }
-	if( p->x[0] > GF_K ) { LOGFAIL( RC_INTERNAL ); return 0; } // CHECK: sqrt( GF_K )?
+	if( p->x[0] > GF_POINT_UNITS ) { LOGFAIL( RC_INTERNAL ); return 0; } // CHECK: sqrt( GF_K )?
 
 	/* evaluate alpha = x^3 + b = (x^2)*x + EC_B: */
 	gfSquare (t, p->x); /* keep t = x^2 for beta evaluation */
