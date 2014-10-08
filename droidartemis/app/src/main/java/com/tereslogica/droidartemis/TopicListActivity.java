@@ -82,7 +82,7 @@ public class TopicListActivity extends FragmentActivity {
         LayoutInflater inflater;
 
         public TLAAdapter( Context cxt ) {
-            super( cxt, R.layout.list_item, R.id.loctopic, al );
+            super( cxt, R.layout.topic_item, R.id.loctopic, al );
             inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
@@ -90,7 +90,7 @@ public class TopicListActivity extends FragmentActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             View rowView;
             if( convertView == null ) { // view recycling and view holder pattern
-                rowView = inflater.inflate(R.layout.list_item, parent, false);
+                rowView = inflater.inflate(R.layout.topic_item, parent, false);
                 ArtemisTopic.configureTags( rowView );
             } else {
                 rowView = convertView;
