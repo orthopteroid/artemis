@@ -10,7 +10,7 @@ public class TopicActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setContentView(R.layout.single_list_item_view);
+        this.setContentView(R.layout.share_item);
 
         TextView txtProduct = (TextView) findViewById(R.id.product_label);
 
