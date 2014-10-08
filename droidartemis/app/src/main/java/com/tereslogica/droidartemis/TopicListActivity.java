@@ -125,7 +125,7 @@ public class TopicListActivity extends FragmentActivity {
         };
 
         tlaa = new TLAAdapter( getApplicationContext() );
-        ListView lv = (ListView) findViewById( R.id.list_container );
+        ListView lv = (ListView) findViewById( R.id.topic_list );
         lv.setAdapter(tlaa);
         lv.setOnItemClickListener(oicl);
 

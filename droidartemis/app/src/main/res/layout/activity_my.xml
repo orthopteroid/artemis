@@ -27,7 +27,7 @@
         android:onClick="onClickSort" />
 
     <ListView
-        android:id="@+id/list_container"
+        android:id="@+id/topic_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/scan_button"
