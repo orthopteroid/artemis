@@ -1,6 +1,7 @@
 package com.tereslogica.droidartemis;
 
 import android.database.Cursor;
+import android.graphics.Paint;
 import android.view.View;
 import android.widget.TextView;
 
@@ -16,8 +17,9 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
     public int ssize;
     public int tsize;
     public String message;
+    public int mindicator;
 
-    public ArtemisTopic( String _topic, int _ssize, int _tsize, String _clue, String _location ) {
+    public ArtemisTopic( String _topic, int _ssize, int _tsize, String _clue, String _location, int _mindicator ) {
         topic = _topic;
         scount = 0; // might be zero, if this share is an arecord
         ssize = _ssize;
@@ -25,6 +27,7 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
         message = "?";
         clues = _clue;
         location = _location;
+        mindicator = _mindicator;
     }
 
     public ArtemisTopic(Cursor cursor) {
@@ -35,6 +38,7 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
         message = cursor.getString( ArtemisSQL.MESSAGE_COL );
         clues = cursor.getString( ArtemisSQL.CLUES_COL );
         location = cursor.getString( ArtemisSQL.LOCATION_COL );
+        mindicator = cursor.getInt( ArtemisSQL.MINDICATOR_COL );
     }
 
     public void addClue( String clue ) {
@@ -45,18 +49,29 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
         scount++;
     }
 
+    public void setMIndicator() { mindicator = 1; }
+
     ///////////
 
-    public static void configureTags( View rowView) {
+    public static void configureTags( View rowView ) {
         rowView.setTag( R.id.loctopic, ((TextView) rowView.findViewById( R.id.loctopic )) );
         rowView.setTag( R.id.details, ((TextView) rowView.findViewById( R.id.details )) );
         rowView.setTag( R.id.clues, ((TextView) rowView.findViewById( R.id.clues )) );
         rowView.setTag( R.id.message, ((TextView) rowView.findViewById( R.id.message )) );
     }
 
-    public void configureView(View listItem) {
+    public void configureView( View listItem ) {
         ((TextView) listItem.getTag( R.id.loctopic )).setText( location+"/"+topic );
-        ((TextView) listItem.getTag( R.id.details )).setText( Integer.toString( scount )+"/"+Integer.toString( tsize )+" ("+Integer.toString( ssize )+")" );
+
+        // http://fupeg.blogspot.ca/2010/01/strikethrough-android.html
+        String detailsString = Integer.toString( scount )+"/"+Integer.toString( tsize )+"/"+Integer.toString( ssize );
+        TextView detailsView = ((TextView) listItem.getTag( R.id.details ));
+        int mibits = detailsView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG; // add
+        if( mindicator != 0 ) { mibits ^= Paint.STRIKE_THRU_TEXT_FLAG; }        // remove
+        if( scount >= tsize ) { mibits |= Paint.FAKE_BOLD_TEXT_FLAG; }
+        detailsView.setPaintFlags( mibits );
+        detailsView.setText( detailsString );
+
         ((TextView) listItem.getTag( R.id.clues )).setText( clues );
         ((TextView) listItem.getTag( R.id.message )).setText( message );
     }

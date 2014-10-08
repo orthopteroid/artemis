@@ -222,10 +222,12 @@ public class TopicListActivity extends FragmentActivity {
             // if topic not found in db, then create new topic and share objects for db
             //
             String location = artemisLib.nativeLocation(share);
-            oTopic = new ArtemisTopic( topic, shareInfo[1], shareInfo[2], clue, location );
+            oTopic = new ArtemisTopic( topic, shareInfo[1], shareInfo[2], clue, location, 0 );
             //
             if( shareInfo[0] == artemisLib.URI_B ) {
                 oTopic.incCount(); // only B Types contribute towards the count
+            } else {
+                oTopic.setMIndicator(); // A types set the indicator
             }
             //
             artemisSql.addShareAndTopic( oShare, oTopic );
@@ -234,6 +236,8 @@ public class TopicListActivity extends FragmentActivity {
             //&p[i], &q[i]
             if( shareInfo[0] == artemisLib.URI_B ) {
                 oTopic.incCount(); // only B Types contribute towards the count
+            } else {
+                oTopic.setMIndicator(); // A types set the indicator
             }
             //
             String recordArr = share;

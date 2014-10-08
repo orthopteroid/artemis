@@ -57,13 +57,18 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final String LOCATION_TYPE   = "TEXT NOT NULL";
     private static final String LOCATION_DECL   = LOCATION+" "+LOCATION_TYPE;
     public  static final int    LOCATION_COL    = 7;
+    private static final String MINDICATOR      = "mindicator";
+    private static final String MINDICATOR_TYPE = "INTEGER NOT NULL";
+    private static final String MINDICATOR_DECL = MINDICATOR+" "+MINDICATOR_TYPE;
+    public  static final int    MINDICATOR_COL  = 8;
     private static final String CALC_COMPLETE   = "complete";
 
     private static final String TOPICS = "topics";
     private static final String SHARES = "shares";
     private static final String SHARES_SCHEMA = KEY_DECL+" , "+TOPIC_DECL+" , "+SHARE_DECL;
     private static final String TOPICS_SCHEMA = KEY_DECL+" , "+TOPIC_DECL+" , "+SCOUNT_DECL+" , "
-            +SSIZE_DECL+" , "+TSIZE_DECL+" , "+MESSAGE_DECL+" , "+CLUES_DECL+" , "+LOCATION_DECL;
+            +SSIZE_DECL+" , "+TSIZE_DECL+" , "+MESSAGE_DECL+" , "+CLUES_DECL+" , "
+            +LOCATION_DECL+" , "+MINDICATOR_DECL;
 
     private void getTopicQueryParms( StringBuilder col, StringBuilder ord, SortOrder so ) {
         col.delete(0,ord.length());
@@ -134,6 +139,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         String topic = oTopic.topic;
         String clues = oTopic.clues;
         String message = oTopic.message;
+        String mindicator = Integer.toString( oTopic.mindicator );
         String count = Integer.toString( oTopic.scount );
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("BEGIN;");
@@ -141,8 +147,8 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         Cursor cursor1 = db.rawQuery( query1, new String [] { oShare.topic, oShare.share } );
         cursor1.moveToFirst();
         cursor1.close();
-        String query2 = "UPDATE "+TOPICS+" SET "+SCOUNT+" = ? , "+CLUES+" = ? , "+MESSAGE+" = ? WHERE "+TOPIC+" = ? ;";
-        Cursor cursor2 = db.rawQuery( query2, new String [] { count, clues, message, topic } );
+        String query2 = "UPDATE "+TOPICS+" SET "+SCOUNT+" = ? , "+CLUES+" = ? , "+MESSAGE+" = ? , "+MINDICATOR+" = ? WHERE "+TOPIC+" = ? ;";
+        Cursor cursor2 = db.rawQuery( query2, new String [] { count, clues, message, mindicator, topic } );
         cursor2.moveToFirst();
         cursor2.close();
         db.execSQL("COMMIT;");
@@ -195,11 +201,11 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         Cursor cursor1 = db.rawQuery( query1, new String[] { oShare.topic, oShare.share } );
         cursor1.moveToFirst();
         cursor1.close();
-        String query2 = "INSERT INTO "+TOPICS+" VALUES ( "+KEY_DEFAULT+", ?, ?, ?, ?, "+MESSAGE_DEFAULT+", ?, ? );";
+        String query2 = "INSERT INTO "+TOPICS+" VALUES ( "+KEY_DEFAULT+", ?, ?, ?, ?, "+MESSAGE_DEFAULT+", ?, ?, ? );";
         Cursor cursor2 = db.rawQuery( query2, new String[] {
                 oTopic.topic,
                 Integer.toString( oTopic.scount ), Integer.toString( oTopic.ssize ), Integer.toString( oTopic.tsize ),
-                oTopic.clues, oTopic.location
+                oTopic.clues, oTopic.location, Integer.toString( oTopic.mindicator )
         } );
         cursor2.moveToFirst();
         cursor2.close();

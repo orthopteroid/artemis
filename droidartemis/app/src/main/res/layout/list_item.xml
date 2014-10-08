@@ -14,21 +14,23 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
+        android:typeface="monospace"
+        android:text="loc &amp; topic"
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="loc &amp; topic"
-        android:typeface="monospace" />
+        />
 
     <TextView
         android:id="@+id/details"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:typeface="monospace"
+        android:text="2/5"
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="2 / 5"
-        android:typeface="monospace" />
+        />
 
     <TextView
         android:id="@+id/clues"
@@ -36,10 +38,11 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/loctopic"
         android:layout_alignParentLeft="true"
+        android:typeface="monospace"
+        android:text="clue, clue, clue, clue, ....."
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:typeface="monospace"
-        android:text="clue, clue, clue, clue, ....." />
+        />
 
     <TextView
         android:id="@+id/message"
@@ -47,9 +50,10 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/clues"
         android:layout_alignParentLeft="true"
+        android:typeface="monospace"
+        android:text="decoded message"
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:typeface="monospace"
-        android:text="decoded message" />
+        />
 
 </RelativeLayout>
