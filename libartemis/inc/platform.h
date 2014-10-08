@@ -108,7 +108,7 @@
 
 	#if !defined(LOGFAIL)
 		#if defined(NDK_DEBUG)
-			#define LOGFAIL(c) __android_log_print(ANDROID_LOG_INFO, "libartemis", "LOGFAIL %s at %s line %d", RC_LOOKUP(c), __FILE__, __LINE__ )
+			#define LOGFAIL(c) __android_log_print(ANDROID_LOG_INFO, "libartemis", "LOGFAIL %s at %s line %d", ar_util_rclookup(c), __FILE__, __LINE__ )
 		#elif defined(_DEBUG)
 			#if defined(SHOW_FAILURES)
 				#include <assert.h>
