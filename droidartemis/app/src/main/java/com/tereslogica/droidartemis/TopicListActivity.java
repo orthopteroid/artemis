@@ -107,7 +107,7 @@ public class TopicListActivity extends FragmentActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_my);
+        setContentView(R.layout.topic_page);
 
         notifier = new Notifier( this );
         artemisSql = new ArtemisSQL( this );
