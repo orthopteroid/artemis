@@ -82,7 +82,7 @@ public class TopicListActivity extends FragmentActivity {
         LayoutInflater inflater;
 
         public TopicArrayAdapter(Context cxt) {
-            super( cxt, R.layout.topic_item, R.id.loctopic, al );
+            super( cxt, R.layout.topic_item, R.id.topic, topicArrayList );
             inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
