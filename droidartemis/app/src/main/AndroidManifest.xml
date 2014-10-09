@@ -17,7 +17,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".TopicActivity" android:label="Topic">
+        <activity android:name=".ShareListActivity" android:label="Topic">
         </activity>
 
     </application>

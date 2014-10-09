@@ -12,7 +12,7 @@ public class ShareListActivity extends Activity {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.share_item);
 
-        TextView txtProduct = (TextView) findViewById(R.id.product_label);
+        TextView txtProduct = (TextView) findViewById(R.id.share);
 
         Intent i = getIntent();
         String product = i.getStringExtra("product");

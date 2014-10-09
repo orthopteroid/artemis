@@ -118,7 +118,7 @@ public class TopicListActivity extends FragmentActivity {
         OnItemClickListener oicl = new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String product = ((TextView) view.findViewById( R.id.loctopic ) ).getText().toString();
-                Intent i = new Intent(getApplicationContext(), TopicActivity.class);
+                Intent i = new Intent(getApplicationContext(), ShareListActivity.class);
                 i.putExtra("product", product);
                 startActivity(i);
             }
