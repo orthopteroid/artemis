@@ -7,6 +7,7 @@ public class ArtemisLib {
         System.loadLibrary("myNDKModule");
     }
 
+    // value is used as a collating order on share_page
     public final static int URI_A = 1;
     public final static int URI_B = 2;
 

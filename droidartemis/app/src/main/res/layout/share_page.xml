@@ -19,11 +19,18 @@
         android:layout_centerInParent="true"
     />
 
+    <View
+        android:id="@+id/sep"
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/message"
+        android:background="@android:color/darker_gray"/>
+
     <ListView
         android:id="@+id/share_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/message"
+        android:layout_below="@+id/sep"
         android:layout_alignParentLeft="true"
         android:layout_centerInParent="true"
     />

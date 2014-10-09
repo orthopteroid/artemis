@@ -27,14 +27,6 @@
         android:layout_toRightOf="@+id/scan_button"
         android:onClick="onClickSort" />
 
-    <ListView
-        android:id="@+id/topic_list"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/scan_button"
-        android:layout_centerInParent="true">
-    </ListView>
-
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -44,5 +36,20 @@
         android:layout_alignRight="@+id/topic_list"
         android:layout_alignParentRight="false"
         android:onClick="onClickPurge"/>
+
+    <View
+        android:id="@+id/sep"
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/scan_button"
+        android:background="@android:color/darker_gray"/>
+
+    <ListView
+        android:id="@+id/topic_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/sep"
+        android:layout_centerInParent="true">
+    </ListView>
 
 </RelativeLayout>
