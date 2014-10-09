@@ -36,18 +36,18 @@ public class TopicListActivity extends FragmentActivity {
     private Notifier notifier;
     private FakeScanner fs;
 
-    private ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
-    private TLAAdapter tlaa;
+    private ArrayList<ArtemisTopic> topicArrayList = new ArrayList<ArtemisTopic>();
+    private TopicArrayAdapter taa;
 
     ////////////////////////////////////
 
-    private class TLALoader extends AsyncTask<Cursor,Void,Long> {
+    private class TopicArrayLoader extends AsyncTask<Cursor,Void,Long> {
 
-        private ArrayList<ArtemisTopic> tlal_al = new ArrayList<ArtemisTopic>();
+        private ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
 
         @Override
         protected void onPreExecute() {
-            tlal_al.clear();
+            al.clear();
         }
 
         @Override
@@ -59,7 +59,7 @@ public class TopicListActivity extends FragmentActivity {
             Cursor cursor = cursors[0];
             if (cursor.moveToFirst()) {
                 do {
-                    tlal_al.add( new ArtemisTopic( cursor ) );
+                    al.add(new ArtemisTopic(cursor));
                 } while( cursor.moveToNext() );
             }
             cursor.close();
@@ -68,9 +68,9 @@ public class TopicListActivity extends FragmentActivity {
 
         @Override
         protected void onPostExecute(Long result) {
-            al.clear();
-            for( ArtemisTopic at : tlal_al ) al.add( at ); // addAll
-            tlaa.notifyDataSetChanged();
+            topicArrayList.clear();
+            for( ArtemisTopic item : al) topicArrayList.add( item ); // addAll
+            taa.notifyDataSetChanged();
         }
     }
 
@@ -78,10 +78,10 @@ public class TopicListActivity extends FragmentActivity {
 
     // http://lucasr.org/2012/04/05/performance-tips-for-androids-listview/
 
-    private class TLAAdapter extends ArrayAdapter<ArtemisTopic> {
+    private class TopicArrayAdapter extends ArrayAdapter<ArtemisTopic> {
         LayoutInflater inflater;
 
-        public TLAAdapter( Context cxt ) {
+        public TopicArrayAdapter(Context cxt) {
             super( cxt, R.layout.topic_item, R.id.loctopic, al );
             inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
@@ -95,7 +95,7 @@ public class TopicListActivity extends FragmentActivity {
             } else {
                 rowView = convertView;
             }
-            al.get( position ).configureView( rowView );
+            topicArrayList.get(position).configureView( rowView );
             return rowView;
         }
     }
@@ -124,9 +124,9 @@ public class TopicListActivity extends FragmentActivity {
             }
         };
 
-        tlaa = new TLAAdapter( getApplicationContext() );
+        taa = new TopicArrayAdapter( getApplicationContext() );
         ListView lv = (ListView) findViewById( R.id.topic_list );
-        lv.setAdapter(tlaa);
+        lv.setAdapter(taa);
         lv.setOnItemClickListener(oicl);
 
         ////////////////
@@ -139,7 +139,7 @@ public class TopicListActivity extends FragmentActivity {
     public void refreshListView() {
         Cursor cursor = artemisSql.getTopicsCursor( sortOrder );
         if( cursor != null ) {
-            (new TLALoader()).execute(cursor);
+            (new TopicArrayLoader()).execute(cursor);
         }
     }
 
