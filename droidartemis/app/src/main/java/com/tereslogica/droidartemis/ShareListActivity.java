@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
 
-public class TopicActivity extends Activity {
+public class ShareListActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
