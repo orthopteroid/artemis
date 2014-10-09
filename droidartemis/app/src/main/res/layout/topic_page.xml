@@ -32,7 +32,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/scan_button"
-        android:layout_alignParentRight="false"
         android:layout_centerInParent="true">
     </ListView>
 
