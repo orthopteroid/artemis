@@ -188,7 +188,12 @@
     <ClInclude Include="winlibartemis.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\Program Files (x86)\gevorkyan.org\MicroProfiler\micro-profiler.initializer.cpp" />
+    <ClCompile Include="..\..\..\..\..\..\Program Files (x86)\gevorkyan.org\MicroProfiler\micro-profiler.initializer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\ar_core.c" />
     <ClCompile Include="..\src\ar_shamir.c" />
     <ClCompile Include="..\src\ar_uricodec.c" />
