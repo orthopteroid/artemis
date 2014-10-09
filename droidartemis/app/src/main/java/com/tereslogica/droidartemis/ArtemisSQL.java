@@ -18,6 +18,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final int VERSION = 1;
     private static final String NAME = "db";
 
+    // common to both tables
     private static final String KEY             = "_id";
     private static final String KEY_DEFAULT     = "NULL";
     private static final String KEY_TYPE        = "INTEGER PRIMARY KEY";
@@ -27,10 +28,18 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final String TOPIC_TYPE      = "TEXT NOT NULL";
     private static final String TOPIC_DECL      = TOPIC+" "+TOPIC_TYPE;
     public  static final int    TOPIC_COL       = 1;
+
+    // shares table
     private static final String SHARE           = "share";
     private static final String SHARE_TYPE      = "TEXT NOT NULL UNIQUE";
     private static final String SHARE_DECL      = SHARE+" "+SHARE_TYPE;
-    public  static final int    SHARE_COL       = 2; // only used in SHARES table
+    public  static final int    SHARE_COL       = 2;
+    private static final String STYPE           = "stype";
+    private static final String STYPE_TYPE      = "INTEGER NOT NULL";
+    private static final String STYPE_DECL      = STYPE+" "+STYPE_TYPE;
+    public  static final int    STYPE_COL       = 3;
+
+    // topics table
     private static final String SCOUNT          = "scount";
     private static final String SCOUNT_TYPE     = "INTEGER NOT NULL DEFAULT(0)";
     private static final String SCOUNT_DECL     = SCOUNT+" "+SCOUNT_TYPE;
@@ -65,10 +74,12 @@ public class ArtemisSQL extends SQLiteOpenHelper {
 
     private static final String TOPICS = "topics";
     private static final String SHARES = "shares";
-    private static final String SHARES_SCHEMA = KEY_DECL+" , "+TOPIC_DECL+" , "+SHARE_DECL;
-    private static final String TOPICS_SCHEMA = KEY_DECL+" , "+TOPIC_DECL+" , "+SCOUNT_DECL+" , "
-            +SSIZE_DECL+" , "+TSIZE_DECL+" , "+MESSAGE_DECL+" , "+CLUES_DECL+" , "
-            +LOCATION_DECL+" , "+MINDICATOR_DECL;
+    private static final String SHARES_SCHEMA =
+            KEY_DECL+" , "+TOPIC_DECL+" , "+SHARE_DECL+" , "+STYPE_DECL;
+    private static final String TOPICS_SCHEMA =
+            KEY_DECL+" , "+TOPIC_DECL+" , "+SCOUNT_DECL+" , "+SSIZE_DECL+" , "+
+            TSIZE_DECL+" , "+MESSAGE_DECL+" , "+CLUES_DECL+" , "+LOCATION_DECL+" , "+
+            MINDICATOR_DECL;
 
     private void getTopicQueryParms( StringBuilder col, StringBuilder ord, SortOrder so ) {
         col.delete(0,ord.length());
@@ -99,12 +110,20 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         ord.delete(0,ord.length());
         switch( so ) {
             default:
+            case NATURAL:
+                col.append(STYPE);
+                ord.append("DESC");
+                break;
+            case UNNATURAL:
+                col.append(STYPE);
+                ord.append("ASC");
+                break;
             case MOSTRECENT:
-                ord.append(KEY);
+                col.append(KEY);
                 ord.append("DESC");
                 break;
             case LEASTRECENT:
-                ord.append(KEY);
+                col.append(KEY);
                 ord.append("ASC");
                 break;
         }
@@ -113,6 +132,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     /////////////////
 
     public enum SortOrder {
+        UNNATURAL, NATURAL,
         MOSTRECENT, LEASTRECENT, MOSTCOMPLETE, LEASTCOMPLETE
     };
 
@@ -125,7 +145,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     public ArtemisTopic getTopicInfo( String topic ) {
         ArtemisTopic oTopic = null;
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT * FROM "+TOPICS+" "+" WHERE "+TOPIC+" = ? ;";
+        String query = "SELECT * FROM "+TOPICS+" WHERE "+TOPIC+" = ? ;";
         Cursor cursor = db.rawQuery(query, new String[] { topic } );
         if( cursor.moveToFirst() ) {
             oTopic = new ArtemisTopic( cursor );
@@ -143,11 +163,11 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         String count = Integer.toString( oTopic.scount );
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("BEGIN;");
-        String query1 = "INSERT INTO "+SHARES+" VALUES ( "+KEY_DEFAULT+", ? , ? );";
-        Cursor cursor1 = db.rawQuery( query1, new String [] { oShare.topic, oShare.share } );
+        String query1 = "INSERT INTO "+SHARES+" VALUES ( "+KEY_DEFAULT+", ?, ?, ? );";
+        Cursor cursor1 = db.rawQuery( query1, new String [] { oShare.topic, oShare.share, Integer.toString( oShare.stype ) } );
         cursor1.moveToFirst();
         cursor1.close();
-        String query2 = "UPDATE "+TOPICS+" SET "+SCOUNT+" = ? , "+CLUES+" = ? , "+MESSAGE+" = ? , "+MINDICATOR+" = ? WHERE "+TOPIC+" = ? ;";
+        String query2 = "UPDATE "+TOPICS+" SET "+SCOUNT+" = ?, "+CLUES+" = ?, "+MESSAGE+" = ?, "+MINDICATOR+" = ? WHERE "+TOPIC+" = ? ;";
         Cursor cursor2 = db.rawQuery( query2, new String [] { count, clues, message, mindicator, topic } );
         cursor2.moveToFirst();
         cursor2.close();
@@ -161,7 +181,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         getTopicQueryParms(col, ord, so);
         //
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT *, ROUND( "+SCOUNT+" / "+TSIZE+" , 2 ) AS '"+CALC_COMPLETE+"' FROM "+TOPICS+" ORDER BY "+col.toString()+" "+ord.toString()+" ;";
+        String query = "SELECT *, ROUND( "+SCOUNT+" / "+TSIZE+" , 4 ) AS '"+CALC_COMPLETE+"' FROM "+TOPICS+" ORDER BY "+col.toString()+" "+ord.toString()+" ;";
         Cursor cursor = db.rawQuery( query, null );
         cursor.moveToFirst();
         db.close();
@@ -170,9 +190,13 @@ public class ArtemisSQL extends SQLiteOpenHelper {
 
     /////
 
-    public Cursor getShareTopicCursor( String topic ) {
+    public Cursor getShareTopicCursor( String topic, SortOrder so ) {
+        StringBuilder col = new StringBuilder();
+        StringBuilder ord = new StringBuilder();
+        getShareQueryParms(col, ord, so);
+        //
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT * FROM "+SHARES+" "+"WHERE "+TOPIC+" = ? ;";
+        String query = "SELECT * FROM "+SHARES+" WHERE "+TOPIC+" = ? ORDER BY "+col.toString()+" "+ord.toString()+" ;";
         Cursor cursor = db.rawQuery( query, new String[] { topic } );
         cursor.moveToFirst();
         db.close();
@@ -197,8 +221,8 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     public void addShareAndTopic( ArtemisShare oShare, ArtemisTopic oTopic ) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("BEGIN;");
-        String query1 = "INSERT INTO "+SHARES+" VALUES ( "+KEY_DEFAULT+", ?, ? );";
-        Cursor cursor1 = db.rawQuery( query1, new String[] { oShare.topic, oShare.share } );
+        String query1 = "INSERT INTO "+SHARES+" VALUES ( "+KEY_DEFAULT+", ?, ?, ? );";
+        Cursor cursor1 = db.rawQuery( query1, new String[] { oShare.topic, oShare.share, Integer.toString( oShare.stype ) } );
         cursor1.moveToFirst();
         cursor1.close();
         String query2 = "INSERT INTO "+TOPICS+" VALUES ( "+KEY_DEFAULT+", ?, ?, ?, ?, "+MESSAGE_DEFAULT+", ?, ?, ? );";
