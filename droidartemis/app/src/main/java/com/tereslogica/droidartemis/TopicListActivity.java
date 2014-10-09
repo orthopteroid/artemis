@@ -117,9 +117,8 @@ public class TopicListActivity extends FragmentActivity {
 
         OnItemClickListener oicl = new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String product = ((TextView) view.findViewById( R.id.loctopic ) ).getText().toString();
                 Intent i = new Intent(getApplicationContext(), ShareListActivity.class);
-                i.putExtra("product", product);
+                i.putExtra( "topic", ((TextView) view.findViewById( R.id.topic ) ).getText().toString() );
                 startActivity(i);
             }
         };
@@ -215,7 +214,7 @@ public class TopicListActivity extends FragmentActivity {
         String topic = artemisLib.nativeTopic(share);
         String clue = artemisLib.nativeClue(share);
         //
-        oShare = new ArtemisShare( share, topic ); // sql api uses these
+        oShare = new ArtemisShare( share, topic, shareInfo[0] ); // sql api uses these
         //
         ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
         if( oTopic == null ) {
@@ -241,7 +240,7 @@ public class TopicListActivity extends FragmentActivity {
             }
             //
             String recordArr = share;
-            Cursor cursor = artemisSql.getShareTopicCursor( topic );
+            Cursor cursor = artemisSql.getShareTopicCursor( topic, ArtemisSQL.SortOrder.UNNATURAL );
             if (cursor.moveToFirst()) {
                 do {
                     String othershare = cursor.getString( ArtemisSQL.SHARE_COL );
