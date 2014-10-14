@@ -8,7 +8,7 @@
 
 //#define ENABLE_MESSAGES
 
-char* szUnknown = "?? ?? ??";
+char* szBlank = "";
 char* szLocation = "foo.bar";
 
 static int rc = 0;
@@ -50,7 +50,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
     if( rc == 0 && cMessage_out ) {
         jMessage_out = (*env)->NewStringUTF( env, cMessage_out );
     } else {
-        jMessage_out = (*env)->NewStringUTF( env, szUnknown );
+        jMessage_out = (*env)->NewStringUTF( env, szBlank );
     }
     if( cMessage_out ) { library_free( &cMessage_out ); }
 
