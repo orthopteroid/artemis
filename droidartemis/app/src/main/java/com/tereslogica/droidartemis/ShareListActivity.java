@@ -30,6 +30,7 @@ public class ShareListActivity extends Activity {
 
     private class ShareArrayLoader extends AsyncTask<Cursor,Void,Long> {
 
+        private String secretShare = "";
         private ArrayList<ArtemisShare> al = new ArrayList<ArtemisShare>();
 
         @Override
@@ -46,7 +47,12 @@ public class ShareListActivity extends Activity {
             Cursor cursor = cursors[0];
             if (cursor.moveToFirst()) {
                 do {
-                    al.add(new ArtemisShare(cursor));
+                    ArtemisShare oShare = new ArtemisShare( cursor );
+                    if( oShare.stype == ArtemisLib.URI_A ) {
+                        secretShare = oShare.share;
+                    } else {
+                        al.add( oShare );
+                    }
                 } while( cursor.moveToNext() );
             }
             cursor.close();
@@ -58,6 +64,17 @@ public class ShareListActivity extends Activity {
             shareArrayList.clear();
             for( ArtemisShare item : al) shareArrayList.add( item ); // addAll
             saa.notifyDataSetChanged();
+
+            ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
+
+            String message = oTopic.message;
+            if( oTopic.message.length() == 0 ) { message = getResources().getString( R.string.sharelist_needmorekeys ); }
+            if( secretShare.length() == 0 ) { message = getResources().getString( R.string.sharelist_messagedecodeerror ); }
+            ((TextView) findViewById( R.id.message ) ).setText( message );
+
+            String secret = secretShare;
+            if( secretShare.length() == 0 ) { secret = getResources().getString( R.string.sharelist_nosecret ); }
+            ((TextView) findViewById( R.id.secret ) ).setText( secret );
         }
     }
 
@@ -98,12 +115,6 @@ public class ShareListActivity extends Activity {
         artemisSql = new ArtemisSQL( this );
 
         topic = getIntent().getStringExtra( "topic" );
-        ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
-        message = oTopic.message;
-
-        ((TextView) findViewById( R.id.message ) ).setText( message );
-
-//        TextView txtProduct = (TextView) findViewById(R.id.share);
 
         ////////////////
 /*
@@ -117,7 +128,7 @@ public class ShareListActivity extends Activity {
         };
 */
         saa = new ShareArrayAdapter( getApplicationContext() );
-        ListView lv = (ListView) findViewById( R.id.share_list );
+        ListView lv = (ListView) findViewById( R.id.key_list );
         lv.setAdapter(saa);
 //        lv.setOnItemClickListener(oicl);
 

@@ -2,10 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingTop="@dimen/activity_vertical_margin">
+    >
 
     <TextView
         android:id="@+id/share"
@@ -17,6 +14,8 @@
         android:text="http://foo.bar?tp=EUAsYRgDPEk&amp;mt=YFXv5y5zmHKeSqhmBA&amp;pk=AAh4ja-DLu2ORvuNpb1Q0RsR&amp;vf=ry28Qw&amp;as=vxNlfhxAUPN-81AR0YuyNw!JBwzNQDYBFxrgzkF9F-3gQ&amp;ai=AF!AF!CI&amp;mc=bWFpbg"
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceSmall"
+        android:singleLine="true"
+        android:ellipsize="end"
         />
 
 </RelativeLayout>
