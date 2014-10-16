@@ -11,32 +11,35 @@
     >
 
     <Button
+        android:id="@+id/scan_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Scan"
-        android:id="@+id/scan_button"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:onClick="onClickScan" />
+        android:text="@string/button_scan"
+        android:onClick="onClickScan"
+        />
 
     <Button
+        android:id="@+id/sort_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sort"
-        android:id="@+id/sort_button"
         android:layout_alignBottom="@+id/scan_button"
         android:layout_toRightOf="@+id/scan_button"
-        android:onClick="onClickSort" />
+        android:text="@string/button_sort"
+        android:onClick="onClickSort"
+        />
 
     <Button
+        android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Purge"
-        android:id="@+id/button"
         android:layout_above="@+id/topic_list"
         android:layout_alignRight="@+id/topic_list"
         android:layout_alignParentRight="false"
-        android:onClick="onClickPurge"/>
+        android:text="@string/button_purge"
+        android:onClick="onClickPurge"
+        />
 
     <View
         android:id="@+id/sep"

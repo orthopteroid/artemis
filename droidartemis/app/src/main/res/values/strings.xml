@@ -12,5 +12,9 @@
     <string name="reponse_ok">Ok</string>
     <string name="reponse_yes">Yes</string>
     <string name="reponse_no">No</string>
+    <string name="button_scan">Scan</string>
+    <string name="button_sort">Sort</string>
+    <string name="button_purge">Purge</string>
+    <string name="button_share">Share</string>
 
 </resources>

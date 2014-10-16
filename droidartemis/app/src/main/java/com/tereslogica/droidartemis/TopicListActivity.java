@@ -23,7 +23,7 @@ import java.util.ArrayList;
 // http://www.androidhive.info/2011/10/android-listview-tutorial/
 public class TopicListActivity extends FragmentActivity {
 
-    public static final int ACTIVITY_SCAN = 0;
+    public static final int ACTIVITY_COMPLETE = 0;
 
     ////////////////
 
@@ -179,7 +179,7 @@ public class TopicListActivity extends FragmentActivity {
             try {
                 Intent intent = new Intent("com.google.zxing.client.android.SCAN");
                 intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-                startActivityForResult( intent, ACTIVITY_SCAN );
+                startActivityForResult( intent, ACTIVITY_COMPLETE);
             } catch (Exception e1) {
                 notifier.showOk(R.string.dialog_noscanner);
             }
@@ -192,7 +192,7 @@ public class TopicListActivity extends FragmentActivity {
         // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
         super.onActivityResult(requestCode, resultCode, data);
         switch( requestCode ) {
-            case ACTIVITY_SCAN:
+            case ACTIVITY_COMPLETE:
                 if (resultCode == RESULT_OK) {
                     addScannedItem( data.getStringExtra("SCAN_RESULT") );
                 } else if (resultCode == RESULT_CANCELED) {

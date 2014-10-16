@@ -2,6 +2,7 @@ package com.tereslogica.droidartemis;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 
 public class ShareListActivity extends Activity {
     private String topic;
+    private String aRecord = "";
     private String message;
 
     private ArtemisSQL artemisSql;
@@ -26,11 +28,12 @@ public class ShareListActivity extends Activity {
     private ArrayList<ArtemisShare> shareArrayList = new ArrayList<ArtemisShare>();
     private ShareArrayAdapter saa;
 
+    public static final int ACTIVITY_COMPLETE = 0;
+
     ////////////////////////////////////
 
     private class ShareArrayLoader extends AsyncTask<Cursor,Void,Long> {
 
-        private String secretShare = "";
         private ArrayList<ArtemisShare> al = new ArrayList<ArtemisShare>();
 
         @Override
@@ -49,7 +52,7 @@ public class ShareListActivity extends Activity {
                 do {
                     ArtemisShare oShare = new ArtemisShare( cursor );
                     if( oShare.stype == ArtemisLib.URI_A ) {
-                        secretShare = oShare.share;
+                        aRecord = oShare.share;
                     } else {
                         al.add( oShare );
                     }
@@ -69,11 +72,11 @@ public class ShareListActivity extends Activity {
 
             String message = oTopic.message;
             if( oTopic.message.length() == 0 ) { message = getResources().getString( R.string.sharelist_needmorekeys ); }
-            if( secretShare.length() == 0 ) { message = getResources().getString( R.string.sharelist_messagedecodeerror ); }
+            if( aRecord.length() == 0 ) { message = getResources().getString( R.string.sharelist_messagedecodeerror ); }
             ((TextView) findViewById( R.id.message ) ).setText( message );
 
-            String secret = secretShare;
-            if( secretShare.length() == 0 ) { secret = getResources().getString( R.string.sharelist_nosecret ); }
+            String secret = aRecord;
+            if( aRecord.length() == 0 ) { secret = getResources().getString( R.string.sharelist_nosecret ); }
             ((TextView) findViewById( R.id.secret ) ).setText( secret );
         }
     }
@@ -116,23 +119,9 @@ public class ShareListActivity extends Activity {
 
         topic = getIntent().getStringExtra( "topic" );
 
-        ////////////////
-/*
-        AdapterView.OnItemClickListener oicl = new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String product = ((TextView) view.findViewById( R.id.loctopic ) ).getText().toString();
-                Intent i = new Intent(getApplicationContext(), ShareListActivity.class);
-                i.putExtra("product", product);
-                startActivity(i);
-            }
-        };
-*/
         saa = new ShareArrayAdapter( getApplicationContext() );
         ListView lv = (ListView) findViewById( R.id.key_list );
         lv.setAdapter(saa);
-//        lv.setOnItemClickListener(oicl);
-
-        ////////////////
 
         refreshListView();
     }
@@ -145,22 +134,57 @@ public class ShareListActivity extends Activity {
             (new ShareArrayLoader()).execute(cursor);
         }
     }
-/*
-    public void onClickSort(View v) {
-        DialogInterface.OnClickListener ocl = new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int _which) {
-                ArtemisSQL.SortOrder orderings[] = {
-                        ArtemisSQL.SortOrder.NATURAL,
-                        ArtemisSQL.SortOrder.MOSTRECENT,
-                        ArtemisSQL.SortOrder.LEASTRECENT,
-                };
-                sortOrder = orderings[_which];
-                refreshListView();
+
+    ///////////////////////////
+
+    private boolean continueSharing;
+    public void onClickShare(View v) {
+
+        // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
+        try {
+            continueSharing = true;
+            if( aRecord.length() > 0 ) {
+                Intent intent = new Intent("com.google.zxing.client.android.ENCODE");
+                intent.putExtra("ENCODE_FORMAT", "QR_CODE");
+                intent.putExtra("ENCODE_TYPE", "TEXT_TYPE");
+                intent.putExtra("ENCODE_DATA", aRecord);
+                intent.putExtra("ENCODE_SHOW_CONTENTS", false);
+                startActivityForResult(intent, ACTIVITY_COMPLETE);
             }
-        };
-        notifier.showOptions( R.array.dialog_sortshares, ocl);
+            for( ArtemisShare item : shareArrayList )
+            {
+                if( continueSharing == false ) { break; }
+                Intent intent = new Intent("com.google.zxing.client.android.ENCODE");
+                intent.putExtra("ENCODE_FORMAT", "QR_CODE");
+                intent.putExtra("ENCODE_TYPE", "TEXT_TYPE");
+                intent.putExtra("ENCODE_DATA", item.share);
+                intent.putExtra("ENCODE_SHOW_CONTENTS", false);
+                startActivityForResult(intent, ACTIVITY_COMPLETE);
+            }
+        } catch (Exception e1) {
+            notifier.showOk(R.string.dialog_noscanner);
+            continueSharing = false;
+        }
     }
-*/
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
+        super.onActivityResult(requestCode, resultCode, data);
+        switch( requestCode ) {
+            case ACTIVITY_COMPLETE:
+                if (resultCode == RESULT_OK) {
+                    break;
+                } else if (resultCode == RESULT_CANCELED) {
+                    continueSharing = false;
+                    break;
+                    //handle cancel
+                }
+                break;
+            default:
+                break;
+        }
+    }
 
     ///////////////////////////
 }
