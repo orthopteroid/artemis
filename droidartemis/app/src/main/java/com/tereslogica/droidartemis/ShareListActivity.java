@@ -1,11 +1,20 @@
 package com.tereslogica.droidartemis;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.DocumentsContract;
+import android.support.v4.content.FileProvider;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +22,23 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.common.BitArray;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class ShareListActivity extends Activity {
     private String topic;
@@ -29,6 +54,141 @@ public class ShareListActivity extends Activity {
     private ShareArrayAdapter saa;
 
     public static final int ACTIVITY_COMPLETE = 0;
+
+    ////////////////////////////////////
+
+    // https://developer.android.com/reference/android/support/v4/content/FileProvider.html
+    // http://stackoverflow.com/questions/18249007/how-to-use-support-fileprovider-for-sharing-content-to-other-apps
+
+    private class TopicZipper {
+        private File dir;
+        private File fout;
+        private Uri uri;
+        private FileOutputStream fouts;
+        private ZipOutputStream zout;
+        //
+        private int width = 300, height = 300;
+        private String topic, sARecord;
+        private ArrayList<ArtemisShare> oSRecordList;
+        private int key = 0;
+        //
+        public int filesToConvert;
+
+        TopicZipper( String a, String b, ArrayList<ArtemisShare> c ) {
+            topic = a;
+            sARecord = b;
+            oSRecordList = c;
+            //
+            filesToConvert = ( sARecord.length() > 0 ? 1 : 0 ) + oSRecordList.size();
+        }
+
+        private void addPNG(ZipOutputStream zout, String fname, String code, int width, int height) throws Exception {
+            ZipEntry ze = new ZipEntry( fname );
+            zout.putNextEntry( ze );
+
+            QRCodeWriter qrcw = new QRCodeWriter();
+            BitMatrix bm = qrcw.encode( code, BarcodeFormat.QR_CODE, width, height );
+
+            Bitmap bitmap = Bitmap.createBitmap( width, height, Bitmap.Config.RGB_565 );
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
+                    bitmap.setPixel(i, j, bm.get(i, j) ? Color.BLACK: Color.WHITE);
+                }
+            }
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+
+            zout.write( bos.toByteArray() );
+            zout.closeEntry();
+        }
+
+        private void open() throws Exception {
+            dir = new File(getApplicationContext().getCacheDir(), "");
+            dir.mkdirs();
+
+            String fname = "topic-" + topic.substring(0, 10) + ".zip";
+            fout = new File(dir, fname);
+
+            uri = FileProvider.getUriForFile(getApplicationContext(), "com.tereslogica.droidartemis.ShareListActivity", fout);
+
+            fouts = new FileOutputStream(fout);
+            zout = new ZipOutputStream(fouts);
+            zout.setMethod(ZipOutputStream.DEFLATED);
+            zout.setLevel(1); // for png, use almost no compression. faster.
+        }
+
+        private void addMessage() throws Exception {
+            if( sARecord.length() > 0 ) {
+                addPNG( zout, "message.png", sARecord, width, height );
+            }
+        }
+
+        private boolean addKey() throws Exception {
+            if( key == oSRecordList.size() ) { return false; }
+            ArtemisShare sRecord = oSRecordList.get( key );
+            String istr = String.format("%04d", key); // 12 bits serialized = 4095 = 4 decimal digits, 0 padding
+            addPNG( zout, "key" + istr + ".png", sRecord.share, width, height );
+            key++;
+            return true;
+        }
+
+        private void close() throws Exception {
+            zout.close();
+            fouts.close();
+            fout.deleteOnExit();
+        }
+    }
+
+    ////////////////////////////////////
+
+    private class TopicPackageAndShare extends AsyncTask<Integer,Integer,Integer> {
+        private ProgressDialog dialog;
+        TopicZipper tz;
+        Uri uri;
+        int progress = 0;
+
+        TopicPackageAndShare( Activity a ) {
+            tz = new TopicZipper( topic, aRecord, shareArrayList );
+            dialog = new ProgressDialog( a );
+            dialog.setProgressStyle( ProgressDialog.STYLE_HORIZONTAL );
+            dialog.setMax( tz.filesToConvert );
+            dialog.setTitle( "Generating Images" );
+            dialog.show();
+        }
+
+        @Override
+        protected Integer doInBackground(Integer ... i) {
+            try {
+                tz.open();
+                tz.addMessage();
+                progress++;
+                dialog.setProgress( progress );
+                while( tz.addKey() ) {
+                    progress++;
+                    dialog.setProgress( progress );
+                    publishProgress(0);
+                }
+                tz.close();
+                uri = tz.uri;
+            } catch( Exception e ) {
+                e.printStackTrace();
+            }
+            return 0;
+        }
+
+        @Override
+        protected void onPostExecute(Integer i) {
+            dialog.dismiss();
+            if( uri != null ) {
+                Intent intent = new Intent(android.content.Intent.ACTION_SEND, tz.uri);
+                intent.setType("application/zip");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.putExtra(Intent.EXTRA_STREAM, tz.uri);
+                startActivity(Intent.createChooser(intent, "Send Images"));
+            }
+        }
+    }
 
     ////////////////////////////////////
 
@@ -137,34 +297,25 @@ public class ShareListActivity extends Activity {
 
     ///////////////////////////
 
-    private boolean continueSharing;
-    public void onClickShare(View v) {
+    private void addPNG(ZipOutputStream zout, String fname, String code, int width, int height) throws Exception {
+        ZipEntry ze = new ZipEntry( fname );
+        zout.putNextEntry( ze );
 
-        // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
-        try {
-            continueSharing = true;
-            if( aRecord.length() > 0 ) {
-                Intent intent = new Intent("com.google.zxing.client.android.ENCODE");
-                intent.putExtra("ENCODE_FORMAT", "QR_CODE");
-                intent.putExtra("ENCODE_TYPE", "TEXT_TYPE");
-                intent.putExtra("ENCODE_DATA", aRecord);
-                intent.putExtra("ENCODE_SHOW_CONTENTS", false);
-                startActivityForResult(intent, ACTIVITY_COMPLETE);
+        QRCodeWriter qrcw = new QRCodeWriter();
+        BitMatrix bm = qrcw.encode( code, BarcodeFormat.QR_CODE, width, height );
+
+        Bitmap bitmap = Bitmap.createBitmap( width, height, Bitmap.Config.RGB_565 );
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                bitmap.setPixel(i, j, bm.get(i, j) ? Color.BLACK: Color.WHITE);
             }
-            for( ArtemisShare item : shareArrayList )
-            {
-                if( continueSharing == false ) { break; }
-                Intent intent = new Intent("com.google.zxing.client.android.ENCODE");
-                intent.putExtra("ENCODE_FORMAT", "QR_CODE");
-                intent.putExtra("ENCODE_TYPE", "TEXT_TYPE");
-                intent.putExtra("ENCODE_DATA", item.share);
-                intent.putExtra("ENCODE_SHOW_CONTENTS", false);
-                startActivityForResult(intent, ACTIVITY_COMPLETE);
-            }
-        } catch (Exception e1) {
-            notifier.showOk(R.string.dialog_noscanner);
-            continueSharing = false;
         }
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+
+        zout.write( bos.toByteArray() );
+        zout.closeEntry();
     }
 
     @Override
@@ -176,7 +327,6 @@ public class ShareListActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     break;
                 } else if (resultCode == RESULT_CANCELED) {
-                    continueSharing = false;
                     break;
                     //handle cancel
                 }
