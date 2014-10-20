@@ -118,12 +118,16 @@ public class ShareListActivity extends Activity {
             zout.setLevel(1); // for png, use almost no compression. faster.
         }
 
-        private void addMessage() throws Exception {
+        // return true if file was added, false if not
+        private boolean addMessage() throws Exception {
             if( sARecord.length() > 0 ) {
                 addPNG( zout, "message.png", sARecord, width, height );
+                return true;
             }
+            return false;
         }
 
+        // return true if file was added, false if not (and there are no more files to add)
         private boolean addKey() throws Exception {
             if( key == oSRecordList.size() ) { return false; }
             ArtemisShare sRecord = oSRecordList.get( key );
@@ -157,18 +161,18 @@ public class ShareListActivity extends Activity {
             dialog.show();
         }
 
+        private void incProgress() {
+            progress++;
+            dialog.setProgress( progress );
+            publishProgress(0);
+        }
+
         @Override
         protected Integer doInBackground(Integer ... i) {
             try {
                 tz.open();
-                tz.addMessage();
-                progress++;
-                dialog.setProgress( progress );
-                while( tz.addKey() ) {
-                    progress++;
-                    dialog.setProgress( progress );
-                    publishProgress(0);
-                }
+                if( tz.addMessage() ) { incProgress(); }
+                while( tz.addKey() ) { incProgress(); }
                 tz.close();
                 uri = tz.uri;
             } catch( Exception e ) {
@@ -297,25 +301,8 @@ public class ShareListActivity extends Activity {
 
     ///////////////////////////
 
-    private void addPNG(ZipOutputStream zout, String fname, String code, int width, int height) throws Exception {
-        ZipEntry ze = new ZipEntry( fname );
-        zout.putNextEntry( ze );
-
-        QRCodeWriter qrcw = new QRCodeWriter();
-        BitMatrix bm = qrcw.encode( code, BarcodeFormat.QR_CODE, width, height );
-
-        Bitmap bitmap = Bitmap.createBitmap( width, height, Bitmap.Config.RGB_565 );
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                bitmap.setPixel(i, j, bm.get(i, j) ? Color.BLACK: Color.WHITE);
-            }
-        }
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-
-        zout.write( bos.toByteArray() );
-        zout.closeEntry();
+    public void onClickShare(View v) {
+        (new TopicPackageAndShare( this )).execute(0);
     }
 
     @Override
