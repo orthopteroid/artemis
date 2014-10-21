@@ -9,7 +9,7 @@
     >
 
     <Button
-        android:id="@+id/share_button"
+        android:id="@+id/button_share"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/scan_button"
@@ -23,7 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/share_button"
+        android:layout_below="@+id/button_share"
         android:text="@string/sharelist_nosecret"
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceMedium"
@@ -60,7 +60,7 @@
         />
 
     <ListView
-        android:id="@+id/key_list"
+        android:id="@+id/listview_keys"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/sep2"

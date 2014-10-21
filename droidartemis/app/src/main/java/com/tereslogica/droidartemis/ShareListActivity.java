@@ -3,6 +3,7 @@ package com.tereslogica.droidartemis;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -52,6 +53,8 @@ public class ShareListActivity extends Activity {
 
     private ArrayList<ArtemisShare> shareArrayList = new ArrayList<ArtemisShare>();
     private ShareArrayAdapter saa;
+
+    private ProgressDialog dialog;
 
     public static final int ACTIVITY_COMPLETE = 0;
 
@@ -147,28 +150,32 @@ public class ShareListActivity extends Activity {
     ////////////////////////////////////
 
     private class TopicPackageAndShare extends AsyncTask<Integer,Integer,Integer> {
-        private ProgressDialog dialog;
+        private ProgressDialog d;
+
         TopicZipper tz;
         Uri uri;
         int progress = 0;
 
-        TopicPackageAndShare( Activity a ) {
+        /////////////////////////
+
+        TopicPackageAndShare( ProgressDialog _d ) {
             tz = new TopicZipper( topic, aRecord, shareArrayList );
-            dialog = new ProgressDialog( a );
-            dialog.setProgressStyle( ProgressDialog.STYLE_HORIZONTAL );
-            dialog.setMax( tz.filesToConvert );
-            dialog.setTitle( "Generating Images" );
-            dialog.show();
+            d = _d;
+            d.setProgressStyle( ProgressDialog.STYLE_HORIZONTAL );
+            d.setMax( tz.filesToConvert );
+            d.setTitle( "Generating Images" );
+            d.show();
         }
 
         private void incProgress() {
             progress++;
-            dialog.setProgress( progress );
+            d.setProgress( progress );
             publishProgress(0);
         }
 
         @Override
         protected Integer doInBackground(Integer ... i) {
+            uri = null;
             try {
                 tz.open();
                 if( tz.addMessage() ) { incProgress(); }
@@ -183,14 +190,15 @@ public class ShareListActivity extends Activity {
 
         @Override
         protected void onPostExecute(Integer i) {
-            dialog.dismiss();
-            if( uri != null ) {
-                Intent intent = new Intent(android.content.Intent.ACTION_SEND, tz.uri);
-                intent.setType("application/zip");
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.putExtra(Intent.EXTRA_STREAM, tz.uri);
-                startActivity(Intent.createChooser(intent, "Send Images"));
-            }
+            d.dismiss();
+
+            if( this.isCancelled() ) { return; }
+
+            Intent intent = new Intent(android.content.Intent.ACTION_SEND, tz.uri);
+            intent.setType("application/zip");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.putExtra(Intent.EXTRA_STREAM, tz.uri);
+            startActivity(Intent.createChooser(intent, "Send Images"));
         }
     }
 
@@ -273,6 +281,15 @@ public class ShareListActivity extends Activity {
 
     ////////////////////////////////////
 
+    public void refreshListView() {
+        Cursor cursor = artemisSql.getShareTopicCursor( topic, sortOrder );
+        if( cursor != null ) {
+            (new ShareArrayLoader()).execute(cursor);
+        }
+    }
+
+    ///////////////////////////
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -284,7 +301,7 @@ public class ShareListActivity extends Activity {
         topic = getIntent().getStringExtra( "topic" );
 
         saa = new ShareArrayAdapter( getApplicationContext() );
-        ListView lv = (ListView) findViewById( R.id.key_list );
+        ListView lv = (ListView) findViewById( R.id.listview_keys );
         lv.setAdapter(saa);
 
         refreshListView();
@@ -292,17 +309,16 @@ public class ShareListActivity extends Activity {
 
     ///////////////////////////
 
-    public void refreshListView() {
-        Cursor cursor = artemisSql.getShareTopicCursor( topic, sortOrder );
-        if( cursor != null ) {
-            (new ShareArrayLoader()).execute(cursor);
-        }
-    }
-
-    ///////////////////////////
-
     public void onClickShare(View v) {
-        (new TopicPackageAndShare( this )).execute(0);
+        dialog = new ProgressDialog( this );
+        final TopicPackageAndShare task = new TopicPackageAndShare( dialog );
+        dialog.setCancelable(true);
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            public void onCancel(DialogInterface dialog) {
+                task.cancel(true);
+            }
+        });
+        task.execute(0);
     }
 
     @Override
@@ -315,7 +331,6 @@ public class ShareListActivity extends Activity {
                     break;
                 } else if (resultCode == RESULT_CANCELED) {
                     break;
-                    //handle cancel
                 }
                 break;
             default:
