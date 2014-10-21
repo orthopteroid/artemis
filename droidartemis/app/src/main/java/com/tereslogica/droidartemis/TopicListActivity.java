@@ -41,7 +41,7 @@ public class TopicListActivity extends FragmentActivity {
 
     ////////////////////////////////////
 
-    private class TopicArrayLoader extends AsyncTask<Cursor,Void,Long> {
+    private class TopicArrayLoader extends AsyncTask<Cursor, Void, Long> {
 
         private ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
 
@@ -51,16 +51,16 @@ public class TopicListActivity extends FragmentActivity {
         }
 
         @Override
-        protected Long doInBackground(Cursor ... cursors) {
-            if( cursors == null ) return null;
-            if( cursors.length != 1 ) return null;
-            if( cursors[0] == null ) return null;
+        protected Long doInBackground(Cursor... cursors) {
+            if (cursors == null) return null;
+            if (cursors.length != 1) return null;
+            if (cursors[0] == null) return null;
 
             Cursor cursor = cursors[0];
             if (cursor.moveToFirst()) {
                 do {
                     al.add(new ArtemisTopic(cursor));
-                } while( cursor.moveToNext() );
+                } while (cursor.moveToNext());
             }
             cursor.close();
             return null;
@@ -69,7 +69,7 @@ public class TopicListActivity extends FragmentActivity {
         @Override
         protected void onPostExecute(Long result) {
             topicArrayList.clear();
-            for( ArtemisTopic item : al) topicArrayList.add( item ); // addAll
+            for (ArtemisTopic item : al) topicArrayList.add(item); // addAll
             taa.notifyDataSetChanged();
         }
     }
@@ -82,20 +82,20 @@ public class TopicListActivity extends FragmentActivity {
         LayoutInflater inflater;
 
         public TopicArrayAdapter(Context cxt) {
-            super( cxt, R.layout.topic_item, R.id.topic, topicArrayList );
+            super(cxt, R.layout.topic_item, R.id.topic, topicArrayList);
             inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View rowView;
-            if( convertView == null ) { // view recycling and view holder pattern
+            if (convertView == null) { // view recycling and view holder pattern
                 rowView = inflater.inflate(R.layout.topic_item, parent, false);
-                ArtemisTopic.configureTags( rowView );
+                ArtemisTopic.configureTags(rowView);
             } else {
                 rowView = convertView;
             }
-            topicArrayList.get(position).configureView( rowView );
+            topicArrayList.get(position).configureView(rowView);
             return rowView;
         }
     }
@@ -176,8 +176,8 @@ public class TopicListActivity extends FragmentActivity {
 
         setContentView(R.layout.topic_page);
 
-        notifier = new Notifier( this );
-        artemisSql = new ArtemisSQL( this );
+        notifier = new Notifier(this);
+        artemisSql = new ArtemisSQL(this);
         artemisLib = new ArtemisLib();
 
         ////////////////
@@ -185,13 +185,13 @@ public class TopicListActivity extends FragmentActivity {
         OnItemClickListener oicl = new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i = new Intent(getApplicationContext(), ShareListActivity.class);
-                i.putExtra( "topic", ((TextView) view.findViewById( R.id.topic ) ).getText().toString() );
+                i.putExtra("topic", ((TextView) view.findViewById(R.id.topic)).getText().toString());
                 startActivity(i);
             }
         };
 
-        taa = new TopicArrayAdapter( getApplicationContext() );
-        ListView lv = (ListView) findViewById( R.id.topic_list );
+        taa = new TopicArrayAdapter(getApplicationContext());
+        ListView lv = (ListView) findViewById(R.id.topic_list);
         lv.setAdapter(taa);
         lv.setOnItemClickListener(oicl);
 
@@ -215,7 +215,7 @@ public class TopicListActivity extends FragmentActivity {
                 refreshListView();
             }
         };
-        notifier.showOptions( R.array.dialog_sortshares, ocl);
+        notifier.showOptions(R.array.dialog_sortshares, ocl);
     }
 
     public void onClickPurge(View v) {
@@ -223,29 +223,31 @@ public class TopicListActivity extends FragmentActivity {
         refreshListView();
     }
 
+    public void onClickHack(View v) {
+        if( fs == null) {
+            fs = new FakeScanner();
+        }
+        addScannedItem( fs.nextItem() );
+    }
+
+    public void onClickNew(View view) {
+        Intent i = new Intent(getApplicationContext(), TopicCreatorActivity.class);
+        startActivity(i);
+    }
+
     public void onClickScan(View v) {
-
         // http://stackoverflow.com/questions/3103196/android-os-build-data-examples-please
-        if( forceFakeScanner || Build.BRAND.equalsIgnoreCase("generic") ) {
-
-            if( fs == null) {
-                fs = new FakeScanner();
-            }
-            addScannedItem( fs.nextItem() );
-
-        } else {
-
-            // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
-            try {
-                Intent intent = new Intent("com.google.zxing.client.android.SCAN");
-                intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-                startActivityForResult( intent, ACTIVITY_COMPLETE);
-            } catch (Exception e1) {
-                notifier.showOk(R.string.dialog_noscanner);
-            }
-
+        // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
+        try {
+            Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+            intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+            startActivityForResult( intent, ACTIVITY_COMPLETE);
+        } catch (Exception e1) {
+            notifier.showOk(R.string.dialog_noscanner);
         }
     }
+
+    //////////////////
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

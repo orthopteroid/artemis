@@ -31,7 +31,27 @@
         />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/hack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/sort_button"
+        android:layout_toRightOf="@+id/sort_button"
+        android:text="h4ck"
+        android:onClick="onClickHack"
+        />
+
+    <Button
+        android:id="@+id/new_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/hack"
+        android:layout_toRightOf="@+id/hack"
+        android:text="@string/button_new"
+        android:onClick="onClickNew"
+        />
+
+    <Button
+        android:id="@+id/button_keys"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/topic_list"
@@ -53,7 +73,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/sep"
-        android:layout_centerInParent="true">
+        android:layout_centerInParent="true"
+        android:clickable="true">
     </ListView>
 
 </RelativeLayout>
