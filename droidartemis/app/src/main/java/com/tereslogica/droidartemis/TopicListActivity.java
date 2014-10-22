@@ -27,8 +27,6 @@ public class TopicListActivity extends FragmentActivity {
 
     ////////////////
 
-    private static final boolean forceFakeScanner = true;
-
     private ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
 
     private FakeScanner fs;
