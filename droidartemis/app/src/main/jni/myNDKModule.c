@@ -15,10 +15,15 @@ static int rc = 0;
 
 //////////////////////////////
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetString(JNIEnv * env, jobject obj)
+JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeInit(JNIEnv * env, jobject obj)
 {
     library_init();
-    return (*env)->NewStringUTF( env, "hello\nworld" );
+    rc = 0;
+}
+
+JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeCleanup(JNIEnv * env, jobject obj)
+{
+    library_cleanup();
 }
 
 JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetStatusOK(JNIEnv * env, jobject obj)

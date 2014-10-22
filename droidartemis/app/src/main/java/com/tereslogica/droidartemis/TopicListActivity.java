@@ -31,9 +31,6 @@ public class TopicListActivity extends FragmentActivity {
 
     private ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
 
-    private ArtemisLib artemisLib;
-    private ArtemisSQL artemisSql;
-    private Notifier notifier;
     private FakeScanner fs;
 
     private ArrayList<ArtemisTopic> topicArrayList = new ArrayList<ArtemisTopic>();
@@ -103,7 +100,7 @@ public class TopicListActivity extends FragmentActivity {
     //////////////////////
 
     public void refreshListView() {
-        Cursor cursor = artemisSql.getTopicsCursor(sortOrder);
+        Cursor cursor = ArtemisSQL.Get().getTopicsCursor(sortOrder);
         if (cursor != null) {
             (new TopicArrayLoader()).execute(cursor);
         }
@@ -112,54 +109,7 @@ public class TopicListActivity extends FragmentActivity {
     ///////////////////////////
 
     public void addScannedItem( String share ) {
-        ArtemisShare oShare = artemisSql.getShareInfo( share );
-        if( oShare != null ) return; // got it already
-        //
-        int[] shareInfo = artemisLib.nativeInfo( share );
-        String topic = artemisLib.nativeTopic(share);
-        String clue = artemisLib.nativeClue(share);
-        //
-        oShare = new ArtemisShare( share, topic, shareInfo[0] ); // sql api uses these
-        //
-        ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
-        if( oTopic == null ) {
-            // if topic not found in db, then create new topic and share objects for db
-            //
-            String location = artemisLib.nativeLocation(share);
-            oTopic = new ArtemisTopic( topic, shareInfo[1], shareInfo[2], clue, location, 0 );
-            //
-            if( shareInfo[0] == artemisLib.URI_B ) {
-                oTopic.incCount(); // only B Types contribute towards the count
-            } else {
-                oTopic.setMIndicator(); // A types set the indicator
-            }
-            //
-            artemisSql.addShareAndTopic( oShare, oTopic );
-        } else {
-            oTopic.addClue( clue );
-            //&p[i], &q[i]
-            if( shareInfo[0] == artemisLib.URI_B ) {
-                oTopic.incCount(); // only B Types contribute towards the count
-            } else {
-                oTopic.setMIndicator(); // A types set the indicator
-            }
-            //
-            String recordArr = share;
-            Cursor cursor = artemisSql.getShareTopicCursor( topic, ArtemisSQL.SortOrder.UNNATURAL );
-            if (cursor.moveToFirst()) {
-                do {
-                    String othershare = cursor.getString( ArtemisSQL.SHARE_COL );
-                    if( recordArr.length() > 0 ) { recordArr += "\n"; }
-                    recordArr += othershare;
-                } while( cursor.moveToNext() );
-            }
-            cursor.close();
-            //
-            oTopic.message = artemisLib.nativeDecode( recordArr ); // szLocation baked into library
-            //
-            artemisSql.addShareUpdateTopic( oShare, oTopic );
-        }
-        //
+        AppLogic.Get().addItem( share );
         refreshListView();
     }
 
@@ -173,12 +123,12 @@ public class TopicListActivity extends FragmentActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.topic_page);
 
-        notifier = new Notifier(this);
-        artemisSql = new ArtemisSQL(this);
-        artemisLib = new ArtemisLib();
+        Notifier.Init( this );
+        ArtemisSQL.Init( this );
+        ArtemisLib.Init();
+        AppLogic.Init();
 
         ////////////////
 
@@ -215,11 +165,11 @@ public class TopicListActivity extends FragmentActivity {
                 refreshListView();
             }
         };
-        notifier.showOptions(R.array.dialog_sortshares, ocl);
+        Notifier.Get().showOptions(R.array.dialog_sortshares, ocl);
     }
 
     public void onClickPurge(View v) {
-        artemisSql.delAll();
+        ArtemisSQL.Get().delAll();
         refreshListView();
     }
 
@@ -243,7 +193,7 @@ public class TopicListActivity extends FragmentActivity {
             intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
             startActivityForResult( intent, ACTIVITY_COMPLETE);
         } catch (Exception e1) {
-            notifier.showOk(R.string.dialog_noscanner);
+            Notifier.Get().showOk(R.string.dialog_noscanner);
         }
     }
 

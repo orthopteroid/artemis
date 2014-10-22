@@ -136,8 +136,22 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         MOSTRECENT, LEASTRECENT, MOSTCOMPLETE, LEASTCOMPLETE
     };
 
-    public ArtemisSQL(Context context) {
+    /////////////////
+
+    private static ArtemisSQL instance = null;
+
+    private ArtemisSQL(Context context) {
         super(context, NAME, null, VERSION);
+    }
+
+    static void Init(Context context) {
+        if( instance == null ) { instance = new ArtemisSQL( context ); }
+    }
+    static void Cleanup() {
+        instance = null;
+    }
+    static ArtemisSQL Get() {
+        return instance;
     }
 
     /////////////////

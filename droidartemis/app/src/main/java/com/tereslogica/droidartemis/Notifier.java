@@ -12,10 +12,26 @@ public class Notifier {
     private Context cxt;
     private Resources rez;
 
-    public Notifier(Context _cxt) {
+    ////////////////////////////
+
+    private static Notifier instance = null;
+
+    private Notifier(Context _cxt) {
         cxt= _cxt;
         rez = _cxt.getResources();
     }
+
+    static void Init(Context _cxt) {
+        if( instance == null ) { instance = new Notifier( _cxt ); }
+    }
+    static void Cleanup() {
+        instance = null;
+    }
+    static Notifier Get() {
+        return instance;
+    }
+
+    //////////////////////
 
     public void showOk(int stringid) {
         String message = rez.getString( stringid );

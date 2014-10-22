@@ -46,9 +46,6 @@ public class ShareListActivity extends Activity {
     private String aRecord = "";
     private String message;
 
-    private ArtemisSQL artemisSql;
-    private Notifier notifier;
-
     private ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.NATURAL;
 
     private ArrayList<ArtemisShare> shareArrayList = new ArrayList<ArtemisShare>();
@@ -240,7 +237,7 @@ public class ShareListActivity extends Activity {
             for( ArtemisShare item : al) shareArrayList.add( item ); // addAll
             saa.notifyDataSetChanged();
 
-            ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
+            ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
 
             String message = oTopic.message;
             if( oTopic.message.length() == 0 ) { message = getResources().getString( R.string.sharelist_needmorekeys ); }
@@ -282,7 +279,7 @@ public class ShareListActivity extends Activity {
     ////////////////////////////////////
 
     public void refreshListView() {
-        Cursor cursor = artemisSql.getShareTopicCursor( topic, sortOrder );
+        Cursor cursor = ArtemisSQL.Get().getShareTopicCursor( topic, sortOrder );
         if( cursor != null ) {
             (new ShareArrayLoader()).execute(cursor);
         }
@@ -294,9 +291,6 @@ public class ShareListActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.share_page);
-
-        notifier = new Notifier( this );
-        artemisSql = new ArtemisSQL( this );
 
         topic = getIntent().getStringExtra( "topic" );
 
