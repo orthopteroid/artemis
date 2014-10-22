@@ -22,6 +22,8 @@ public class ArtemisLib {
     public native String nativeClue( String record );
     public native String nativeLocation( String record );
 
+    public native String nativeEncode( int keys, int locks, String location, String clues, String message );
+
     ///////////////////
 
     private static ArtemisLib instance = null;
