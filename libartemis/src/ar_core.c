@@ -62,8 +62,15 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	if( !clueTbl ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( inbuflen == 0 ) { rc = RC_NULL; goto EXIT; }
 
+	if( numThres < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 	if( numShares < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 	if( numShares < numThres ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+
+	{
+		int clueCount = 0;
+		for( byteptr* ppClue = clueTbl; *ppClue; ppClue++ ) { clueCount++; }
+		if( clueCount != ( numShares + 1 ) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
+	}
 
 	///////////
 	// alloc tmp storage
@@ -78,7 +85,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	size_t loclen = location ? strlen( location ) : 0;
 	if( loclen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
-	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
+	size_t acluelen = strlen( clueTbl[ 0 ] ); // 0 for message clue
 	size_t msgoffset = loclen + acluelen; // msg comes after clue + location
 
 	///////////
@@ -96,7 +103,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	for( int i=0; i<numShares; i++ )
 	{
-		size_t scluelen = ( clueTbl && clueTbl[i+1] ) ? strlen( clueTbl[i+1] ) : 0;
+		size_t scluelen = strlen( clueTbl[ i + 1 ] ); // +1 to skip mesage clue
 		size_t sbufused = loclen + scluelen;
 		size_t sstructsize = sizeof(arShare) + sbufused;
 
@@ -567,7 +574,7 @@ void ar_core_test()
 	char* reftextin = "dog food.";
 	byteptr cleartextin = 0;
 	byteptr cleartext_out = 0;
-	char* cluetbl[3] = {"topiclue", "clue1", "clue2"};
+	char* cluetbl[4] = {"topiclue", "clue1", "clue2", 0}; // is a table, must end with 0
 	int rc = 0;
 
 	byte checkarr[2] = {0,0};
