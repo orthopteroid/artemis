@@ -19,6 +19,12 @@
 	#define PRAGMA_POP
 	#define PRAGMA_O3
 
+	#if defined(_DEBUG)
+		#define DEBUGPRINT(f,v) printf(f,(v))
+	#else
+		#define DEBUGPRINT(f,v) (0)
+	#endif
+
 	#if !defined(LITTLE_ENDIAN) && !defined(BIG_ENDIAN)
 		#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_I86) || defined(__alpha)
 			#define LITTLE_ENDIAN
@@ -93,6 +99,16 @@
         #define PRAGMA_POP _Pragma("GCC pop_options")
         #define PRAGMA_O3 _Pragma("GCC optimize(\"O3\")")
     #endif
+
+	#if defined(_DEBUG)
+		#if defined(__ANDROID__)
+			#define DEBUGPRINT(f, v) __android_log_print(ANDROID_LOG_INFO, "libartemis", (f), (v) );
+		#else
+			#define DEBUGPRINT(f,v) printf(f,(v))
+		#endif
+	#else
+		#define DEBUGPRINT(f,v) (0)
+	#endif
 	
 	#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
 		#define BIG_ENDIAN
