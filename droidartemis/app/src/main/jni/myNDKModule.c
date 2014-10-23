@@ -80,8 +80,8 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeEnc
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "jKeys %d", jKeys );
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "jLocks %d", jLocks );
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "cLoc %s", cLoc );
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cMess %s", cMess );
     __android_log_print(ANDROID_LOG_INFO, "libartemis", "cClues %s", cClues );
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cMess %s", cMess );
 #endif
 
     rc = library_uri_encoder( &cShares_out, jKeys, jLocks, cLoc, cClues, cMess );
