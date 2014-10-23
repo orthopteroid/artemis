@@ -281,9 +281,9 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	if( !clueArr ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !message ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
-	if( threshold == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
-	if( shares == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
-	if( threshold > shares ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+	if( threshold < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( shares < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+	if( shares < threshold ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 	
 	// change delimiters of clueArr
 	if( !(clueArr_rw = strdup( clueArr )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
@@ -292,24 +292,14 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	for( size_t i = 0; i < cluePtrArrLen; i++ ) { if( clueArr_rw[i]=='\n' ) { clueArr_rw[i]='\0'; } }
 	if( rc = ar_util_buildByteTbl( &clueTbl, clueArr_rw, cluePtrArrLen ) ) { LOGFAIL( rc ); goto EXIT; }
 
-	size_t loclen = szLocation ? strlen( szLocation ) : 0;
-	if( loclen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+	{
+		int clueCount = 0;
+		for( byteptr* ppClue = clueTbl; *ppClue; ppClue++ ) { clueCount++; }
+		if( clueCount != ( shares + 1 ) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
+	}
 
 	size_t messlen = message ? strlen( message ) : 0;
 	if( messlen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
-
-	// alloc arecord
-	size_t acluelen = ( clueTbl && clueTbl[0] ) ? strlen( clueTbl[0] ) : 0;
-	size_t abuflen = ( loclen + acluelen + messlen + 1 /* +1 for \0 */ );
-	size_t astructlen = sizeof(arAuth) + abuflen;
-
-	// alloc srecord arr and the srecords themselves
-	for( word16 i=0; i<shares; i++ )
-	{
-		size_t scluelen = ( clueTbl && clueTbl[i] ) ? ( strlen( clueTbl[i] ) + 1 /* +1 for \0 */ ) : 0;
-		size_t sbuflen = loclen + scluelen;
-		size_t sstructlen = sizeof(arShare) + sbuflen;
-	}
 
 	// +1 to include \0
 	if( rc = ar_core_create( &arecord, &srecordtbl, shares, threshold, message, (word16)messlen + 1, clueTbl, szLocation ) ) { LOGFAIL( rc ); goto EXIT; }
