@@ -749,7 +749,7 @@ void ar_uri_test()
 	arAuthptr		arecord_;
 	arSharetbl		srecordtbl_;
 
-	char* clues_r[3] = {"topiclue", "clue1", "clue2"};
+	char* clues_r[4] = {"topiclue", "clue1", "clue2", 0}; // is a table, ends with 0
 	char* location = "foo.bar";
 
 	char cleartextin[20];
@@ -769,7 +769,7 @@ void ar_uri_test()
 		cleartextin[ ar_util_rnd32() % 20 ] = 0;
 
 		// make clue optional
-		char* clues_rw[3] = {clues_r[0], clues_r[1], clues_r[2]};
+		char* clues_rw[4] = {clues_r[0], clues_r[1], clues_r[2], 0}; // table ends in 0
 		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
 		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
 

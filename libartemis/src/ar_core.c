@@ -574,7 +574,7 @@ void ar_core_test()
 	char* reftextin = "dog food.";
 	byteptr cleartextin = 0;
 	byteptr cleartext_out = 0;
-	char* cluetbl[3] = {"topiclue", "clue1", "clue2"};
+	char* cluetbl[4] = {"topiclue", "clue1", "clue2", 0}; // is a table, must end with 0
 	int rc = 0;
 
 	byte checkarr[2] = {0,0};
