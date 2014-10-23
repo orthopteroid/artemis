@@ -97,8 +97,10 @@ public class TopicCreatorActivity extends Activity {
 
         ////////////////////////
 
+        settings.get(2).value.replace( "\n", " " ); // can't hae embedded \n in artemislib api
+
         StringBuilder clues = new StringBuilder( 1024 );
-        clues.append( settings.get(2).value );
+        clues.append( settings.get(3).value );
         {
             for( int i = 4; i < settings.size(); i++) { // 4 >= are the key clues
                 clues.append( "/n" );
@@ -107,7 +109,7 @@ public class TopicCreatorActivity extends Activity {
         }
         int keys = Integer.parseInt( settings.get(0).value );
         int locks = Integer.parseInt( settings.get(1).value );
-        String shares = ArtemisLib.Get().nativeEncode( keys, locks, "foo.bar", settings.get(2).value, clues.toString() );
+        String shares = ArtemisLib.Get().nativeEncode( keys, locks, "foo.bar", clues.toString(), settings.get(2).value );
 
         ////////////////////////
 
