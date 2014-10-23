@@ -162,7 +162,6 @@ void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 	}
 } /* gfAdd */
 
-// TODO: optimize
 void gfReduce (gfPoint p)
 	/* reduces p mod the irreducible trinomial x^GF_K + x^GF_T + 1 */
 {
