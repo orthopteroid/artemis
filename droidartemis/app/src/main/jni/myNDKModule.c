@@ -8,17 +8,25 @@
 
 //#define ENABLE_MESSAGES
 
-char* szUnknown = "?? ?? ??";
+// unpin string copies
+// http://stackoverflow.com/questions/5859673/should-you-call-releasestringutfchars-if-getstringutfchars-returned-a-copy
+
+char* szBlank = "";
 char* szLocation = "foo.bar";
 
 static int rc = 0;
 
 //////////////////////////////
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetString(JNIEnv * env, jobject obj)
+JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeInit(JNIEnv * env, jobject obj)
 {
     library_init();
-    return (*env)->NewStringUTF( env, "hello\nworld" );
+    rc = 0;
+}
+
+JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeCleanup(JNIEnv * env, jobject obj)
+{
+    library_cleanup();
 }
 
 JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetStatusOK(JNIEnv * env, jobject obj)
@@ -50,13 +58,53 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
     if( rc == 0 && cMessage_out ) {
         jMessage_out = (*env)->NewStringUTF( env, cMessage_out );
     } else {
-        jMessage_out = (*env)->NewStringUTF( env, szUnknown );
+        jMessage_out = (*env)->NewStringUTF( env, szBlank );
     }
     if( cMessage_out ) { library_free( &cMessage_out ); }
 
     (*env)->ReleaseStringUTFChars( env, jRecordArr, cRecordArr );
 
     return jMessage_out;
+}
+
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeEncode(JNIEnv * env, jobject obj, jint jKeys, jint jLocks, jstring jLoc, jstring jClues, jstring jMess )
+{
+    byte* cShares_out = 0;
+    jstring jShares_out;
+
+    const char *cLoc = (*env)->GetStringUTFChars(env, jLoc, 0);
+    const char *cMess = (*env)->GetStringUTFChars(env, jMess, 0);
+    const char *cClues = (*env)->GetStringUTFChars(env, jClues, 0);
+
+#if defined(ENABLE_MESSAGES)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "jKeys %d", jKeys );
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "jLocks %d", jLocks );
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cLoc %s", cLoc );
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cMess %s", cMess );
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cClues %s", cClues );
+#endif
+
+    rc = library_uri_encoder( &cShares_out, jKeys, jLocks, cLoc, cClues, cMess );
+
+#if defined(ENABLE_MESSAGES)
+    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShares_out %X", (unsigned int)cShares_out );
+    if( cShares_out) {
+        __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cShares_out );
+    }
+#endif
+
+    if( rc == 0 && cShares_out ) {
+        jShares_out = (*env)->NewStringUTF( env, cShares_out );
+    } else {
+        jShares_out = (*env)->NewStringUTF( env, szBlank );
+    }
+    if( cShares_out ) { library_free( &cShares_out ); }
+
+    (*env)->ReleaseStringUTFChars( env, jClues, cClues );
+    (*env)->ReleaseStringUTFChars( env, jMess, cMess );
+    (*env)->ReleaseStringUTFChars( env, jLoc, cLoc );
+
+    return jShares_out;
 }
 
 JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeInfo(JNIEnv * env, jobject obj, jstring jRecord)

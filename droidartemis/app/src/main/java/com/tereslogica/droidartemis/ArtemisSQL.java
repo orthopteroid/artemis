@@ -53,8 +53,8 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final String TSIZE_DECL      = TSIZE+" "+TSIZE_TYPE;
     public  static final int    TSIZE_COL       = 4;
     private static final String MESSAGE         = "message";
-    private static final String MESSAGE_DEFAULT = "'? ? ?'";
-    private static final String MESSAGE_TYPE    = "TEXT NOT NULL";
+    private static final String MESSAGE_DEFAULT = "''";
+    private static final String MESSAGE_TYPE    = "TEXT";
     private static final String MESSAGE_DECL    = MESSAGE+" "+MESSAGE_TYPE;
     public  static final int    MESSAGE_COL     = 5;
     private static final String CLUES           = "clues";
@@ -136,8 +136,22 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         MOSTRECENT, LEASTRECENT, MOSTCOMPLETE, LEASTCOMPLETE
     };
 
-    public ArtemisSQL(Context context) {
+    /////////////////
+
+    private static ArtemisSQL instance = null;
+
+    private ArtemisSQL(Context context) {
         super(context, NAME, null, VERSION);
+    }
+
+    static void Init(Context context) {
+        if( instance == null ) { instance = new ArtemisSQL( context ); }
+    }
+    static void Cleanup() {
+        instance = null;
+    }
+    static ArtemisSQL Get() {
+        return instance;
     }
 
     /////////////////

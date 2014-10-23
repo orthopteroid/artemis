@@ -44,11 +44,13 @@ extern "C" {
 #undef com_tereslogica_droidartemis_ArtemisLib_DEFAULT_KEYS_SEARCH_GLOBAL
 #define com_tereslogica_droidartemis_ArtemisLib_DEFAULT_KEYS_SEARCH_GLOBAL 4L
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetString(JNIEnv *, jobject);
+JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeInit(JNIEnv *, jobject);
+JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeCleanup(JNIEnv *, jobject);
 
 JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetStatusOK(JNIEnv * env, jobject obj);
 
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jRecordArr);
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeEncode(JNIEnv * env, jobject obj, jint jKeys, jint jLocks, jstring jLoc, jstring jClues, jstring jMess );
 
 JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeInfo(JNIEnv * env, jobject obj, jstring jRecord);
 JNIEXPORT jstring   JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeTopic(JNIEnv * env, jobject obj, jstring jRecord);

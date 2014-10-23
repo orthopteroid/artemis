@@ -11,7 +11,9 @@ public class ArtemisLib {
     public final static int URI_A = 1;
     public final static int URI_B = 2;
 
-    public native String nativeGetString();
+    public native void nativeInit();
+    public native void nativeCleanup();
+
     public native boolean nativeGetStatusOK();
     public native String nativeDecode( String recordArr ); // recordArr is \n delimited
 
@@ -20,8 +22,23 @@ public class ArtemisLib {
     public native String nativeClue( String record );
     public native String nativeLocation( String record );
 
-    ArtemisLib() {
-        String sss = nativeGetString();
-    }
+    public native String nativeEncode( int keys, int locks, String location, String clues, String message );
 
+    ///////////////////
+
+    private static ArtemisLib instance = null;
+
+    private ArtemisLib() {}
+
+    static void Init() {
+        if( instance == null ) { instance = new ArtemisLib(); }
+        instance.nativeInit();
+    }
+    static void Cleanup() {
+        instance.nativeCleanup();
+        instance = null;
+    }
+    static ArtemisLib Get() {
+        return instance;
+    }
 }

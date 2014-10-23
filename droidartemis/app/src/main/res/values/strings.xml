@@ -6,8 +6,21 @@
     <string name="action_settings">Settings</string>
     <string name="dialog_noscanner">Scanner app not found.</string>
     <string name="dialog_nonativelib">Installation error: native library not found.</string>
+    <string name="dialog_keycount">Free version restriction of 2 to 10 keys only.</string>
+    <string name="dialog_lockcount">Free version restriction of 2 to 4 locks only.</string>
+    <string name="dialog_messagesize">Free version restricted to 40 character messages.</string>
+    <string name="dialog_cluesize">Free version restricted to 20 character clues.</string>
+    <string name="sharelist_messagedecodeerror">Unable to decode secret message.</string>
+    <string name="sharelist_needmorekeys">More keys needed to unlock secret.</string>
+    <string name="sharelist_nosecret">Secret not yet scanned.</string>
     <string name="reponse_ok">Ok</string>
     <string name="reponse_yes">Yes</string>
     <string name="reponse_no">No</string>
+    <string name="button_scan">Scan</string>
+    <string name="button_sort">Sort</string>
+    <string name="button_new">New</string>
+    <string name="button_purge">Purge</string>
+    <string name="button_share">Share</string>
+    <string name="button_accept">Accept</string>
 
 </resources>

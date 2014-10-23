@@ -23,17 +23,12 @@ import java.util.ArrayList;
 // http://www.androidhive.info/2011/10/android-listview-tutorial/
 public class TopicListActivity extends FragmentActivity {
 
-    public static final int ACTIVITY_SCAN = 0;
+    public static final int ACTIVITY_COMPLETE = 0;
 
     ////////////////
 
-    private static final boolean forceFakeScanner = true;
-
     private ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
 
-    private ArtemisLib artemisLib;
-    private ArtemisSQL artemisSql;
-    private Notifier notifier;
     private FakeScanner fs;
 
     private ArrayList<ArtemisTopic> topicArrayList = new ArrayList<ArtemisTopic>();
@@ -41,7 +36,7 @@ public class TopicListActivity extends FragmentActivity {
 
     ////////////////////////////////////
 
-    private class TopicArrayLoader extends AsyncTask<Cursor,Void,Long> {
+    private class TopicArrayLoader extends AsyncTask<Cursor, Void, Long> {
 
         private ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
 
@@ -51,16 +46,16 @@ public class TopicListActivity extends FragmentActivity {
         }
 
         @Override
-        protected Long doInBackground(Cursor ... cursors) {
-            if( cursors == null ) return null;
-            if( cursors.length != 1 ) return null;
-            if( cursors[0] == null ) return null;
+        protected Long doInBackground(Cursor... cursors) {
+            if (cursors == null) return null;
+            if (cursors.length != 1) return null;
+            if (cursors[0] == null) return null;
 
             Cursor cursor = cursors[0];
             if (cursor.moveToFirst()) {
                 do {
                     al.add(new ArtemisTopic(cursor));
-                } while( cursor.moveToNext() );
+                } while (cursor.moveToNext());
             }
             cursor.close();
             return null;
@@ -69,7 +64,7 @@ public class TopicListActivity extends FragmentActivity {
         @Override
         protected void onPostExecute(Long result) {
             topicArrayList.clear();
-            for( ArtemisTopic item : al) topicArrayList.add( item ); // addAll
+            for (ArtemisTopic item : al) topicArrayList.add(item); // addAll
             taa.notifyDataSetChanged();
         }
     }
@@ -82,22 +77,42 @@ public class TopicListActivity extends FragmentActivity {
         LayoutInflater inflater;
 
         public TopicArrayAdapter(Context cxt) {
-            super( cxt, R.layout.topic_item, R.id.topic, topicArrayList );
+            super(cxt, R.layout.topic_item, R.id.topic, topicArrayList);
             inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View rowView;
-            if( convertView == null ) { // view recycling and view holder pattern
+            if (convertView == null) { // view recycling and view holder pattern
                 rowView = inflater.inflate(R.layout.topic_item, parent, false);
-                ArtemisTopic.configureTags( rowView );
+                ArtemisTopic.configureTags(rowView);
             } else {
                 rowView = convertView;
             }
-            topicArrayList.get(position).configureView( rowView );
+            topicArrayList.get(position).configureView(rowView);
             return rowView;
         }
+    }
+
+    //////////////////////
+
+    public void refreshListView() {
+        Cursor cursor = ArtemisSQL.Get().getTopicsCursor(sortOrder);
+        if (cursor != null) {
+            (new TopicArrayLoader()).execute(cursor);
+        }
+    }
+
+    ///////////////////////////
+
+    public void addScannedItem( String share ) {
+        AppLogic.Get().addItem( share );
+        refreshListView();
+    }
+
+    public void removeScannedItem( String item ) {
+        Log.d("libartemis", "remove " + item);
     }
 
     //////////////////////
@@ -106,25 +121,25 @@ public class TopicListActivity extends FragmentActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.topic_page);
 
-        notifier = new Notifier( this );
-        artemisSql = new ArtemisSQL( this );
-        artemisLib = new ArtemisLib();
+        Notifier.Init( this );
+        ArtemisSQL.Init( this );
+        ArtemisLib.Init();
+        AppLogic.Init();
 
         ////////////////
 
         OnItemClickListener oicl = new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i = new Intent(getApplicationContext(), ShareListActivity.class);
-                i.putExtra( "topic", ((TextView) view.findViewById( R.id.topic ) ).getText().toString() );
+                i.putExtra("topic", ((TextView) view.findViewById(R.id.topic)).getText().toString());
                 startActivity(i);
             }
         };
 
-        taa = new TopicArrayAdapter( getApplicationContext() );
-        ListView lv = (ListView) findViewById( R.id.topic_list );
+        taa = new TopicArrayAdapter(getApplicationContext());
+        ListView lv = (ListView) findViewById(R.id.topic_list);
         lv.setAdapter(taa);
         lv.setOnItemClickListener(oicl);
 
@@ -134,13 +149,6 @@ public class TopicListActivity extends FragmentActivity {
     }
 
     ///////////////////////////
-
-    public void refreshListView() {
-        Cursor cursor = artemisSql.getTopicsCursor( sortOrder );
-        if( cursor != null ) {
-            (new TopicArrayLoader()).execute(cursor);
-        }
-    }
 
     public void onClickSort(View v) {
         DialogInterface.OnClickListener ocl = new DialogInterface.OnClickListener() {
@@ -155,44 +163,46 @@ public class TopicListActivity extends FragmentActivity {
                 refreshListView();
             }
         };
-        notifier.showOptions( R.array.dialog_sortshares, ocl);
+        Notifier.Get().showOptions(R.array.dialog_sortshares, ocl);
     }
 
     public void onClickPurge(View v) {
-        artemisSql.delAll();
+        ArtemisSQL.Get().delAll();
         refreshListView();
     }
 
+    public void onClickHack(View v) {
+        if( fs == null) {
+            fs = new FakeScanner();
+        }
+        addScannedItem( fs.nextItem() );
+    }
+
+    public void onClickNew(View view) {
+        Intent i = new Intent(getApplicationContext(), TopicCreatorActivity.class);
+        startActivity(i);
+    }
+
     public void onClickScan(View v) {
-
         // http://stackoverflow.com/questions/3103196/android-os-build-data-examples-please
-        if( forceFakeScanner || Build.BRAND.equalsIgnoreCase("generic") ) {
-
-            if( fs == null) {
-                fs = new FakeScanner();
-            }
-            addScannedItem( fs.nextItem() );
-
-        } else {
-
-            // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
-            try {
-                Intent intent = new Intent("com.google.zxing.client.android.SCAN");
-                intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-                startActivityForResult( intent, ACTIVITY_SCAN );
-            } catch (Exception e1) {
-                notifier.showOk(R.string.dialog_noscanner);
-            }
-
+        // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
+        try {
+            Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+            intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+            startActivityForResult( intent, ACTIVITY_COMPLETE);
+        } catch (Exception e1) {
+            Notifier.Get().showOk(R.string.dialog_noscanner);
         }
     }
+
+    //////////////////
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
         super.onActivityResult(requestCode, resultCode, data);
         switch( requestCode ) {
-            case ACTIVITY_SCAN:
+            case ACTIVITY_COMPLETE:
                 if (resultCode == RESULT_OK) {
                     addScannedItem( data.getStringExtra("SCAN_RESULT") );
                 } else if (resultCode == RESULT_CANCELED) {
@@ -204,60 +214,4 @@ public class TopicListActivity extends FragmentActivity {
         }
     }
 
-    ///////////////////////////
-
-    public void addScannedItem( String share ) {
-        ArtemisShare oShare = artemisSql.getShareInfo( share );
-        if( oShare != null ) return; // got it already
-        //
-        int[] shareInfo = artemisLib.nativeInfo( share );
-        String topic = artemisLib.nativeTopic(share);
-        String clue = artemisLib.nativeClue(share);
-        //
-        oShare = new ArtemisShare( share, topic, shareInfo[0] ); // sql api uses these
-        //
-        ArtemisTopic oTopic = artemisSql.getTopicInfo( topic );
-        if( oTopic == null ) {
-            // if topic not found in db, then create new topic and share objects for db
-            //
-            String location = artemisLib.nativeLocation(share);
-            oTopic = new ArtemisTopic( topic, shareInfo[1], shareInfo[2], clue, location, 0 );
-            //
-            if( shareInfo[0] == artemisLib.URI_B ) {
-                oTopic.incCount(); // only B Types contribute towards the count
-            } else {
-                oTopic.setMIndicator(); // A types set the indicator
-            }
-            //
-            artemisSql.addShareAndTopic( oShare, oTopic );
-        } else {
-            oTopic.addClue( clue );
-            //&p[i], &q[i]
-            if( shareInfo[0] == artemisLib.URI_B ) {
-                oTopic.incCount(); // only B Types contribute towards the count
-            } else {
-                oTopic.setMIndicator(); // A types set the indicator
-            }
-            //
-            String recordArr = share;
-            Cursor cursor = artemisSql.getShareTopicCursor( topic, ArtemisSQL.SortOrder.UNNATURAL );
-            if (cursor.moveToFirst()) {
-                do {
-                    String othershare = cursor.getString( ArtemisSQL.SHARE_COL );
-                    if( recordArr.length() > 0 ) { recordArr += "\n"; }
-                    recordArr += othershare;
-                } while( cursor.moveToNext() );
-            }
-            cursor.close();
-            //
-            oTopic.message = artemisLib.nativeDecode( recordArr ); // szLocation baked into library
-            //
-            artemisSql.addShareUpdateTopic( oShare, oTopic );
-        }
-        //
-        refreshListView();
-    }
-    public void removeScannedItem( String item ) {
-        Log.d("libartemis", "remove " + item);
-    }
 }
