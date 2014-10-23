@@ -258,7 +258,7 @@ public class ShareListActivity extends Activity {
         LayoutInflater inflater;
 
         public ShareArrayAdapter( Context cxt ) {
-            super( cxt, R.layout.share_item, R.id.share, shareArrayList );
+            super( cxt, R.layout.share_item, /* R.id.share, */ shareArrayList );
             inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
