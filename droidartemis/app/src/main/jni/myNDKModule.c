@@ -6,6 +6,7 @@
 // adb logcat
 //http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
 
+#undef DEBUGPRINT
 #define DEBUGPRINT(...) (0)
 
 // unpin string copies
