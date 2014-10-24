@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -185,8 +184,7 @@ public class TopicListActivity extends FragmentActivity {
     }
 
     public void onClickNew(View view) {
-        Intent i = new Intent(getApplicationContext(), TopicCreatorActivity.class);
-        startActivity(i);
+        startActivity( new Intent(getApplicationContext(), TopicCreatorActivity.class) );
     }
 
     public void onClickScan(View v) {

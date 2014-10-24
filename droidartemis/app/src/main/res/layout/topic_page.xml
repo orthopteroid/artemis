@@ -18,7 +18,7 @@
         android:layout_alignParentLeft="true"
         android:text="@string/button_scan"
         android:onClick="onClickScan"
-        />
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
         android:id="@+id/sort_button"
@@ -28,7 +28,7 @@
         android:layout_toRightOf="@+id/scan_button"
         android:text="@string/button_sort"
         android:onClick="onClickSort"
-        />
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
         android:id="@+id/hack"
@@ -36,7 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/sort_button"
         android:layout_toRightOf="@+id/sort_button"
-        android:text="h4ck"
+        android:text="H"
         android:onClick="onClickHack"
         />
 
@@ -48,7 +48,7 @@
         android:layout_toRightOf="@+id/hack"
         android:text="@string/button_new"
         android:onClick="onClickNew"
-        />
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
         android:id="@+id/button_keys"
@@ -59,7 +59,7 @@
         android:layout_alignParentRight="false"
         android:text="@string/button_purge"
         android:onClick="onClickPurge"
-        />
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <View
         android:id="@+id/sep"
