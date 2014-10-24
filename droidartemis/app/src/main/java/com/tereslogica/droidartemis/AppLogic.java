@@ -7,6 +7,9 @@ import android.database.Cursor;
  */
 public class AppLogic {
 
+    public boolean detectedError;
+    public boolean detectedDecode;
+
     ///////////////////
 
     private static AppLogic instance = null;
@@ -25,21 +28,25 @@ public class AppLogic {
 
     ///////////////////
 
-    public void addItem( String share ) {
-        ArtemisShare oShare = ArtemisSQL.Get().getShareInfo( share );
+    private void addToken_helper(String sToken) throws Exception {
+        ArtemisShare oShare = ArtemisSQL.Get().getShareInfo( sToken );
         if( oShare != null ) return; // got it already
         //
-        int[] shareInfo = ArtemisLib.Get().nativeInfo( share );
-        String topic = ArtemisLib.Get().nativeTopic(share);
-        String clue = ArtemisLib.Get().nativeClue(share);
+        int[] shareInfo = ArtemisLib.Get().nativeInfo( sToken );
+        if( ArtemisLib.Get().nativeDidFail() ) { detectedError = true; throw new Exception(); }
+        String topic = ArtemisLib.Get().nativeTopic(sToken);
+        if( ArtemisLib.Get().nativeDidFail() ) { detectedError = true; throw new Exception(); }
+        String clue = ArtemisLib.Get().nativeClue(sToken);
+        if( ArtemisLib.Get().nativeDidFail() ) { detectedError = true; throw new Exception(); }
         //
-        oShare = new ArtemisShare( share, topic, shareInfo[0] ); // sql api uses these
+        oShare = new ArtemisShare( sToken, topic, shareInfo[0] ); // sql api uses these
         //
         ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
         if( oTopic == null ) {
-            // if topic not found in db, then create new topic and share objects for db
+            // if topic not found in db, then create new topic and sToken objects for db
             //
-            String location = ArtemisLib.Get().nativeLocation(share);
+            String location = ArtemisLib.Get().nativeLocation(sToken);
+            if( ArtemisLib.Get().nativeDidFail() ) { detectedError = true; throw new Exception(); }
             oTopic = new ArtemisTopic( topic, shareInfo[1], shareInfo[2], clue, location, 0 );
             //
             if( shareInfo[0] == ArtemisLib.URI_B ) {
@@ -58,20 +65,50 @@ public class AppLogic {
                 oTopic.setMIndicator(); // A types set the indicator
             }
             //
-            String recordArr = share;
+            String tokenArrStr = sToken;
             Cursor cursor = ArtemisSQL.Get().getShareTopicCursor( topic, ArtemisSQL.SortOrder.UNNATURAL );
             if (cursor.moveToFirst()) {
                 do {
                     String othershare = cursor.getString( ArtemisSQL.SHARE_COL );
-                    if( recordArr.length() > 0 ) { recordArr += "\n"; }
-                    recordArr += othershare;
+                    if( tokenArrStr.length() > 0 ) { tokenArrStr += "\n"; }
+                    tokenArrStr += othershare;
                 } while( cursor.moveToNext() );
             }
             cursor.close();
             //
-            oTopic.message = ArtemisLib.Get().nativeDecode( recordArr ); // szLocation baked into library
+            String oldMess = oTopic.message;
+            oTopic.message = ArtemisLib.Get().nativeDecode( tokenArrStr ); // szLocation baked into library
+            boolean decodeOK = ArtemisLib.Get().nativeDidFail() == false;
+            boolean newMessage = oldMess.compareTo( oTopic.message ) != 0;
+            if( newMessage && decodeOK ) { detectedDecode = true; } // set, without exception
             //
             ArtemisSQL.Get().addShareUpdateTopic( oShare, oTopic );
+        }
+    }
+
+    ///////////////
+
+    public void addToken(String token) {
+        detectedError = false;
+        detectedDecode = false;
+        //
+        try {
+            AppLogic.Get().addToken_helper(token);
+        } catch ( Exception e ) {
+            // do nothing
+        }
+    }
+
+    public void addTokenArray(String[] tokenArr) {
+        detectedError = false;
+        detectedDecode = false;
+        //
+        for( String token : tokenArr ) {
+            try {
+                AppLogic.Get().addToken_helper(token);
+            } catch ( Exception e ) {
+                // do nothing, continue with all tokens
+            }
         }
     }
 

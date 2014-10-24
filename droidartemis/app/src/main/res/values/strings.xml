@@ -10,8 +10,12 @@
     <string name="dialog_lockcount">Free version restriction of 2 to 4 locks only.</string>
     <string name="dialog_messagesize">Free version restricted to 40 character messages.</string>
     <string name="dialog_cluesize">Free version restricted to 20 character clues.</string>
-    <string name="sharelist_messagedecodeerror">Unable to decode secret message.</string>
-    <string name="sharelist_needmorekeys">More keys needed to unlock secret.</string>
+    <string name="dialog_info_decode">New message decoded!</string>
+    <string name="dialog_err_encode">There was an encoding failure.</string>
+    <string name="dialog_err_decode">There was a decoding failure.</string>
+    <string name="dialog_err_parse">There was a parse failure.</string>
+    <string name="sharelist_messagedecodeerror">Unable to decode message.</string>
+    <string name="sharelist_needmorekeys">More keys needed to unlock message.</string>
     <string name="sharelist_nosecret">Secret not yet scanned.</string>
     <string name="reponse_ok">Ok</string>
     <string name="reponse_yes">Yes</string>

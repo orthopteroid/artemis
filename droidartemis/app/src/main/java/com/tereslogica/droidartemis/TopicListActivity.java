@@ -107,7 +107,10 @@ public class TopicListActivity extends FragmentActivity {
     ///////////////////////////
 
     public void addScannedItem( String share ) {
-        AppLogic.Get().addItem( share );
+        AppLogic.Get().addToken(share);
+        if( AppLogic.Get().detectedError ) { Notifier.Get().showOk(R.string.dialog_err_parse); }
+        if( AppLogic.Get().detectedDecode ) { Notifier.Get().showOk(R.string.dialog_info_decode); }
+
         refreshListView();
     }
 

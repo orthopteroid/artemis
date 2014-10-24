@@ -111,13 +111,18 @@ public class TopicCreatorActivity extends Activity {
         int locks = Integer.parseInt( settings.get(1).value );
         String shares = ArtemisLib.Get().nativeEncode( keys, locks, "foo.bar", clues.toString(), settings.get(2).value );
 
-        ////////////////////////
-
-        String[] shareArr = shares.split( "\n" );
-        for( String share : shareArr ) {
-            AppLogic.Get().addItem(share);
+        if( ArtemisLib.Get().nativeDidFail() ) {
+            Notifier.Get().showOk(R.string.dialog_err_encode);
+            return;
         }
 
+        ////////////////////////
+
+        AppLogic.Get().addTokenArray(shares.split("\n"));
+
+        if( AppLogic.Get().detectedError ) { Notifier.Get().showOk(R.string.dialog_err_parse); }
+        if( AppLogic.Get().detectedDecode ) { Notifier.Get().showOk(R.string.dialog_info_decode); }
+        if( AppLogic.Get().detectedDecode ) { this.finish(); }
     }
 
 }
