@@ -3,10 +3,12 @@ package com.tereslogica.droidartemis;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -57,12 +59,12 @@ public class TopicCreatorActivity extends Activity {
         lv.setAdapter(settingsAdapter);
 
         settings.clear();
-        settings.add(new TopicCreatorItem("Keys", "2", settings.size()));
-        settings.add(new TopicCreatorItem("Locks", "2", settings.size()));
-        settings.add(new TopicCreatorItem("Message to be Encrypted", "A Secret", settings.size()));
-        settings.add(new TopicCreatorItem("Message Clue (Optional, Cleartext)", "mc", settings.size()));
-        settings.add( new TopicCreatorItem("Key Clue (Optional)","c1", settings.size()) );
-        settings.add( new TopicCreatorItem("Key Clue (Optional)","c2", settings.size()) );
+        settings.add(new TopicCreatorItem("Keys", "2", InputType.TYPE_CLASS_NUMBER));
+        settings.add(new TopicCreatorItem("Locks", "2", InputType.TYPE_CLASS_NUMBER));
+        settings.add(new TopicCreatorItem("Message to be Encrypted", "A Secret", InputType.TYPE_CLASS_TEXT));
+        settings.add(new TopicCreatorItem("Message Clue (Optional, Cleartext)", "mc", InputType.TYPE_CLASS_TEXT));
+        settings.add( new TopicCreatorItem("Key Clue (Optional)","c1", InputType.TYPE_CLASS_TEXT) );
+        settings.add( new TopicCreatorItem("Key Clue (Optional)","c2", InputType.TYPE_CLASS_TEXT) );
         settingsAdapter.notifyDataSetChanged();
     }
 

@@ -1,7 +1,9 @@
 package com.tereslogica.droidartemis;
 
 import android.database.Cursor;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -13,16 +15,14 @@ public class TopicCreatorItem {
 
     public String title;
     public String value;
-    public int index;
+    public int kind;
 
-    public TopicCreatorItem() {
-        index = -1;
-    }
+    private TopicCreatorItem() {}
 
-    public TopicCreatorItem( String _t, String _v, int _i ) {
+    public TopicCreatorItem( String _t, String _v, int _k ) {
         title = _t;
         value = _v;
-        index = _i;
+        kind = _k;
     }
 
     ///////////
@@ -35,11 +35,18 @@ public class TopicCreatorItem {
     public void configureView( View listItem ) {
         ((TextView) listItem.getTag( R.id.setting_title )).setText( title );
         ((EditText) listItem.getTag( R.id.setting_value )).setText( value );
-        if( index <= 1 ) {
-            ((EditText) listItem.getTag(R.id.setting_value)).setInputType(InputType.TYPE_CLASS_NUMBER);
-        } else {
-            ((EditText) listItem.getTag(R.id.setting_value)).setInputType( InputType.TYPE_CLASS_TEXT );
-        }
+        ((EditText) listItem.getTag( R.id.setting_value )).setFocusable(true);
+        ((EditText) listItem.getTag( R.id.setting_value )).setEnabled(true);
+        ((EditText) listItem.getTag( R.id.setting_value )).setInputType(kind);
+        ((EditText) listItem.getTag( R.id.setting_value )).addTextChangedListener(
+            new TextWatcher() {
+                public void afterTextChanged(Editable s) {
+                    value = s.toString();
+                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+                public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            }
+        );
     }
 
 }
