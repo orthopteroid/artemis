@@ -14,10 +14,6 @@
 #include "ar_util.h"
 #include "ar_core.h"
 
-#if defined(__ANDROID__)
-	#define printf(...) __android_log_print(ANDROID_LOG_DEBUG, "TAG", __VA_ARGS__);
-#endif
-
 /////////////////////////
 
 typedef struct {
@@ -61,9 +57,7 @@ static word32 testendianness()
 #ifdef LITTLE_ENDIAN
 	if ( *(word32*)x != 0x04030201 )
 	{
-#if defined(_DEBUG)
-		printf( "# libartemis: expected BIG_ENDIAN, found LITTLE_ENDIAN\n" );
-#endif
+		DEBUGPRINT( "# libartemis: expected BIG_ENDIAN, found LITTLE_ENDIAN\n" );
 		LOGFAIL( RC_INTERNAL );
 		return 1;
 	}
@@ -71,9 +65,7 @@ static word32 testendianness()
 #else
 	if ( *(word32*)x != 0x01020304 )
 	{
-#if defined(_DEBUG)
-		printf( "# libartemis: expected LITTLE_ENDIAN, found BIG_ENDIAN\n" );
-#endif
+		DEBUGPRINT( "# libartemis: expected LITTLE_ENDIAN, found BIG_ENDIAN\n" );
 		LOGFAIL( RC_INTERNAL );
 		return 1;
 	}
@@ -92,9 +84,7 @@ const char* library_rclookup( int rc )
 
 word32 library_init()
 {
-#if defined(_DEBUG)
-	printf( "library_init\n" );
-#endif
+	DEBUGPRINT( "library_init\n" );
 
 	if( testendianness() ) return 1;
 
@@ -533,7 +523,7 @@ void library_test()
 
 #if defined(_DEBUG)
 
-	printf("# library_test\n");
+	DEBUGPRINT("# library_test\n");
 
 	int rc = 0;
 
