@@ -145,8 +145,11 @@ public class TopicListActivity extends FragmentActivity {
         ListView lv = (ListView) findViewById(R.id.topic_list);
         lv.setAdapter(taa);
         lv.setOnItemClickListener(oicl);
+    }
 
-        ////////////////
+    @Override
+    public void onResume() {
+        super.onResume();
 
         refreshListView();
     }
