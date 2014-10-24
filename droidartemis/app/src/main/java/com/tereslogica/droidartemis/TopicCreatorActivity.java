@@ -2,9 +2,6 @@ package com.tereslogica.droidartemis;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -97,13 +94,13 @@ public class TopicCreatorActivity extends Activity {
 
         ////////////////////////
 
-        settings.get(2).value.replace( "\n", " " ); // can't hae embedded \n in artemislib api
+        settings.get(2).value.replace( '\n', ' ' ); // can't hae embedded \n in artemislib api
 
         StringBuilder clues = new StringBuilder( 1024 );
         clues.append( settings.get(3).value );
         {
             for( int i = 4; i < settings.size(); i++) { // 4 >= are the key clues
-                clues.append( "/n" );
+                clues.append( '\n' );
                 clues.append( settings.get(i).value );
             }
         }
