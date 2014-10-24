@@ -65,19 +65,28 @@ int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len )
 
 	if( !table_out ) { rc = RC_NULL; LOGFAIL( rc ); return rc; }
 
+	// TODO: one day, fix this to allow tables of only 0, 1 or 2 elements
+	if( len < 3 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); return rc; }
+
 	*table_out = 0;
 
-	size_t numentries = +1 +1; // +1 first entry, +1 0 (last) entry
-	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) numentries++; } // interior \0 only, not terminating one
+	size_t numentries = +1; // +1 first entry
+	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) { numentries++; } } // interior \0 only, not terminating one
 
-	if( !(*table_out = malloc( numentries * sizeof(byteptr) )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	memset( *table_out, 0, numentries * sizeof(byteptr) );
+	size_t tablesize = numentries +1; // +1 for table terminator
+	if( !(*table_out = malloc( tablesize * sizeof(byteptr) )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+	memset( *table_out, 0, tablesize * sizeof(byteptr) );
 
+	// stuff the pointer to each sub-string into a table-slot
 	size_t j = 0;
 	(*table_out)[j++] = arr;
-	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) (*table_out)[j++] = &arr[ i + 1 ]; }
+	for( size_t i = 0; i < len; i++ ) { if( arr[i] == '\0' ) { (*table_out)[j++] = &arr[ i + 1 ]; } }
+
+	if( j != numentries ) { rc = RC_ARG; LOGFAIL( rc ); return rc; }
 
 EXIT:
+
+	if( rc && *table_out ) { free( *table_out ); *table_out = 0; }
 
 	return rc;
 }
