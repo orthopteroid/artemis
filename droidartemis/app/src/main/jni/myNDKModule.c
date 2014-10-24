@@ -6,7 +6,7 @@
 // adb logcat
 //http://stackoverflow.com/questions/10531050/redirect-stdout-to-logcat-in-android-ndk
 
-//#define ENABLE_MESSAGES
+#define DEBUGPRINT(...) (0)
 
 // unpin string copies
 // http://stackoverflow.com/questions/5859673/should-you-call-releasestringutfchars-if-getstringutfchars-returned-a-copy
@@ -42,18 +42,14 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
 
     const char *cRecordArr = (*env)->GetStringUTFChars(env, jRecordArr, 0);
 
-#if defined(ENABLE_MESSAGES)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cRecordArr %s", cRecordArr );
-#endif
+    DEBUGPRINT( "cRecordArr %s", cRecordArr );
 
     rc = library_uri_decoder( &cMessage_out, (byte*)szLocation, (byte*)cRecordArr );
 
-#if defined(ENABLE_MESSAGES)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cMessage_out %X", (unsigned int)cMessage_out );
+    DEBUGPRINT( "cMessage_out %X", (unsigned int)cMessage_out );
     if( cMessage_out) {
-        __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cMessage_out );
+        DEBUGPRINT( "%s", cMessage_out );
     }
-#endif
 
     if( rc == 0 && cMessage_out ) {
         jMessage_out = (*env)->NewStringUTF( env, cMessage_out );
@@ -76,22 +72,18 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeEnc
     const char *cMess = (*env)->GetStringUTFChars(env, jMess, 0);
     const char *cClues = (*env)->GetStringUTFChars(env, jClues, 0);
 
-#if defined(ENABLE_MESSAGES)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "jKeys %d", jKeys );
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "jLocks %d", jLocks );
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cLoc %s", cLoc );
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cClues %s", cClues );
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cMess %s", cMess );
-#endif
+    DEBUGPRINT( "jKeys %d", jKeys );
+    DEBUGPRINT( "jLocks %d", jLocks );
+    DEBUGPRINT( "cLoc %s", cLoc );
+    DEBUGPRINT( "cClues %s", cClues );
+    DEBUGPRINT( "cMess %s", cMess );
 
     rc = library_uri_encoder( &cShares_out, jKeys, jLocks, cLoc, cClues, cMess );
 
-#if defined(ENABLE_MESSAGES)
-    __android_log_print(ANDROID_LOG_INFO, "libartemis", "cShares_out %X", (unsigned int)cShares_out );
+    DEBUGPRINT( "cShares_out %X", (unsigned int)cShares_out );
     if( cShares_out) {
-        __android_log_print(ANDROID_LOG_INFO, "libartemis", "%s", cShares_out );
+        DEBUGPRINT( "%s", cShares_out );
     }
-#endif
 
     if( rc == 0 && cShares_out ) {
         jShares_out = (*env)->NewStringUTF( env, cShares_out );
