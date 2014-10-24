@@ -14,7 +14,7 @@ public class ArtemisLib {
     public native void nativeInit();
     public native void nativeCleanup();
 
-    public native boolean nativeGetStatusOK();
+    public native boolean nativeDidFail();
     public native String nativeDecode( String recordArr ); // recordArr is \n delimited
 
     public native int[] nativeInfo( String record ); // type, shares, threshold

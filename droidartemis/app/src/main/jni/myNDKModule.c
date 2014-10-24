@@ -29,9 +29,9 @@ JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeCleanu
     library_cleanup();
 }
 
-JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetStatusOK(JNIEnv * env, jobject obj)
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDidFail(JNIEnv * env, jobject obj)
 {
-    jboolean jok = rc ? JNI_FALSE : JNI_TRUE;
+    jboolean jok = ( rc != 0 ) ? JNI_TRUE : JNI_FALSE;
     return jok;
 }
 

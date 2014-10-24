@@ -47,7 +47,7 @@ extern "C" {
 JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeInit(JNIEnv *, jobject);
 JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeCleanup(JNIEnv *, jobject);
 
-JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeGetStatusOK(JNIEnv * env, jobject obj);
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDidFail(JNIEnv * env, jobject obj);
 
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jRecordArr);
 JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeEncode(JNIEnv * env, jobject obj, jint jKeys, jint jLocks, jstring jLoc, jstring jClues, jstring jMess );
