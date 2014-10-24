@@ -279,7 +279,8 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	if( !(clueArr_rw = strdup( clueArr )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
 	size_t cluePtrArrLen = strlen( clueArr_rw );
-	for( size_t i = 0; i < cluePtrArrLen; i++ ) { if( clueArr_rw[i]=='\n' ) { clueArr_rw[i]='\0'; } }
+
+	for( size_t i = 0; i < cluePtrArrLen; i++ ) { if( clueArr_rw[i] == '\n' ) { clueArr_rw[i] = '\0'; } }
 	if( rc = ar_util_buildByteTbl( &clueTbl, clueArr_rw, cluePtrArrLen ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	{
