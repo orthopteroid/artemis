@@ -20,7 +20,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 // http://www.androidhive.info/2011/10/android-listview-tutorial/
-public class TopicListActivity extends FragmentActivity {
+public class ActivityTopics extends FragmentActivity {
 
     public static final int ACTIVITY_COMPLETE = 0;
 
