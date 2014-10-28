@@ -70,11 +70,11 @@ public class TopicCreatorActivity extends Activity {
 
     public void onClickAccept(View view) {
         if( Integer.parseInt( settings.get(0).value ) < 2 || Integer.parseInt( settings.get(0).value ) > 10 ) {
-            Notifier.Get().showOk(R.string.dialog_keycount);
+            Notifier.ShowOk( this, R.string.dialog_keycount);
             return;
         }
         if( Integer.parseInt( settings.get(1).value ) < 2 || Integer.parseInt( settings.get(1).value ) > 4 ) {
-            Notifier.Get().showOk(R.string.dialog_lockcount);
+            Notifier.ShowOk( this, R.string.dialog_lockcount);
             return;
         }
         if( settings.get(2).value.length() > 40 ) {
@@ -111,7 +111,7 @@ public class TopicCreatorActivity extends Activity {
         String shares = ArtemisLib.Get().nativeEncode( keys, locks, "foo.bar", clues.toString(), settings.get(2).value );
 
         if( ArtemisLib.Get().nativeDidFail() ) {
-            Notifier.Get().showOk(R.string.dialog_err_encode);
+            Notifier.ShowOk( this, R.string.dialog_err_encode);
             return;
         }
 
@@ -119,8 +119,8 @@ public class TopicCreatorActivity extends Activity {
 
         AppLogic.Get().addTokenArray(shares.split("\n"));
 
-        if( AppLogic.Get().detectedError ) { Notifier.Get().showOk(R.string.dialog_err_parse); }
-        if( AppLogic.Get().detectedDecode ) { Notifier.Get().showOk(R.string.dialog_info_decode); }
+        if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_parse ); }
+        if( AppLogic.Get().detectedDecode ) { Notifier.ShowOk( this, R.string.dialog_info_decode ); }
         if( AppLogic.Get().detectedDecode ) { this.finish(); }
     }
 

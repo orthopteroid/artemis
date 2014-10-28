@@ -104,8 +104,8 @@ public class TopicListActivity extends FragmentActivity {
 
     public void addScannedItem( String share ) {
         AppLogic.Get().addToken(share);
-        if( AppLogic.Get().detectedError ) { Notifier.Get().showOk(R.string.dialog_err_parse); }
-        if( AppLogic.Get().detectedDecode ) { Notifier.Get().showOk(R.string.dialog_info_decode); }
+        if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_parse); }
+        if( AppLogic.Get().detectedDecode ) { Notifier.ShowOk( this, R.string.dialog_info_decode); }
 
         refreshListView();
     }
@@ -122,7 +122,6 @@ public class TopicListActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.topic_page);
 
-        Notifier.Init( this );
         ArtemisSQL.Init( this );
         ArtemisLib.Init();
         AppLogic.Init();
@@ -164,7 +163,7 @@ public class TopicListActivity extends FragmentActivity {
                 refreshListView();
             }
         };
-        Notifier.Get().showOptions(R.array.dialog_sortshares, ocl);
+        Notifier.ShowOptions( this, R.array.dialog_sortshares, ocl);
     }
 
     public void onClickPurge(View v) {
@@ -191,7 +190,7 @@ public class TopicListActivity extends FragmentActivity {
             intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
             startActivityForResult( intent, ACTIVITY_COMPLETE);
         } catch (Exception e1) {
-            Notifier.Get().showOk(R.string.dialog_noscanner);
+            Notifier.ShowOk( this, R.string.dialog_noscanner);
         }
     }
 
