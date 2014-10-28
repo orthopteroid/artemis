@@ -17,7 +17,7 @@ import java.util.ArrayList;
 /**
  * Created by john on 19/10/14.
  */
-public class TopicCreatorActivity extends Activity {
+public class ActivityNew extends Activity {
 
     private Activity thisActivity;
 
