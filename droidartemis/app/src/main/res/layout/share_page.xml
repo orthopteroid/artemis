@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/button_share"
-        android:text="@string/sharelist_nosecret"
+        android:text="@string/sharelist_nomessage"
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceMedium"
         />
@@ -44,7 +44,7 @@
         android:layout_below="@+id/sep1"
         android:layout_alignLeft="@+id/message"
         android:typeface="monospace"
-        android:text="@string/sharelist_nosecret"
+        android:text="@string/sharelist_nomessage"
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:singleLine="true"

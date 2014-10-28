@@ -16,10 +16,11 @@
     <string name="dialog_err_parse">There was a parse failure.</string>
     <string name="sharelist_messagedecodeerror">Unable to decode message.</string>
     <string name="sharelist_needmorekeys">More keys needed to unlock message.</string>
-    <string name="sharelist_nosecret">Secret not yet scanned.</string>
-    <string name="reponse_ok">Ok</string>
-    <string name="reponse_yes">Yes</string>
-    <string name="reponse_no">No</string>
+    <string name="sharelist_nomessage">Message not yet scanned.</string>
+    <string name="button_ok">Ok</string>
+    <string name="button_yes">Yes</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_no">No</string>
     <string name="button_scan">Scan</string>
     <string name="button_sort">Sort</string>
     <string name="button_new">New</string>

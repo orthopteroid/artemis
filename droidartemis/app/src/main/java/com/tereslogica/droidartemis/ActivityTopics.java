@@ -1,12 +1,15 @@
 package com.tereslogica.droidartemis;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,12 +29,21 @@ public class ActivityTopics extends FragmentActivity {
 
     ////////////////
 
+    private FragmentActivity thisActivity;
+
     private ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
 
     private FakeScanner fs;
 
     private ArrayList<ArtemisTopic> topicArrayList = new ArrayList<ArtemisTopic>();
     private ListView listView;
+
+    private BroadcastReceiver shareIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Notifier.ShowMessage(thisActivity, "sharing!" );
+        }
+    };
 
     ////////////////////////////////////
 
@@ -118,9 +130,19 @@ public class ActivityTopics extends FragmentActivity {
     // http://developer.android.com/reference/android/app/Activity.html#ActivityLifecycle
 
     @Override
+    protected void onDestroy() {
+        // Unregister since the activity is about to be closed.
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(shareIntentReceiver);
+        super.onDestroy();
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.topic_page);
+        thisActivity = this;
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(shareIntentReceiver, new IntentFilter( Notifier.INTENT_SHARE ));
 
         ArtemisSQL.Init( this );
         ArtemisLib.Init();
@@ -130,6 +152,27 @@ public class ActivityTopics extends FragmentActivity {
 
         listView = (ListView) findViewById(R.id.topic_list);
         listView.setAdapter(new TopicArrayAdapter(getApplicationContext()));
+        listView.setOnItemLongClickListener(
+                new AdapterView.OnItemLongClickListener() {
+                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                        String topic = ((TextView) view.findViewById(R.id.topic)).getText().toString();
+                        ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
+
+                        boolean shareMode = false;
+                        String message = oTopic.message;
+                        if( oTopic.isARecordPresent() == false ) { message = getResources().getString( R.string.sharelist_nomessage ); }
+                        else if( oTopic.message.length() == 0 ) { message = getResources().getString( R.string.sharelist_needmorekeys ); }
+                        else { shareMode = true; }
+
+                        if( shareMode ) {
+                            Notifier.ShowMessageAndPosiblyShare(thisActivity, message);
+                        } else {
+                            Notifier.ShowMessage(thisActivity, message);
+                        }
+                        return false;
+                    }
+                }
+        );
         listView.setOnItemClickListener(
             new OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

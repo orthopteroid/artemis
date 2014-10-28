@@ -50,6 +50,7 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
     }
 
     public void setMIndicator() { mindicator = 1; }
+    public boolean isARecordPresent() { return mindicator == 1; }
 
     ///////////
 
