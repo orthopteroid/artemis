@@ -8,8 +8,8 @@
     <string name="dialog_nonativelib">Installation error: native library not found.</string>
     <string name="dialog_keycount">Free version restriction of 2 to 10 keys only.</string>
     <string name="dialog_lockcount">Free version restriction of 2 to 4 locks only.</string>
-    <string name="dialog_messagesize">Free version restricted to 40 character messages.</string>
-    <string name="dialog_cluesize">Free version restricted to 20 character clues.</string>
+    <string name="dialog_textsize">Free version restricted to 20 character messages or clues.</string>
+    <string name="dialog_nomultiline">Multiline text not allowed.</string>
     <string name="dialog_info_decode">New message decoded!</string>
     <string name="dialog_err_encode">There was an encoding failure.</string>
     <string name="dialog_err_decode">There was a decoding failure.</string>
@@ -26,5 +26,7 @@
     <string name="button_purge">Purge</string>
     <string name="button_share">Share</string>
     <string name="button_accept">Accept</string>
+    <string name="button_more">More</string>
+    <string name="button_less">Less</string>
 
 </resources>

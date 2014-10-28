@@ -44,11 +44,12 @@
         android:id="@+id/new_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/hack"
-        android:layout_toRightOf="@+id/hack"
         android:text="@string/button_new"
         android:onClick="onClickNew"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_above="@+id/topic_list"
+        android:layout_toLeftOf="@+id/button_keys"
+        android:layout_toRightOf="@+id/hack" />
 
     <Button
         android:id="@+id/button_keys"

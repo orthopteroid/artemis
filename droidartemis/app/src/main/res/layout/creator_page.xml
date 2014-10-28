@@ -19,7 +19,8 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/button_accept"
         android:clickable="true"
-        android:onClick="onClickAccept" />
+        android:onClick="onClickAccept"
+        />
 
     <View
         android:id="@+id/sep2"
@@ -37,6 +38,9 @@
         android:layout_below="@+id/sep2"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="10dp" />
+        android:layout_marginTop="10dp"
+        android:descendantFocusability="beforeDescendants"
+        android:focusable="false"
+        android:fastScrollEnabled="false" />
 
 </RelativeLayout>
