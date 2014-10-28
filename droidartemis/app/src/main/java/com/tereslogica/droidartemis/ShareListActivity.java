@@ -264,15 +264,12 @@ public class ShareListActivity extends Activity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View rowView;
             if( convertView == null ) { // view recycling and view holder pattern
-                rowView = inflater.inflate(R.layout.share_item, parent, false);
-                ArtemisShare.configureTags( rowView );
-            } else {
-                rowView = convertView;
+                convertView = inflater.inflate(R.layout.share_item, parent, false);
+                ArtemisShare.configureTags( convertView );
             }
-            shareArrayList.get(position).configureView( rowView );
-            return rowView;
+            shareArrayList.get(position).configureView( convertView );
+            return convertView;
         }
     }
 
@@ -307,11 +304,13 @@ public class ShareListActivity extends Activity {
         dialog = new ProgressDialog( this );
         final TopicPackageAndShare task = new TopicPackageAndShare( dialog );
         dialog.setCancelable(true);
-        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            public void onCancel(DialogInterface dialog) {
-                task.cancel(true);
+        dialog.setOnCancelListener(
+            new DialogInterface.OnCancelListener() {
+                public void onCancel(DialogInterface dialog) {
+                    task.cancel(true);
+                }
             }
-        });
+        );
         task.execute(0);
     }
 

@@ -59,19 +59,19 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
         rowView.setTag( R.id.clues, ((TextView) rowView.findViewById( R.id.clues )) );
     }
 
-    public void configureView( View listItem ) {
-        ((TextView) listItem.getTag( R.id.topic )).setText( topic );
+    public void configureView( View rowView ) {
+        ((TextView) rowView.getTag( R.id.topic )).setText( topic );
 
         // http://fupeg.blogspot.ca/2010/01/strikethrough-android.html
         String detailsString = Integer.toString( scount )+"/"+Integer.toString( tsize )+"/"+Integer.toString( ssize );
-        TextView detailsView = ((TextView) listItem.getTag( R.id.details ));
+        TextView detailsView = ((TextView) rowView.getTag( R.id.details ));
         int mibits = detailsView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG; // add
         if( mindicator != 0 ) { mibits ^= Paint.STRIKE_THRU_TEXT_FLAG; }        // remove
         if( scount >= tsize ) { mibits |= Paint.FAKE_BOLD_TEXT_FLAG; }
         detailsView.setPaintFlags( mibits );
         detailsView.setText(detailsString);
 
-        ((TextView) listItem.getTag( R.id.clues )).setText( clues );
+        ((TextView) rowView.getTag( R.id.clues )).setText( clues );
     }
 
     @Override

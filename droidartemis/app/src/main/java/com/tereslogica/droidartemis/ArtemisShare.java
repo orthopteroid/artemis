@@ -37,8 +37,8 @@ public class ArtemisShare {
         rowView.setTag( R.id.share, ((TextView) rowView.findViewById( R.id.share )) );
     }
 
-    public void configureView( View listItem ) {
-        ((TextView) listItem.getTag( R.id.share )).setText( share );
+    public void configureView( View rowView ) {
+        ((TextView) rowView.getTag( R.id.share )).setText( share );
     }
 
 }

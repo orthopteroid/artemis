@@ -31,7 +31,7 @@ public class TopicListActivity extends FragmentActivity {
     private FakeScanner fs;
 
     private ArrayList<ArtemisTopic> topicArrayList = new ArrayList<ArtemisTopic>();
-    private TopicArrayAdapter taa;
+    private ListView listView;
 
     ////////////////////////////////////
 
@@ -64,7 +64,7 @@ public class TopicListActivity extends FragmentActivity {
         protected void onPostExecute(Long result) {
             topicArrayList.clear();
             for (ArtemisTopic item : al) topicArrayList.add(item); // addAll
-            taa.notifyDataSetChanged();
+            ((TopicArrayAdapter)listView.getAdapter()).notifyDataSetChanged();
         }
     }
 
@@ -82,15 +82,12 @@ public class TopicListActivity extends FragmentActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View rowView;
             if (convertView == null) { // view recycling and view holder pattern
-                rowView = inflater.inflate(R.layout.topic_item, parent, false);
-                ArtemisTopic.configureTags(rowView);
-            } else {
-                rowView = convertView;
+                convertView = inflater.inflate(R.layout.topic_item, parent, false);
+                ArtemisTopic.configureTags( convertView );
             }
-            topicArrayList.get(position).configureView(rowView);
-            return rowView;
+            topicArrayList.get(position).configureView(convertView);
+            return convertView;
         }
     }
 
@@ -132,18 +129,17 @@ public class TopicListActivity extends FragmentActivity {
 
         ////////////////
 
-        OnItemClickListener oicl = new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent i = new Intent(getApplicationContext(), ShareListActivity.class);
-                i.putExtra("topic", ((TextView) view.findViewById(R.id.topic)).getText().toString());
-                startActivity(i);
+        listView = (ListView) findViewById(R.id.topic_list);
+        listView.setAdapter(new TopicArrayAdapter(getApplicationContext()));
+        listView.setOnItemClickListener(
+            new OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Intent i = new Intent(getApplicationContext(), ShareListActivity.class);
+                    i.putExtra("topic", ((TextView) view.findViewById(R.id.topic)).getText().toString());
+                    startActivity(i);
+                }
             }
-        };
-
-        taa = new TopicArrayAdapter(getApplicationContext());
-        ListView lv = (ListView) findViewById(R.id.topic_list);
-        lv.setAdapter(taa);
-        lv.setOnItemClickListener(oicl);
+        );
     }
 
     @Override
