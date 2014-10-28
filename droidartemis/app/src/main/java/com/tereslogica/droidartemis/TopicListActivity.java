@@ -179,7 +179,7 @@ public class TopicListActivity extends FragmentActivity {
     }
 
     public void onClickNew(View view) {
-        startActivity( new Intent(getApplicationContext(), TopicCreatorActivity.class) );
+        startActivity( new Intent(getApplicationContext(), ActivityNew.class) );
     }
 
     public void onClickScan(View v) {

@@ -41,7 +41,7 @@
         <!-- **************** -->
 
         <activity
-            android:name=".TopicCreatorActivity"
+            android:name=".ActivityNew"
             android:label="@string/app_name"
             android:windowSoftInputMode="stateUnspecified|adjustUnspecified"
             >
