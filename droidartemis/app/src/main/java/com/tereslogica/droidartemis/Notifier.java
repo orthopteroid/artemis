@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 // http://developer.android.com/guide/topics/ui/dialogs.html
 // http://code.tutsplus.com/tutorials/android-sdk-using-alerts-toasts-and-notifications--mobile-1949
@@ -13,6 +12,9 @@ import android.util.Log;
 public class Notifier {
 
     public final static String INTENT_SHARE = "intent-share";
+    public final static String INTENT_PACKAGE = "intent-package";
+    public final static String EXTRA_TOPICSTRING = "intent-topic";
+    public final static String EXTRA_URISTRING = "intent-uristring";
 
     public static void ShowOk(Context cxt, int stringid) {
         String message = cxt.getResources().getString( stringid );
@@ -37,7 +39,7 @@ public class Notifier {
                 .show();
     }
 
-    public static void ShowMessageAndPosiblyShare(final Context cxt, String message) {
+    public static void ShowMessageAndPosiblyShare(final Context cxt, final String topic, String message) {
         String title = cxt.getResources().getString(R.string.app_name);
         String sCancel = cxt.getResources().getString(R.string.button_cancel);
         String sShare = cxt.getResources().getString(R.string.button_share);
@@ -50,7 +52,7 @@ public class Notifier {
                 .setNegativeButton( sShare,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                LocalBroadcastManager.getInstance(cxt).sendBroadcast(new Intent(Notifier.INTENT_SHARE));
+                                LocalBroadcastManager.getInstance(cxt).sendBroadcast(new Intent(Notifier.INTENT_SHARE).putExtra( Notifier.EXTRA_TOPICSTRING, topic ));
                             }
                         }
                 )

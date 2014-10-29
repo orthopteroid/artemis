@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -41,7 +42,21 @@ public class ActivityTopics extends FragmentActivity {
     private BroadcastReceiver shareIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Notifier.ShowMessage(thisActivity, "sharing!" );
+            //Notifier.ShowMessage(thisActivity, "sharing!" );
+            new Packager( thisActivity, intent.getStringExtra(Notifier.EXTRA_TOPICSTRING) );
+        }
+    };
+
+    private BroadcastReceiver packageIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Uri uri = Uri.parse( intent.getStringExtra(Notifier.EXTRA_URISTRING) );
+            //Notifier.ShowMessage(thisActivity, "packaged uri: " + uri.toString() );
+            Intent intent2 = new Intent( android.content.Intent.ACTION_SEND, uri );
+            intent2.setType("application/zip");
+            intent2.addFlags( Intent.FLAG_GRANT_READ_URI_PERMISSION );
+            intent2.putExtra( Intent.EXTRA_STREAM, uri );
+            startActivity(Intent.createChooser(intent2, "Send Images"));
         }
     };
 
@@ -131,8 +146,8 @@ public class ActivityTopics extends FragmentActivity {
 
     @Override
     protected void onDestroy() {
-        // Unregister since the activity is about to be closed.
         LocalBroadcastManager.getInstance(this).unregisterReceiver(shareIntentReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(packageIntentReceiver);
         super.onDestroy();
     }
 
@@ -143,6 +158,7 @@ public class ActivityTopics extends FragmentActivity {
         thisActivity = this;
 
         LocalBroadcastManager.getInstance(this).registerReceiver(shareIntentReceiver, new IntentFilter( Notifier.INTENT_SHARE ));
+        LocalBroadcastManager.getInstance(this).registerReceiver(packageIntentReceiver, new IntentFilter( Notifier.INTENT_PACKAGE ));
 
         ArtemisSQL.Init( this );
         ArtemisLib.Init();
@@ -165,7 +181,7 @@ public class ActivityTopics extends FragmentActivity {
                         else { shareMode = true; }
 
                         if( shareMode ) {
-                            Notifier.ShowMessageAndPosiblyShare(thisActivity, message);
+                            Notifier.ShowMessageAndPosiblyShare(thisActivity, topic, message);
                         } else {
                             Notifier.ShowMessage(thisActivity, message);
                         }
