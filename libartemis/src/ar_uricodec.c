@@ -359,19 +359,11 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 	{
 		// no clue, skip
 		if( stateArr[ state ] == 'mc=\0' && pARecord->cluelen == 0 ) { state++; continue; }
-		//
-#if 1
+
 		char delim[5] = DELIM_INIT( state == 0, stateArr[ state ] );
-#else
-		char delim[5];
-		delim[0] = ( state == 0 ) ? '?' : '&';
-		delim[1] = 0xff & (stateArr[ state ] >> 24);
-		delim[2] = 0xff & (stateArr[ state ] >> 16);
-		delim[3] = 0xff & (stateArr[ state ] >> 8);
-		delim[4] = 0;
-#endif
+
 		if( rc = ar_util_strcat( buf, bufsize, delim ) ) { LOGFAIL( rc ); goto EXIT; }
-		//
+
 		switch( stateArr[ state ] )
 		{
 		default: rc = RC_ARG; LOGFAIL( rc ); break;
@@ -416,6 +408,8 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 
 EXIT:
 
+	if( rc && buf ) { memset( buf, 0, bufsize ); }
+
 	return rc;
 }
 
@@ -450,19 +444,11 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 	{
 		// no clue, skip
 		if( stateArr[ state ] == 'sc=\0' && pSRecord->cluelen == 0 ) { state++; continue; }
-		//
-#if 1
+
 		char delim[5] = DELIM_INIT( state == 0, stateArr[ state ] );
-#else
-		char delim[5];
-		delim[0] = ( state == 0 ) ? '?' : '&';
-		delim[1] = 0xff & (stateArr[ state ] >> 24);
-		delim[2] = 0xff & (stateArr[ state ] >> 16);
-		delim[3] = 0xff & (stateArr[ state ] >> 8);
-		delim[4] = 0;
-#endif
+
 		if( rc = ar_util_strcat( buf, bufsize, delim ) ) { LOGFAIL( rc ); goto EXIT; }
-		//
+
 		switch( stateArr[ state ] )
 		{
 		default: rc = RC_ARG; LOGFAIL( rc ); break;
@@ -498,6 +484,8 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 	}
 
 EXIT:
+
+	if( rc && buf ) { memset( buf, 0, bufsize ); }
 
 	return rc;
 }
@@ -616,6 +604,8 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 
 EXIT:
 
+	if( rc && arecord_out && *arecord_out ) { free(*arecord_out); *arecord_out = 0; }
+
 	return rc;
 }
 
@@ -718,6 +708,8 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 	}
 
 EXIT:
+
+	if( rc && srecord_out && *srecord_out ) { free(*srecord_out); *srecord_out = 0; }
 
 	return rc;
 }
