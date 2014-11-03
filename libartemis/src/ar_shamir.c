@@ -121,9 +121,6 @@ void ar_shamir_test()
 
 #if defined(_DEBUG)
 
-	#define bufSize 2000
-	char buf[ bufSize ];
-
 	{
 		printf("# test shamir roundtrip\n");
 
@@ -148,14 +145,7 @@ void ar_shamir_test()
 			gfPoint keyRecovered;
 			ar_shamir_recoversecret( keyRecovered, shareIDArr, shareArr, sharesN );
 
-			if( !gfEqual( gfCryptCoef[0], keyRecovered ) )
-			{
-				*buf = 0; ar_util_8BAto4BZ( buf, bufSize, (byteptr)(shareArr[0]+1), shareArr[0][0] ); printf( "%2X,%s ", shareIDArr[0], buf );
-				*buf = 0; ar_util_8BAto4BZ( buf, bufSize, (byteptr)(shareArr[1]+1), shareArr[1][0] ); printf( "%2X,%s ", shareIDArr[1], buf );
-				*buf = 0; ar_util_8BAto4BZ( buf, bufSize, (byteptr)(keyRecovered+1), keyRecovered[0] ); printf( "-> %s", buf );
-				*buf = 0; ar_util_8BAto4BZ( buf, bufSize, (byteptr)(gfCryptCoef[0]+1), gfCryptCoef[0][0] ); printf( " (should be %s)\n", buf );
-				TESTASSERT( 0 );
-			}
+			TESTASSERT( gfEqual( gfCryptCoef[0], keyRecovered ) );
 		}
 	}
 
@@ -176,14 +166,7 @@ void ar_shamir_test()
 		int rc = ar_shamir_sign( &sig, pri, mac );
 		TESTASSERT( rc == 0 );
 
-		if( !cpVerify( pub, mac, &sig ) )
-		{
-			*buf = 0; ar_util_16BAto4BZ( buf, bufSize, pri+1, pri[0] ); printf( "pri: %s\n", buf );
-			*buf = 0; ar_util_16BAto4BZ( buf, bufSize, pub+1, pub[0] ); printf( "pub: %s\n", buf );
-			*buf = 0; ar_util_16BAto4BZ( buf, bufSize, sig.r+1, sig.r[0] ); printf( "r: %s\n", buf );
-			*buf = 0; ar_util_16BAto4BZ( buf, bufSize, sig.s+1, sig.s[0] ); printf( "s: %s\n", buf );
-			TESTASSERT( 0 );
-		}
+		TESTASSERT( cpVerify( pub, mac, &sig ) );
 	}
 
 #endif
