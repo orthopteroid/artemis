@@ -229,7 +229,7 @@ EXIT:
 	return rc;
 }
 
-int library_uri_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szShare )
+int library_uri_info( word16ptr pType, word16ptr pShares, byteptr pThreshold, byteptr szShare )
 {
 	int rc = 0;
 	

@@ -11,10 +11,8 @@ int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len );
 // text conversion/copy routines that write to memy in big endian for printing or hashing
 // cant use these for the sha1 digest as it is already big endian
 
-int ar_util_12Bto6B( byteptr out, word16 in );
-int ar_util_6Bto12B( word16ptr out, byteptr in );
-
-// BA to BA
+int ar_util_30Bto6BA( byteptr out, word32 in );
+int ar_util_6BAto30B( word32ptr out, byteptr in );
 
 int ar_util_8BAto4BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
 int ar_util_4BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
@@ -43,8 +41,11 @@ word32 ar_util_rnd32();
 
 ////////
 
-int ar_util_vl2txt( char* buf, size_t bufsize, vlPoint v );
 int ar_util_txt2vl( vlPoint v, char* buf, size_t bufsize );
+int ar_util_vl2txt( char* buf, size_t bufsize, vlPoint v );
+
+int ar_util_txttow16( word16* pw, char* buf, size_t bufsize );
+int ar_util_w16totxt( char* buf, size_t bufsize, word16* pw );
 
 ////////
 

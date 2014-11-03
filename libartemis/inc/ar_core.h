@@ -9,7 +9,7 @@
 //#include "ec_field.h"
 //#include "ec_crypt.h"
 
-int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, word16 numThres, byteptr bytes, word16 bytelen, bytetbl clueTbl, byteptr location );
+int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, byte numThres, byteptr bytes, word16 bytelen, bytetbl clueTbl, byteptr location );
 
 int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl, word16 numSRecords );
 

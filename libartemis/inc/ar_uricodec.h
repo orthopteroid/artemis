@@ -8,7 +8,7 @@
 #include "ec_crypt.h"
 #include "ar_types.h"
 
-// The arg 'si' is a triplet made from shares, threshold and fieldsize, which only have their lower 12 bits encoded in the uri scheme.
+// The arg 'si' is a triplet made from version (6bits), shares (16bits) and threshold(8bits)
 
 void ar_uri_bufsize_a( size_t* pUribufsize, arAuth* pARecord );
 	/* returns number of bytes needed for uri compose buffer */
@@ -19,7 +19,7 @@ void ar_uri_bufsize_s( size_t* pUribufsize, arShare* pASecord );
 void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf );
 	/* returns num of bytes needed to hold all variable length data in buf record */
 
-int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szRecord );
+int ar_uri_parse_info( word16* pType, word16* pShares, byte* pThreshold, byteptr szRecord );
 
 int ar_uri_locate_topic( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord );
 

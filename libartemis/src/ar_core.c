@@ -16,14 +16,12 @@
 
 ////////////////////////////
 
-// Artemis A uri is http://<location>?tp=<topic>&ai=<splitinfo>&vf=<verify>&pk=<pubkey>&as=<authsig>&mt=<messagetext>&mc=<messageclue>
-// where:
-// <splitinfo> == <shares|<threshold>|<fieldsize>
+// Artemis A uri is http://<location>?tp=<topic>&ai=<info>&vf=<verify>&pk=<pubkey>&as=<authsig>&mt=<messagetext>&mc=<messageclue>
 //
-// Artemis S uri is http://<location>?tp=<topic>&si=<shareinfo>&sh=<share>&ss=<sharesig>&sc=<shareclue>
-// where:
-// <shareinfo> == <shares|<threshold>|<shareid>
+// Artemis S uri is http://<location>?tp=<topic>&si=<info>&sh=<shareid>|<share>&ss=<sharesig>&sc=<shareclue>
 //
+// where:
+// <info> == <version>|<shares>|<threshold>
 
 // artemis
 //  0 url location L is specified as an identifying tag and as a url path
@@ -44,7 +42,62 @@
 #define AR_RC4CRANK_OFFSET	256
 #define AR_RC4CRANK_MASK	255
 
-int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, word16 numThres, byteptr inbuf, word16 inbuflen, bytetbl clueTbl, byteptr location )
+//////////////////////////
+
+static void ar_core_mac_arecord( sha1_context* c, vlPoint vlTopic, vlPoint vlVerify, word16 shares, byte thresh, byte version, vlPoint vlPubkey, byteptr buf, size_t buflen )
+{
+	word16 blob16 = 0;
+	size_t deltalen = 0;
+	char composebuf[ sizeof(vlPoint) ];
+
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlTopic+1, vlTopic[0] );
+	sha1_process( c, composebuf, (unsigned)(vlTopic[0] * sizeof(word16)) );
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlVerify+1, vlVerify[0] );
+	sha1_process( c, composebuf, (unsigned)(vlVerify[0] * sizeof(word16)) );
+	blob16 = shares;
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
+	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+	blob16 = thresh;
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
+	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+	blob16 = version;
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
+	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlPubkey+1, vlPubkey[0] );
+	sha1_process( c, composebuf, (unsigned)(vlPubkey[0] * sizeof(word16)) );
+	sha1_process( c, buf, (unsigned)(buflen) );
+	memset( composebuf, 0, sizeof(composebuf) );
+}
+
+static void ar_core_mac_srecord( sha1_context* c, vlPoint vlTopic, word16 shares, byte thresh, byte version, word16 shareid, vlPoint vlShare, byteptr buf, size_t buflen )
+{
+	word16 blob16 = 0;
+	size_t deltalen = 0;
+	char composebuf[ sizeof(vlPoint) ];
+
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlTopic+1, vlTopic[0] );
+	sha1_process( c, composebuf, (unsigned)(vlTopic[0] * sizeof(word16)) );
+	blob16 = shares;
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
+	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+	blob16 = thresh;
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
+	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+	blob16 = version;
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
+	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+	blob16 = shareid;
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
+	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlShare+1, vlShare[0] );
+	sha1_process( c, composebuf, (unsigned)(vlShare[0] * sizeof(word16)) );
+	sha1_process( c, buf, (unsigned)(buflen) );
+	memset( composebuf, 0, sizeof(composebuf) );
+}
+
+//////////////////////////
+
+int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, byte numThres, byteptr inbuf, word16 inbuflen, bytetbl clueTbl, byteptr location )
 {
 	int rc = 0;
 	
@@ -210,45 +263,31 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	arecord_out[0]->shares = numShares;
 	arecord_out[0]->threshold = numThres;
-	arecord_out[0]->fieldsize = GF_M;
+
+	vlCopy( arecord_out[0]->pubkey, pubSigningkey );
+	vlCopy( arecord_out[0]->topic, topic );
+	vlCopy( arecord_out[0]->verify, verify );
 
 	cpPair authsig;
 	cpClear( &authsig );
 	{
-		vlPoint authhash;
-		vlClear( authhash );
+		vlPoint mac;
+		vlClear( mac );
 		{
 			sha1Digest digest;
 			sha1_context c[1];
 			sha1_initial( c );
 			{
-				size_t deltalen = 0;
-				char composebuf[ sizeof(vlPoint) ];
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), topic+1, topic[0] );
-				sha1_process( c, composebuf, (unsigned)(topic[0] * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), verify+1, verify[0] );
-				sha1_process( c, composebuf, (unsigned)(verify[0] * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &arecord_out[0]->shares, 1 );
-				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &arecord_out[0]->threshold, 1 );
-				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &arecord_out[0]->fieldsize, 1 );
-				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pubSigningkey+1, pubSigningkey[0] );
-				sha1_process( c, composebuf, (unsigned)(pubSigningkey[0] * sizeof(word16)) );
-				sha1_process( c, arecord_out[0]->buf, (unsigned)(abufused) );
-				memset( composebuf, 0, sizeof(composebuf) );
+				arAuthptr pa = arecord_out[0];
+				ar_core_mac_arecord( c, pa->topic, pa->verify, pa->shares, pa->threshold, AR_VERSION, pa->pubkey, pa->buf, abufused );
 			}
 			sha1_final( c, digest );
-			vlSetWord64( authhash, digest[0], digest[1] ); // signed with 64bit hash
+			vlSetWord64( mac, digest[0], digest[1] ); // signed with 64bit hash
 		}
-		if( rc = ar_shamir_sign( &authsig, priSigningkey, authhash ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_shamir_sign( &authsig, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 	cpCopy( &arecord_out[0]->authsig, &authsig );
-	vlCopy( arecord_out[0]->pubkey, pubSigningkey );
-	vlCopy( arecord_out[0]->topic, topic );
-	vlCopy( arecord_out[0]->verify, verify );
 
 	/////////////
 	// sign the produced share records
@@ -287,32 +326,20 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		{
 			cpClear( &sharesig );
 
-			vlPoint saltedsharehash;
-			vlClear( saltedsharehash );
+			vlPoint mac;
+			vlClear( mac );
 			{
 				sha1Digest digest;
 				sha1_context c[1];
 				sha1_initial( c );
 				{
-					size_t deltalen = 0;
-					char composebuf[ sizeof(vlPoint) ];
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), (*srecordtbl_out)[i]->topic+1, (*srecordtbl_out)[i]->topic[0] );
-					sha1_process( c, composebuf, (unsigned)((*srecordtbl_out)[i]->topic[0] * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &(*srecordtbl_out)[i]->shares, 1 );
-					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &(*srecordtbl_out)[i]->threshold, 1 );
-					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &(*srecordtbl_out)[i]->shareid, 1 );
-					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), (*srecordtbl_out)[i]->share+1, (*srecordtbl_out)[i]->share[0] );
-					sha1_process( c, composebuf, (unsigned)((*srecordtbl_out)[i]->share[0] * sizeof(word16)) );
-					sha1_process( c, (*srecordtbl_out)[i]->buf, (unsigned)(sbufused) );
-					memset( composebuf, 0, sizeof(composebuf) );
+					arShareptr ps = (*srecordtbl_out)[i];
+					ar_core_mac_srecord( c, ps->topic, ps->shares, ps->threshold, AR_VERSION, ps->shareid, ps->share, ps->buf, sbufused );
 				}
 				sha1_final( c, digest );
-				vlSetWord64( saltedsharehash, digest[0], digest[1] ); // signed with 64bit hash
+				vlSetWord64( mac, digest[0], digest[1] ); // signed with 64bit hash
 			}
-			if( rc = ar_shamir_sign( &sharesig, priSigningkey, saltedsharehash ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_shamir_sign( &sharesig, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 		}
 
 		cpClear( &(*srecordtbl_out)[i]->sharesig );
@@ -483,35 +510,23 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 
 	// check authsignature to ensure data integreity
 
+	size_t abufused = arecord->msglen + arecord->loclen + arecord->cluelen;
+
 	{
-		vlPoint authhash;
-		vlClear( authhash );
+		vlPoint mac;
+		vlClear( mac );
 		{
 			sha1Digest digest;
 			sha1_context c[1];
 			sha1_initial( c );
 			{
-				size_t deltalen = 0;
-				char composebuf[ sizeof(vlPoint) ];
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), arecord->topic+1, arecord->topic[0] );
-				sha1_process( c, composebuf, (unsigned)(arecord->topic[0] * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), arecord->verify+1, arecord->verify[0] );
-				sha1_process( c, composebuf, (unsigned)(arecord->verify[0] * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &arecord->shares, 1 );
-				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &arecord->threshold, 1 );
-				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &arecord->fieldsize, 1 );
-				sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-				ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), arecord->pubkey+1, arecord->pubkey[0] );
-				sha1_process( c, composebuf, (unsigned)(arecord->pubkey[0] * sizeof(word16)) );
-				sha1_process( c, arecord->buf, (unsigned)(arecord->msglen + arecord->loclen + arecord->cluelen) );
-				memset( composebuf, 0, sizeof(composebuf) );
+				arAuthptr pa = arecord;
+				ar_core_mac_arecord( c, pa->topic, pa->verify, pa->shares, pa->threshold, AR_VERSION, pa->pubkey, pa->buf, abufused );
 			}
 			sha1_final( c, digest );
-			vlSetWord64( authhash, digest[0], digest[1] );
+			vlSetWord64( mac, digest[0], digest[1] );
 		}
-		if( !cpVerify( arecord->pubkey, authhash, &arecord->authsig ) ) { rc = RC_AUTH_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
+		if( !cpVerify( arecord->pubkey, mac, &arecord->authsig ) ) { rc = RC_AUTH_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 	}
 
 	// check sharesignatures to ensure data integreity
@@ -521,34 +536,22 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 		for( int i=0; i<numSRecords; i++ )
 		{
 			arShareptr pSRecord = srecordtbl_opt[i];
-			size_t bufused = pSRecord->loclen + pSRecord->cluelen;
+			size_t sbufused = pSRecord->loclen + pSRecord->cluelen;
 			//
-			vlPoint saltedsharehash;
-			vlClear( saltedsharehash );
+			vlPoint mac;
+			vlClear( mac );
 			{
 				sha1Digest digest;
 				sha1_context c[1];
 				sha1_initial( c );
 				{
-					size_t deltalen = 0;
-					char composebuf[ sizeof(vlPoint) ];
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pSRecord->topic+1, pSRecord->topic[0] );
-					sha1_process( c, composebuf, (unsigned)(pSRecord->topic[0] * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pSRecord->shares, 1 );
-					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pSRecord->threshold, 1 );
-					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &pSRecord->shareid, 1 );
-					sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-					ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), pSRecord->share+1, pSRecord->share[0] );
-					sha1_process( c, composebuf, (unsigned)(pSRecord->share[0] * sizeof(word16)) );
-					sha1_process( c, pSRecord->buf, (unsigned)(bufused) );
-					memset( composebuf, 0, sizeof(composebuf) );
+					arShareptr ps = srecordtbl_opt[i];
+					ar_core_mac_srecord( c, ps->topic, ps->shares, ps->threshold, AR_VERSION, ps->shareid, ps->share, ps->buf, sbufused );
 				}
 				sha1_final( c, digest );
-				vlSetWord64( saltedsharehash, digest[0], digest[1] );
+				vlSetWord64( mac, digest[0], digest[1] );
 			}
-			int fail = !cpVerify( arecord->pubkey, saltedsharehash, &pSRecord->sharesig );
+			int fail = !cpVerify( arecord->pubkey, mac, &pSRecord->sharesig );
 
 			// return nz rc if there is any failure
 			if( fail ) { rc = RC_SIGNATURE; LOGFAIL( rc ); if( !buf_opt ) { goto EXIT; } }

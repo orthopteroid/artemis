@@ -93,19 +93,25 @@ EXIT:
 
 ////////////////////
 
-int ar_util_12Bto6B( byteptr out, word16 in )
+int ar_util_30Bto6BA( byteptr out, word32 in )
 {
-	if( in > (1 << 12) - 1) { return RC_ARG; }
-	out[0] = b64charout[ ( in >> 6 ) & 63 ];
-	out[1] = b64charout[ ( in ) & 63 ];
+	if( in > (1 << 30) - 1) { return RC_ARG; }
+	out[0] = b64charout[ ( in >> 24 ) & 63 ];
+	out[1] = b64charout[ ( in >> 18 ) & 63 ];
+	out[2] = b64charout[ ( in >> 12 ) & 63 ];
+	out[3] = b64charout[ ( in >>  6 ) & 63 ];
+	out[4] = b64charout[ ( in       ) & 63 ];
 	return 0;
 }
 
-int ar_util_6Bto12B( word16ptr out, byteptr in )
+int ar_util_6BAto30B( word32ptr out, byteptr in )
 {
 	*out = 0;
-	*out |= (word16)( b64charin[ in[0] - 0x2D ] & 63 ) << 6;
-	*out |= (word16)( b64charin[ in[1] - 0x2D ] & 63 );
+	*out |= (word16)( b64charin[ in[0] - 0x2D ] & 63 ) << 24;
+	*out |= (word16)( b64charin[ in[1] - 0x2D ] & 63 ) << 18;
+	*out |= (word16)( b64charin[ in[2] - 0x2D ] & 63 ) << 12;
+	*out |= (word16)( b64charin[ in[3] - 0x2D ] & 63 ) << 6;
+	*out |= (word16)( b64charin[ in[4] - 0x2D ] & 63 );
 	return 0;
 }
 

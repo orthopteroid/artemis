@@ -9,6 +9,7 @@
 #include "ar_uricodec.h"
 #include "ec_vlong.h"
 #include "ar_util.h"
+#include "version.h"
 
 #if defined(_DEBUG)
 	#include "ar_core.h" // for testing
@@ -174,6 +175,45 @@ static void ar_uri_arglen( size_t* pArglen, byteptr arg, byteptr buf )
 
 ///////////////////
 
+static int ar_uri_info_parse( word16ptr pshares, byteptr pthresh, byteptr pvers, byteptr pdata )
+{
+	int rc = 0;
+
+	if( !pshares || !pthresh || !pvers ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	word32 blob = 0;
+	if( rc = ar_util_6BAto30B( &blob, pdata ) ) { LOGFAIL( rc ); goto EXIT; }
+	*pvers = ( blob >> 24 ) & 63;
+	*pshares = ( blob >> 8 ) & 0xFFFF;
+	*pthresh = ( blob ) & 0x00FF;
+
+EXIT:
+
+	return rc;
+}
+
+static int ar_uri_info_cat( byteptr buf, size_t bufsize, word16 shares, byte threshold, byte vers )
+{
+	int rc = 0;
+
+	if( !buf ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	char sz[5+1] = {0,0,0,0,0,0}; // 5b64chars = 30 bits, +1 for \0 term
+
+	word32 blob = 0;
+	blob |= ( vers & 63 ) << 24;
+	blob |= ( shares & 0xFFFF ) << 8;
+	blob |= ( threshold & 0x00FF );
+	if( rc = ar_util_30Bto6BA( sz, blob ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_strcat( buf, bufsize, sz ) ) { LOGFAIL( rc ); goto EXIT; }
+
+EXIT:
+
+	return rc;
+}
+
+///////////////////
+
 void ar_uri_bufsize_a( size_t* pUribufsize, arAuth* pARecord )
 {
 	size_t bufused = pARecord->msglen + pARecord->loclen + pARecord->cluelen;
@@ -284,7 +324,7 @@ void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf )
 	}
 }
 
-int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szRecord )
+int ar_uri_parse_info( word16ptr pType, word16ptr pShares, byteptr pThreshold, byteptr szRecord )
 {
 	int rc = 0;
 
@@ -297,9 +337,6 @@ int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, bytep
 
 	*pType = *pShares = *pThreshold = 0;
 
-	byteptr pShare_start, pThreshold_start;
-	pShare_start = pThreshold_start = 0;
-
 	parsestate2 ss;
 	parsestate2* pss = &ss;
 	ps2_init( pss, szRecord, strlen( szRecord ) );
@@ -307,16 +344,14 @@ int ar_uri_parse_info( word16* pType, word16* pShares, word16* pThreshold, bytep
 	word32 token;
 	while( token = ps2_token( pss ) )
 	{
-		if( token == 'ai=0' )		{ *pType = 1; pShare_start = ss.data_first; }
-		else if( token == 'ai=1' )	{             pThreshold_start = ss.data_first; }
-		else if( token == 'si=0' )	{ *pType = 2; pShare_start = ss.data_first; }
-		else if( token == 'si=1' )	{             pThreshold_start = ss.data_first; }
-		if( pShare_start != 0 && pThreshold_start != 0 ) { break; }
+		if( token == 'ai=0' )		{ *pType = 1; break; }
+		else if( token == 'si=0' )	{ *pType = 2; break; }
 	}
-	if( pShare_start == 0 && pThreshold_start == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+	if( !(*pType) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
-	if( rc = ar_util_6Bto12B( pShares, pShare_start ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_6Bto12B( pThreshold, pThreshold_start ) ) { LOGFAIL( rc ); goto EXIT; }
+	byte vers = 0;
+	if( rc = ar_uri_info_parse( pShares, pThreshold, &vers, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( vers != AR_VERSION ) { rc = RC_VERSION; LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 
@@ -371,14 +406,7 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ai=\0':
-			if( rc = ar_util_12Bto6B( sz, pARecord->shares ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_12Bto6B( sz, pARecord->threshold ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_12Bto6B( sz, pARecord->fieldsize ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_uri_info_cat( buf, bufsize, pARecord->shares, pARecord->threshold, AR_VERSION ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'vf=\0':
 			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->verify ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -418,8 +446,6 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 	int rc = 0;
 
 	size_t buflen = 0;
-	char sz[3] = {0,0,0};
-
 	size_t tokenlen = 0;
 	word32 stateArr[] = {'tp=\0', 'si=\0', 'sh=\0', 'ss=\0', 'sc=\0', 0 };
 
@@ -456,16 +482,11 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'si=\0':
-			if( rc = ar_util_12Bto6B( sz, pSRecord->shares ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_12Bto6B( sz, pSRecord->threshold ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_12Bto6B( sz, pSRecord->shareid ) ) { LOGFAIL( rc ); goto EXIT; }
-			if( rc = ar_util_strcat( buf, bufsize, sz ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_uri_info_cat( buf, bufsize, pSRecord->shares, pSRecord->threshold, AR_VERSION ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'sh=\0':
+			if( rc = ar_util_w16totxt( buf, bufsize, &(pSRecord->shareid) ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_strcat( buf, bufsize, "!" ) ) { LOGFAIL( rc ); goto EXIT; }
 			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->share ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ss=\0':
@@ -521,6 +542,8 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 	char tmp[ sizeof(vlPoint) + 2 ] = {0};
 	const word16 VL_WORD_COUNT = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
 
+	byte vers = 0;
+
 	parsestate2 ss;
 	ps2ptr pss = &ss;
 	ps2_init( pss, szRecord, strlen(szRecord) );
@@ -545,14 +568,9 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 		case 'tp=0': // topic
 			if( rc = ar_util_txt2vl( (*arecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
-		case 'ai=0': // arecord info - shares
-			if( rc = ar_util_6Bto12B( &(*arecord_out)->shares, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'ai=1': // arecord info - threshold
-			if( rc = ar_util_6Bto12B( &(*arecord_out)->threshold, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'ai=2': // arecord info - fieldsize
-			if( rc = ar_util_6Bto12B( &(*arecord_out)->fieldsize, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
+		case 'ai=0': // arecord info - version | shares | threshold
+			if( rc = ar_uri_info_parse( &(*arecord_out)->shares, &(*arecord_out)->threshold, &vers, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( vers != AR_VERSION ) { rc = RC_VERSION; LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'vf=0': // <verify>
 			if( rc = ar_util_txt2vl( (*arecord_out)->verify, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -634,6 +652,8 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 	size_t uLocation = 0, uClue = 0;
 	byteptr pLocation = 0, pClue = 0;
 
+	byte vers = 0;
+
 	// vl conversion vars
 	size_t deltalen = 0;
 	char tmp[ sizeof(vlPoint) + 2 ] = {0};
@@ -663,16 +683,13 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 		case 'tp=0': // topic
 			if( rc = ar_util_txt2vl( (*srecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
-		case 'si=0': // srecord info - shares
-			if( rc = ar_util_6Bto12B( &(*srecord_out)->shares, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
+		case 'si=0': // srecord info - version | shares | threshold
+			if( rc = ar_uri_info_parse( &(*srecord_out)->shares, &(*srecord_out)->threshold, &vers, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( vers != AR_VERSION ) { rc = RC_VERSION; LOGFAIL( rc ); goto EXIT; }
 			break;
-		case 'si=1': // srecord info - threshold
-			if( rc = ar_util_6Bto12B( &(*srecord_out)->threshold, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'si=2': // srecord info - shareid
-			if( rc = ar_util_6Bto12B( &(*srecord_out)->shareid, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'sh=0': // share
+		case 'sh=0': // share - shareid
+			if( rc = ar_util_txttow16( &(*srecord_out)->shareid, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+		case 'sh=1': // share
 			if( rc = ar_util_txt2vl( (*srecord_out)->share, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ss=0': // <asharesig> - r
@@ -750,7 +767,8 @@ void ar_uri_test()
 	typedef byte byte2048[2048];
 
 	byte2048 bufa, bufs0, bufs1;
-	word16 stype, shares, threshold;
+	word16 stype, shares;
+	byte threshold;
 
 	int numtests = 100;
 	for( int i=0; i<numtests; i++ )

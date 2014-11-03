@@ -13,7 +13,7 @@
 DLLDECL word32 library_init();
 DLLDECL void library_cleanup();
 
-DLLDECL int library_uri_info( word16* pType, word16* pShares, word16* pThreshold, byteptr szShare );
+DLLDECL int library_uri_info( word16ptr pType, word16ptr pShares, byteptr pThreshold, byteptr szShare );
 
 DLLDECL int library_uri_validate( byteptr* invalidBoolArr_out, byteptr szLocation, byteptr szRecordArr );
 

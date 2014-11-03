@@ -11,9 +11,8 @@
 typedef struct arAuth_
 {
 	vlPoint		topic;			// digest of cryptext
-	word16		shares;			// 12 bits
-	word16		threshold;		// 12 bits
-	word16		fieldsize;		// 12 bits
+	word16		shares;			// 16 bits
+	byte		threshold;		// 8 bits
 	//
 	vlPoint		pubkey;
 	cpPair		authsig;
@@ -31,10 +30,10 @@ typedef arAuth*		arAuthptr;
 typedef struct arShare_
 {
 	vlPoint		topic;			// digest of cryptext
-	word16		shares;			// 12 bits
-	word16		threshold;		// 12 bits
-	word16		shareid;		// 12 bits
+	word16		shares;			// 16 bits
+	byte		threshold;		// 8 bits
 	//
+	word16		shareid;		// 16 bits
 	vlPoint		share;
 	cpPair		sharesig;
 	//
