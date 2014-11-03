@@ -62,7 +62,7 @@ int ar_main(int argc, char **argv)
 			{
 			case 'h':
 HELP:
-				printf("(artemis v%u.%u, libartemis v%u.%u KL%u %s)\n", app_vmajor, app_vminor, library_vmajor(), library_vminor(), library_keylength(), library_isdemo() ? "crippleware" : "");
+				printf("(artemis v%u.%u, libartemis v%u KL%u %s)\n", app_vmajor, app_vminor, library_version(), library_keylength(), library_isdemo() ? "crippleware" : "");
 				printf("usage: -h | -z | -d <newline delimited data> | -l <locationURL> -s <sharesize> -t <thresholdsize> [ -c \"<topiclue>|<shareclue1>|...|<shareclueN>\" ] -m \"<textmessage>\"\n");
 				return 0;
 				break;

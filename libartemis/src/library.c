@@ -128,14 +128,9 @@ int library_isdemo()
 	return AR_DEMO;
 }
 
-word32 library_vmajor()
+word16 library_version()
 {
-	return AR_VMAJOR;
-}
-
-word32 library_vminor()
-{
-	return AR_VMINOR;
+	return AR_VERSION;
 }
 
 word32 library_keylength()

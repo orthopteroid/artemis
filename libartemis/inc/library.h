@@ -32,8 +32,7 @@ DLLDECL int library_isdebug();
 DLLDECL int library_isdemo();
 DLLDECL int library_istest();
 DLLDECL void library_settest();
-DLLDECL word32 library_vmajor();
-DLLDECL word32 library_vminor();
+DLLDECL word16 library_version();
 DLLDECL word32 library_keylength();
 
 DLLDECL const char* library_rclookup( int rc );
