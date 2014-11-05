@@ -18,11 +18,7 @@ void vlClear (vlPoint p);
 int vlIsZero(const vlPoint p);
 
 word16 vlGetWord16(vlPoint p, word16 i);
-
 void vlSetWord16(vlPoint p, word16 u);
-void vlSetWord32(vlPoint p, word32 u);
-void vlSetWord64(vlPoint p, word32 h, word32 l);
-void vlSetWord128(vlPoint p, word32 hh, word32 hl, word32 lh, word32 ll);
 
 void vlSetWord32Ptr( vlPoint p, word16 maxWord16s, word32* q );
 
