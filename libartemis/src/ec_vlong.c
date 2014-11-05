@@ -83,18 +83,25 @@ word16 vlGetWord16(vlPoint p, word16 i)
 
 void vlSetWord16(vlPoint p, word16 u)
 {
-	vlClear( p );
-	p[0] = 1;
-	p[1] = u;
-	if( !u ) p[0] = 0; // orthopteroid
+	if( u == 0 )
+		p[0] = 0;
+	else {
+		p[0] = 1;
+		p[1] = u;
+		if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	}
 }
 
 void vlSetWord32(vlPoint p, word32 u)
 {
-	vlClear( p );
-	p[0] = 2;
-	p[1] = ( u >> 16 ) & 0xFFFF; p[2] = u & 0xFFFF;
-	if( !u ) p[0] = 0; // orthopteroid
+	if( u == 0 )
+		p[0] = 0;
+	else {
+		p[0] = 2;
+		p[1] = ( u >> 16 ) & 0xFFFF;
+		p[2] = u & 0xFFFF;
+		if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	}
 }
 
 void vlSetWord64(vlPoint p, word32 h, word32 l)
@@ -106,6 +113,7 @@ void vlSetWord64(vlPoint p, word32 h, word32 l)
 		p[0] = 4;
 		p[1] = ( h >> 16 ) & 0xFFFF; p[2] = h & 0xFFFF;
 		p[3] = ( l >> 16 ) & 0xFFFF; p[4] = l & 0xFFFF;
+		if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
 	}
 }
 
@@ -120,6 +128,7 @@ void vlSetWord128(vlPoint p, word32 hh, word32 hl, word32 lh, word32 ll)
 		p[3] = ( hl >> 16 ) & 0xFFFF; p[4] = hl & 0xFFFF;
 		p[5] = ( lh >> 16 ) & 0xFFFF; p[6] = lh & 0xFFFF;
 		p[7] = ( ll >> 16 ) & 0xFFFF; p[8] = ll & 0xFFFF;
+		if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
 	}
 }
 
@@ -283,6 +292,9 @@ int vlShortMultiply (vlPoint p, const vlPoint q, word16 d)
 	} else { /* d == 0 */
 		p[0] = 0;
 	}
+
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return -1; }
+
 	return 0;
 } /* vlShortMultiply */
 
