@@ -65,12 +65,12 @@ void vlClear (vlPoint p)
 	memset (p, 0, sizeof (vlPoint));
 } /* vlClear */
 
+
 void vlCopy (vlPoint p, const vlPoint q)
 	/* sets p := q */
 {
-	size_t b = (q[0] + 1) * sizeof( word16 );
-	if( b > sizeof(vlPoint) ) { LOGFAIL( RC_INTERNAL ); b = sizeof(vlPoint); }
-	memcpy( p, q, b );
+	if( !vlIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
+	memcpy( p, q, (q[0] + 1) * sizeof(word16) );
 } /* vlCopy */
 
 
