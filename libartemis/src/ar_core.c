@@ -169,15 +169,13 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	// create verification hash of cleartext
 
 	vlPoint verify;
-	vlClear( verify );
 	{
 		sha1Digest digest;
 		sha1_context c[1];
 		sha1_initial( c );
-
 		sha1_process( c, inbuf, (unsigned)(inbuflen) );
 		sha1_final( c, digest );
-		vlSetWord32( verify, digest[0] ); // verify is 32bit hash
+		vlSetWord32Ptr( verify, AR_VERIFYLENGTH / 16, digest );
 	}
 
 	///////////
@@ -195,14 +193,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	for( word16 t = 0; t < numThres; t++ )
 	{
 		vlPoint vlTmp;
-		vlClear( vlTmp );
-#if AR_CRYPTKEYLENGTH == 32
-		vlSetWord32( vlTmp, ar_util_rnd32() );
-#elif AR_CRYPTKEYLENGTH == 64
-		vlSetWord64( vlTmp, ar_util_rnd32(), ar_util_rnd32() );
-#elif AR_CRYPTKEYLENGTH == 128
-		vlSetWord128( vlTmp, ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32() );
-#endif // AR_CRYPTKEYLENGTH
+		vlSetRandom( vlTmp, AR_SHARECOEFLENGTH / 16, &ar_util_rnd16 );
 		gfUnpack( gfCryptCoefArr[t], vlTmp );
 		gfReduce( gfCryptCoefArr[t] );
 	}
@@ -230,7 +221,6 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	// construct topic from location, cryptext and mclue
 
 	vlPoint topic;
-	vlClear( topic );
 	{
 		sha1Digest digest;
 		sha1_context c[1];
@@ -238,24 +228,16 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 		sha1_process( c, arecord_out[0]->buf, (unsigned)(abufused) );
 		sha1_final( c, digest );
-		vlSetWord64( topic, digest[0], digest[1] ); // topic is 64bit hash
+		vlSetWord32Ptr( topic, AR_TOPICLENGTH / 16, digest );
 	}
 
 	/////////
 	// construct keypair
 
 	vlPoint priSigningkey;
-	vlClear( priSigningkey );
-#if AR_SIGNKEYLENGTH == 32
-	vlSetWord32( priSigningkey, ar_util_rnd32() );
-#elif AR_SIGNKEYLENGTH == 64
-	vlSetWord64( priSigningkey, ar_util_rnd32(), ar_util_rnd32() );
-#elif AR_SIGNKEYLENGTH == 128
-	vlSetWord128( priSigningkey, ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32(), ar_util_rnd32() );
-#endif // AR_SIGNKEYLENGTH
+	vlSetRandom( priSigningkey, AR_SIGNKEYLENGTH / 16, &ar_util_rnd16 );
 
 	vlPoint pubSigningkey;
-	vlClear( pubSigningkey );
 	cpMakePublicKey( pubSigningkey, priSigningkey );
 
 	//////////
@@ -269,7 +251,6 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	vlCopy( arecord_out[0]->verify, verify );
 
 	cpPair authsig;
-	cpClear( &authsig );
 	{
 		vlPoint mac;
 		vlClear( mac );
@@ -282,7 +263,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 				ar_core_mac_arecord( c, pa->topic, pa->verify, pa->shares, pa->threshold, AR_VERSION, pa->pubkey, pa->buf, abufused );
 			}
 			sha1_final( c, digest );
-			vlSetWord64( mac, digest[0], digest[1] ); // signed with 64bit hash
+			vlSetWord32Ptr( mac, AR_MACLENGTH / 16, digest );
+		}
 
 		for( size_t i = 0; i < 100; i++ )
 		{
@@ -333,8 +315,6 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 		cpPair sharesig;
 		{
-			cpClear( &sharesig );
-
 			vlPoint mac;
 			vlClear( mac );
 			{
@@ -346,7 +326,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 					ar_core_mac_srecord( c, ps->topic, ps->shares, ps->threshold, AR_VERSION, ps->shareid, ps->share, ps->buf, sbufused );
 				}
 				sha1_final( c, digest );
-				vlSetWord64( mac, digest[0], digest[1] ); // signed with 64bit hash
+				vlSetWord32Ptr( mac, AR_MACLENGTH / 16, digest );
+			}
 
 			for( size_t i = 0; i < 100; i++ )
 			{
@@ -360,7 +341,6 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			if( rc ) { LOGFAIL( rc ); goto EXIT; }
 		}
 
-		cpClear( &(*srecordtbl_out)[i]->sharesig );
 		cpCopy( &(*srecordtbl_out)[i]->sharesig, &sharesig );
 	}
 
@@ -436,7 +416,6 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 
 	{
 		gfPoint gfCryptkey;
-		gfClear( gfCryptkey );
 		ar_shamir_recoversecret( gfCryptkey, shareIDArr, shareArr, numSRecords );
 
 		vlPoint vlCryptkey;
@@ -448,6 +427,8 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
 		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
 		rc4( cryptkeyBArr, 16, rc4cranks, *buf_out, arecord->msglen );
+
+		gfClear( gfCryptkey );
 	}
 
 	///////////
@@ -455,14 +436,13 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 
 	{
 		vlPoint verify;
-		vlClear( verify );
 		{
 			sha1Digest digest;
 			sha1_context c[1];
 			sha1_initial( c );
 			sha1_process( c, *buf_out, (unsigned)(arecord->msglen) );
 			sha1_final( c, digest );
-			vlSetWord32( verify, digest[0] );
+			vlSetWord32Ptr( verify, AR_VERIFYLENGTH / 16, digest );
 		}
 		if( !vlEqual( verify, arecord->verify ) ) { rc = RC_MESSAGE; LOGFAIL( rc ); goto EXIT; }
 	}
@@ -489,11 +469,10 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 	// check internal topic consistiency for ARecord
 
 	vlPoint topic;
-	vlClear( topic );
 	{
 		sha1Digest digest;
 		sha1_digest( digest, arecord->buf, arecord->msglen + arecord->loclen + arecord->cluelen );
-		vlSetWord64( topic, digest[0], digest[1] );
+		vlSetWord32Ptr( topic, AR_TOPICLENGTH / 16, digest );
 	}
 	if( !vlEqual( arecord->topic, topic ) ) { rc = RC_AUTH_TOPIC; LOGFAIL( rc ); goto EXIT; }
 
@@ -542,7 +521,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 				ar_core_mac_arecord( c, pa->topic, pa->verify, pa->shares, pa->threshold, AR_VERSION, pa->pubkey, pa->buf, abufused );
 			}
 			sha1_final( c, digest );
-			vlSetWord64( mac, digest[0], digest[1] );
+			vlSetWord32Ptr( mac, AR_MACLENGTH / 16, digest );
 		}
 		if( !cpVerify( arecord->pubkey, mac, &arecord->authsig ) ) { rc = RC_AUTH_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 	}
@@ -567,7 +546,7 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 					ar_core_mac_srecord( c, ps->topic, ps->shares, ps->threshold, AR_VERSION, ps->shareid, ps->share, ps->buf, sbufused );
 				}
 				sha1_final( c, digest );
-				vlSetWord64( mac, digest[0], digest[1] );
+				vlSetWord32Ptr( mac, AR_MACLENGTH / 16, digest );
 			}
 			int fail = !cpVerify( arecord->pubkey, mac, &pSRecord->sharesig );
 

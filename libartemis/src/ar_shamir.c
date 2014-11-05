@@ -12,6 +12,14 @@
 #include "ec_crypt.h"	// for testing
 #include "ar_util.h"	// for testing
 
+#if defined(_DEBUG)
+
+#include "version.h"
+
+#endif
+
+///////////
+
 static void eval_horner( gfPoint* solnArr, word16 solnN, gfPoint* coefArr, word16 coefM )
 	/* Evaluate polynomial with coefs c { 0 ... M-1 } at x { 1 ... N } (Horner's Method) */
 {
@@ -131,7 +139,7 @@ void ar_shamir_test()
 		{
 			for( int t=0;t<2;t++ )
 			{
-				vlSetWord64( vlTmp, ar_util_rnd32(), ar_util_rnd32() );
+				vlSetRandom( vlTmp, AR_SHARECOEFLENGTH / 16, &ar_util_rnd16 );
 				gfUnpack( gfCryptCoef[t], vlTmp );
 				gfReduce( gfCryptCoef[t] );
 			}
@@ -151,13 +159,13 @@ void ar_shamir_test()
 		vlPoint pub, pri, mac;
 		cpPair sig;
 
-		vlSetWord64( pri, ar_util_rnd32(), ar_util_rnd32() );
+		vlSetRandom( pri, AR_SIGNKEYLENGTH / 16, &ar_util_rnd16 );
 
 		cpMakePublicKey( pub, pri );
 
 		sha1Digest digest;
 		sha1_digest( digest, "themessage", strlen("themessage") );
-		vlSetWord64( mac, digest[0], digest[1] );
+		vlSetWord32Ptr( mac, VL_UNITS, digest );
 
 		int rc = 0;
 		for( size_t i = 0; i < 100; i++ )

@@ -24,6 +24,8 @@ void vlSetWord32(vlPoint p, word32 u);
 void vlSetWord64(vlPoint p, word32 h, word32 l);
 void vlSetWord128(vlPoint p, word32 hh, word32 hl, word32 lh, word32 ll);
 
+void vlSetWord32Ptr( vlPoint p, word16 maxWord16s, word32* q );
+
 int  vlEqual (const vlPoint p, const vlPoint q);
 
 int  vlGreater (const vlPoint p, const vlPoint q);

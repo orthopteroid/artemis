@@ -327,8 +327,8 @@ int ecSelfTest (int test_count)
 	for (i = 0; i < test_count; i++) {
 		ecRandom (&f);
 		ecRandom (&g);
-		vlRandom (m);
-		vlRandom (n);
+		vlSetRandom (m);
+		vlSetRandom (n);
 
 		/* negation test: -(-f) = f */
 		ecCopy (&x, &f);

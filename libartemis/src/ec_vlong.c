@@ -382,3 +382,13 @@ void vlSetRandom( vlPoint p, word16 maxWord16s, rnd16gen fn )
 	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
 }
 
+void vlSetWord32Ptr( vlPoint p, word16 maxWord16s, word32* q )
+{
+	p[0] = ( VL_UNITS-2 < maxWord16s ) ? VL_UNITS-2 : maxWord16s;
+	for( size_t j = 0, i = 0; i < p[0]; i++ )
+	{
+		p[i+1] = 0xFFFF & (q[j] >> ( (i & 0x01) ? 0 : 16 ) ); // hi on even and low on odd, +1 to skip length indicator
+		j += (i & 0x01 ); // inc j on odd i
+	}
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
+}
