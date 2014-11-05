@@ -375,3 +375,10 @@ void vlMulMod (vlPoint u, const vlPoint v, const vlPoint w, const vlPoint m)
 } /* vlMulMod */
 
 
+void vlSetRandom( vlPoint p, word16 maxWord16s, rnd16gen fn )
+{
+	p[0] = ( VL_UNITS-2 < maxWord16s ) ? VL_UNITS-2 : maxWord16s;
+	for( size_t i = 0; i < p[0]; i++ ) { p[i+1] = fn(); } // +1 to skip length indicator
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
+}
+

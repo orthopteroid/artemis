@@ -462,6 +462,11 @@ word32 ar_util_rnd32()
 
 }
 
+word16 ar_util_rnd16()
+{
+	return (word16)ar_util_rnd32();
+}
+
 int ar_util_isvalid7bit( byteptr szRecord )
 {
 	for( size_t i = 0 ; szRecord[i] != 0; i++ )

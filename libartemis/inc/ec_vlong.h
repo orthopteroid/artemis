@@ -34,9 +34,6 @@ int  vlNumBits (const vlPoint k);
 int  vlTakeBit (const vlPoint k, word16 i);
 	/* evaluates to the i-th bit of k */
 
-void vlRandom (vlPoint k);
-	/* sets k := <random very long integer value> */
-
 void vlCopy (vlPoint p, const vlPoint q);
 	/* sets p := q */
 
@@ -54,6 +51,9 @@ void vlShortRshift (vlPoint u, int n);
 
 int  vlShortMultiply (vlPoint p, const vlPoint q, word16 d);
 	/* sets p = q * d, where d is a single digit */
+
+typedef word16 (*rnd16gen)();
+void vlSetRandom( vlPoint p, word16 maxWord16s, rnd16gen fn );
 
 int  vlSelfTest (int test_count);
 

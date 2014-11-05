@@ -283,8 +283,17 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			}
 			sha1_final( c, digest );
 			vlSetWord64( mac, digest[0], digest[1] ); // signed with 64bit hash
+
+		for( size_t i = 0; i < 100; i++ )
+		{
+			vlPoint session;
+			vlSetRandom( session, VL_UNITS, &ar_util_rnd16 );
+			rc = ar_shamir_sign( &authsig, session, priSigningkey, mac );
+			if( !rc ) { break; }
+			if( rc == RC_ARG ) { continue; }
+			if( rc ) { LOGFAIL( rc ); goto EXIT; }
 		}
-		if( rc = ar_shamir_sign( &authsig, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 	cpCopy( &arecord_out[0]->authsig, &authsig );
@@ -338,8 +347,17 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 				}
 				sha1_final( c, digest );
 				vlSetWord64( mac, digest[0], digest[1] ); // signed with 64bit hash
+
+			for( size_t i = 0; i < 100; i++ )
+			{
+				vlPoint session;
+				vlSetRandom( session, VL_UNITS, &ar_util_rnd16 );
+				rc = ar_shamir_sign( &sharesig, session, priSigningkey, mac );
+				if( !rc ) { break; }
+				if( rc == RC_ARG ) { continue; }
+				if( rc ) { LOGFAIL( rc ); goto EXIT; }
 			}
-			if( rc = ar_shamir_sign( &sharesig, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc ) { LOGFAIL( rc ); goto EXIT; }
 		}
 
 		cpClear( &(*srecordtbl_out)[i]->sharesig );

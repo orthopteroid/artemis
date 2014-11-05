@@ -14,7 +14,7 @@ void ar_shamir_splitsecret( gfPoint* shareArr, word16* shareIDArr, word16 numSha
 void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr, word16 numShares );
 	/* Calc key from numbered shares */
 
-int ar_shamir_sign( cpPair* cpSig, const vlPoint vlPrivateKey, const vlPoint mac );
+int ar_shamir_sign( cpPair* cpSig, const vlPoint session, const vlPoint vlPrivateKey, const vlPoint mac );
 	/* if signing fails, rekey using prng */
 
 void ar_shamir_test();

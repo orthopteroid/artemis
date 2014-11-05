@@ -93,21 +93,17 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 	if( gfShareIDArr ) free( gfShareIDArr );
 }
 
-int ar_shamir_sign( cpPair* sig, const vlPoint vlPrivateKey, const vlPoint mac )
+int ar_shamir_sign( cpPair* sig, const vlPoint session, const vlPoint vlPrivateKey, const vlPoint mac )
 {
 	int rc = 0;
 
 	if( !vlIsValid( vlPrivateKey ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+	if( !vlIsValid( session ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 	if( !vlIsValid( mac ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 	if( vlIsZero( mac ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 
-	const int maxLoops = 100;
-	int i = 0;
-	do {
-		vlPoint session;
-		vlSetWord64( session, ar_util_rnd32(), ar_util_rnd32() );
-		cpSign( vlPrivateKey, session, mac, sig );
-	} while ( sig->r[0] == 0 && i++ < maxLoops );
+	cpSign( vlPrivateKey, session, mac, sig );
+	if( sig->r[0] == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	if( vlIsZero( sig->r ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 
@@ -163,8 +159,15 @@ void ar_shamir_test()
 		sha1_digest( digest, "themessage", strlen("themessage") );
 		vlSetWord64( mac, digest[0], digest[1] );
 
-		int rc = ar_shamir_sign( &sig, pri, mac );
-		TESTASSERT( rc == 0 );
+		int rc = 0;
+		for( size_t i = 0; i < 100; i++ )
+		{
+			vlPoint session;
+			vlSetRandom( session, VL_UNITS, &ar_util_rnd16 );
+			rc = ar_shamir_sign( &sig, session, pri, mac );
+			if( rc == RC_ARG ) { continue; }
+			TESTASSERT( rc == 0 );
+		}
 
 		TESTASSERT( cpVerify( pub, mac, &sig ) );
 	}

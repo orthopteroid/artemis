@@ -38,6 +38,7 @@ const char* ar_util_rclookup( int rc );
 ////////
 
 word32 ar_util_rnd32();
+word16 ar_util_rnd16();
 
 ////////
 
