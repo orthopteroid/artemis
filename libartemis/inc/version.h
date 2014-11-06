@@ -3,18 +3,18 @@
 #include "ec_param.h"
 
 // units are 16-bit words
-#define AR_UNITS ((GF_K*GF_L + 15)/16 + 1)
+#define AR_UNITS ((GF_K*GF_L + 15)/16 + 1) // 9 units = 144 bits @ 136 gf_m
 
-// fixed length
-#define AR_VERIFYUNITS		2
-#define AR_TOPICUNITS		4
-#define AR_MACUNITS			4
+// storage-bits (fixed length)
+#define AR_VERIFYUNITS		2 // 32 bits
+#define AR_TOPICUNITS		4 // 64 bits
+#define AR_MACUNITS			4 // 64 bits
 
-// length adjusted to prevent saturation/overflow
-#define AR_SESSIONUNITS		AR_UNITS-2
-#define AR_SHARECOEFUNITS	AR_UNITS-2
-#define AR_CRYPTKEYUNITS	AR_UNITS-2
-#define AR_SIGNKEYUNITS		AR_UNITS-4
+// entropy-bits (length adjusted to prevent saturation/overflow)
+#define AR_SESSIONUNITS		AR_UNITS-2 // 112 bits @ 136 gf_m
+#define AR_SHARECOEFUNITS	AR_UNITS-4 // 80 bits @ 136 gf_m
+#define AR_CRYPTKEYUNITS	AR_UNITS-2 // 112 bits @ 136 gf_m
+#define AR_SIGNKEYUNITS		AR_UNITS-4 // 80 bits @ 136 gf_m
 
 // some sanity checks
 STATICASSERT( AR_VERIFYUNITS < AR_UNITS );
