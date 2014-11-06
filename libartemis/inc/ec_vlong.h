@@ -6,12 +6,12 @@
 #include "ec_types.h"
 #include "ec_param.h"
 
-#define VL_UNITS ((GF_K*GF_L + 15)/16 + 1) /* must be large enough to hold a (packed) curve point (plus one element: the length) */
+#define VL_UNITS ((GF_K*GF_L + 15)/16 + 1) /* must be large enough to hold a (packed) curve point (+1 for length ?or? rounding) */
 
 // little endian format, i think
-typedef word16 vlPoint [VL_UNITS + 2];
+typedef word16 vlPoint [VL_UNITS +1 ]; // +1 for length
 
-#define vlIsValid(p) (p[0] < VL_UNITS)
+#define vlIsValid(p) (p[0] <= VL_UNITS)
 
 void vlClear (vlPoint p);
 
