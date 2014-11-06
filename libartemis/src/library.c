@@ -135,7 +135,7 @@ word16 library_version()
 
 word32 library_keylength()
 {
-	return AR_CRYPTKEYLENGTH;
+	return AR_CRYPTKEYUNITS * 16;
 }
 
 //////////////////

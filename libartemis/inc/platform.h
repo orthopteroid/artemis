@@ -9,6 +9,10 @@
 //#define SHOW_FAILURES
 
 /////////////////////////////
+#define AR_STR_HELPER(x) #x
+#define AR_STR(x) AR_STR_HELPER(x)
+
+/////////////////////////////
 #if !defined(PLATFORM_PRAGMAS)
 	#define PLATFORM_PRAGMAS
 	#if defined(_WINDOWS)
@@ -92,6 +96,17 @@
 // TODO: rip
 #if !defined(TESTASSERT)
 	#define TESTASSERT(c) ASSERT(c)
+#endif
+
+/////////////////////////////
+#if !defined(STATICASSERT)
+	#define STATICASSERT_CONCAT(x,y) x ## y
+	#define STATICASSERT_SUBST(x,y) STATICASSERT_CONCAT(x,y)
+	#if defined(_DEBUG)
+		#define STATICASSERT( c ) static char STATICASSERT_SUBST( static_assert, __COUNTER__ ) [ (c) ? 1 : -1 ] = {0};
+	#else
+		#define STATICASSERT( c ) static char STATICASSERT_SUBST( static_assert, __COUNTER__ ) [ 1 ] = {0};
+	#endif
 #endif
 
 /////////////////////////////

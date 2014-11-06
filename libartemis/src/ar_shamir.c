@@ -139,7 +139,7 @@ void ar_shamir_test()
 		{
 			for( int t=0;t<2;t++ )
 			{
-				vlSetRandom( vlTmp, AR_SHARECOEFLENGTH / 16, &ar_util_rnd16 );
+				vlSetRandom( vlTmp, AR_SHARECOEFUNITS, &ar_util_rnd16 );
 				gfUnpack( gfCryptCoef[t], vlTmp );
 				gfReduce( gfCryptCoef[t] );
 			}
@@ -159,20 +159,21 @@ void ar_shamir_test()
 		vlPoint pub, pri, mac;
 		cpPair sig;
 
-		vlSetRandom( pri, AR_SIGNKEYLENGTH / 16, &ar_util_rnd16 );
+		vlSetRandom( pri, AR_SIGNKEYUNITS, &ar_util_rnd16 );
 
 		cpMakePublicKey( pub, pri );
 
 		sha1Digest digest;
 		sha1_digest( digest, "themessage", strlen("themessage") );
-		vlSetWord32Ptr( mac, VL_UNITS, digest );
+		vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 
 		int rc = 0;
 		for( size_t i = 0; i < 100; i++ )
 		{
 			vlPoint session;
-			vlSetRandom( session, VL_UNITS, &ar_util_rnd16 );
+			vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
 			rc = ar_shamir_sign( &sig, session, pri, mac );
+			if( !rc ) { break; }
 			if( rc == RC_ARG ) { continue; }
 			TESTASSERT( rc == 0 );
 		}
