@@ -224,7 +224,6 @@ public class ActivityNew extends Activity {
         AppLogic.Get().addTokenArray(shares.split("\n"));
 
         if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_parse ); }
-// leaks?        if( AppLogic.Get().detectedDecode ) { Notifier.ShowOk( this, R.string.dialog_info_decode ); }
         if( AppLogic.Get().detectedDecode ) { this.finish(); }
     }
 
