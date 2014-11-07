@@ -79,7 +79,7 @@ public class Packager {
             dir = new File( cxt.getCacheDir(), "");
             dir.mkdirs();
 
-            String fname = "topic-" + topic.substring(0, 10) + ".zip";
+            String fname = "topic-" + topic + ".zip";
             fout = new File(dir, fname);
 
             uri = FileProvider.getUriForFile( cxt, cxt.getClass().getName(), fout); // use classname of cxt child
@@ -103,7 +103,7 @@ public class Packager {
         private boolean addKey() throws Exception {
             if( key == oSRecords.size() ) { return false; }
             ArtemisShare sRecord = oSRecords.get( key );
-            String istr = String.format("%04d", key); // 12 bits serialized = 4095 = 4 decimal digits, 0 padding
+            String istr = String.format("%05d", key); // 16 bits serialized = 4095 = 5 decimal digits, 0 padding
             addPNG( zout, "key" + istr + ".png", sRecord.share, width, height );
             key++;
             return true;
@@ -194,8 +194,9 @@ public class Packager {
             dialog.dismiss();
 
             if( this.isCancelled() ) { return; }
+            if( uri == null ) { return; }
 
-            LocalBroadcastManager.getInstance(cxt).sendBroadcast( (new Intent(Notifier.INTENT_PACKAGE)).putExtra( Notifier.EXTRA_URISTRING, tz.uri.toString() ) );
+            LocalBroadcastManager.getInstance(cxt).sendBroadcast( (new Intent(Notifier.INTENT_PACKAGE)).putExtra( Notifier.EXTRA_URISTRING, uri.toString() ) );
         }
     }
 
