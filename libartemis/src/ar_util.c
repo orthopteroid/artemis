@@ -39,6 +39,29 @@ static byte b64charin[]  = {
         0x32, 0x33, // w - z
 }; // start at 0x2D
 
+///////
+
+#if defined(_DEBUG)
+
+	#undef RC_XXX
+	#define RC_XXX(a,b) { #a , b },
+
+#else
+
+	#undef RC_XXX
+	#define RC_XXX(a,b) { "ERR" , b },
+
+#endif
+
+	static struct {
+		char* sz;
+		int c;
+	} rc_table[] = {
+
+#include "ar_codes.x"
+
+	};
+
 ////////////////////
 
 int ar_util_istest()
@@ -424,21 +447,9 @@ int ar_util_strncat( byteptr dst, size_t dstsize, byteptr src, size_t srcsize )
 
 const char* ar_util_rclookup( int rc )
 {
-	#undef RC_XXX
-	#define RC_XXX(a,b) { #a , b },
-
-	static struct {
-		char* sz;
-		int c;
-	} table[] = {
-
-#include "ar_codes.x"
-
-	};
-
 	if( rc >= 0 ) return "OK";
 
-	for( int i=0; table[i].c != RC_MARKER; i++ ) { if( table[i].c == rc ) { return table[i].sz; } }
+	for( int i=0; rc_table[i].c != RC_MARKER; i++ ) { if( rc_table[i].c == rc ) { return rc_table[i].sz; } }
 
 	return "ERR";
 }
