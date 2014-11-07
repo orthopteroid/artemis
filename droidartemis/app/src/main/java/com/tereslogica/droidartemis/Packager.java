@@ -82,7 +82,7 @@ public class Packager {
             String fname = "topic-" + topic.substring(0, 10) + ".zip";
             fout = new File(dir, fname);
 
-            uri = FileProvider.getUriForFile( cxt, "com.tereslogica.droidartemis.ShareListActivity", fout);
+            uri = FileProvider.getUriForFile( cxt, cxt.getClass().getName(), fout); // use classname of cxt child
 
             fouts = new FileOutputStream(fout);
             zout = new ZipOutputStream(fouts);

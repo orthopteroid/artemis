@@ -168,6 +168,7 @@ public class ActivityTopics extends FragmentActivity {
 
         listView = (ListView) findViewById(R.id.topic_list);
         listView.setAdapter(new TopicArrayAdapter(getApplicationContext()));
+        /*
         listView.setOnItemLongClickListener(
                 new AdapterView.OnItemLongClickListener() {
                     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -189,12 +190,29 @@ public class ActivityTopics extends FragmentActivity {
                     }
                 }
         );
+        */
         listView.setOnItemClickListener(
             new OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+/*
                     Intent i = new Intent(getApplicationContext(), ShareListActivity.class);
                     i.putExtra("topic", ((TextView) view.findViewById(R.id.topic)).getText().toString());
                     startActivity(i);
+*/
+                    String topic = ((TextView) view.findViewById(R.id.topic)).getText().toString();
+                    ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
+
+                    boolean shareMode = false;
+                    String message = oTopic.message;
+                    if( oTopic.isARecordPresent() == false ) { message = getResources().getString( R.string.sharelist_nomessage ); }
+                    else if( oTopic.message.length() == 0 ) { message = getResources().getString( R.string.sharelist_needmorekeys ); }
+                    else { shareMode = true; }
+
+                    if( shareMode ) {
+                        Notifier.ShowMessageAndPosiblyShare(thisActivity, topic, message);
+                    } else {
+                        Notifier.ShowMessage(thisActivity, message);
+                    }
                 }
             }
         );
@@ -222,7 +240,7 @@ public class ActivityTopics extends FragmentActivity {
                 refreshListView();
             }
         };
-        Notifier.ShowOptions( this, R.array.dialog_sortshares, ocl);
+        Notifier.ShowOptions( this, R.array.dialog_sorttopics, ocl);
     }
 
     public void onClickPurge(View v) {

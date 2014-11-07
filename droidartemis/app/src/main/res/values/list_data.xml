@@ -1,19 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="adobe_products">
-        <item>Adobe After Effects</item>
-        <item>Adobe Bridge</item>
-        <item>Adobe Dreamweaver</item>
-        <item>Adobe Edge</item>
-    </string-array>
-    <string-array name="dialog_sortshares">
+    <string-array name="dialog_sorttopics">
         <item>Most Recent</item>
         <item>Least Recent</item>
         <item>Most Complete</item>
         <item>Least Complete</item>
-    </string-array>
-    <string-array name="dialog_sorttopics">
-        <item>Most Recent</item>
-        <item>Least Recent</item>
     </string-array>
 </resources>

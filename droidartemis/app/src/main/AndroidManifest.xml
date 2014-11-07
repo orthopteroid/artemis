@@ -11,6 +11,7 @@
         <activity
             android:name=".ActivityTopics"
             android:label="@string/app_name"
+            android:grantUriPermissions="true"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,15 +23,9 @@
         <!-- http://stackoverflow.com/questions/18249007/how-to-use-support-fileprovider-for-sharing-content-to-other-apps -->
         <!-- http://stackoverflow.com/questions/21931169/fileprovider-throws-exception-on-geturiforfile -->
 
-        <activity
-            android:name=".ShareListActivity"
-            android:label="@string/app_name"
-            android:grantUriPermissions="true">
-        </activity>
-
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.tereslogica.droidartemis.ShareListActivity"
+            android:authorities="com.tereslogica.droidartemis.ActivityTopics"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
