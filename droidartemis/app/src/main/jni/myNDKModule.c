@@ -1,6 +1,8 @@
 #include "com_tereslogica_droidartemis_ArtemisLib.h"
 
 #include "library.h"
+#include "ar_codes.h"
+
 #include <string.h>
 
 // adb logcat
@@ -33,6 +35,12 @@ JNIEXPORT void JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeCleanu
 JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDidFail(JNIEnv * env, jobject obj)
 {
     jboolean jok = ( rc != 0 ) ? JNI_TRUE : JNI_FALSE;
+    return jok;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeWasFailDemo(JNIEnv * env, jobject obj)
+{
+    jboolean jok = ( rc == RC_DEMO_7K_3L_20C ) ? JNI_TRUE : JNI_FALSE;
     return jok;
 }
 
@@ -104,7 +112,9 @@ JNIEXPORT jintArray JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeI
 {
     const char *cRecord = (*env)->GetStringUTFChars(env, jRecord, 0);
 
-    word16 rtype, shares, threshold;
+    word16 rtype, shares;
+    byte threshold;
+
     rc = library_uri_info( &rtype, &shares, &threshold, (byteptr)cRecord );
 
     (*env)->ReleaseStringUTFChars( env, jRecord, cRecord );

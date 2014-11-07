@@ -117,7 +117,7 @@ public class ActivityNew extends Activity {
                     new TextWatcher() {
                         public void afterTextChanged(Editable s) {
                             if (s.length() > 20) {
-                                Notifier.ShowOk(thisActivity, R.string.dialog_textsize);
+                                Notifier.ShowOk(thisActivity, R.string.dialog_demofail);
                                 setValue( s.toString().substring(0,19) );
                             }
                             for (int i = 0; i < s.length(); i++) {
@@ -189,22 +189,6 @@ public class ActivityNew extends Activity {
     ////////
 
     public void onClickAccept(View view) {
-        if( Integer.parseInt( settings.get(0).getValue() ) < 2 || Integer.parseInt( settings.get(0).getValue() ) > 10 ) {
-            Notifier.ShowOk( this, R.string.dialog_keycount);
-            return;
-        }
-        if( Integer.parseInt( settings.get(1).getValue() ) < 2 || Integer.parseInt( settings.get(1).getValue() ) > 4 ) {
-            Notifier.ShowOk( this, R.string.dialog_lockcount);
-            return;
-        }
-
-        for( int i = 2; i < settings.size(); i++) { // 2 is message, 3 is message clue, 4 >= are the key clues
-            if( settings.get(i).getValue().length() > 20) {
-                Notifier.ShowOk( this, R.string.dialog_textsize);
-                return;
-            }
-        }
-
         for( int i = 2; i < settings.size(); i++) { // 2 >= are user text
             if( settings.get(i).getValue().indexOf('\n') >= 0) {
                 Notifier.ShowOk( this, R.string.dialog_nomultiline);
@@ -227,6 +211,10 @@ public class ActivityNew extends Activity {
         String shares = ArtemisLib.Get().nativeEncode( keys, locks, "foo.bar", clues.toString(), settings.get(2).getValue() );
 
         if( ArtemisLib.Get().nativeDidFail() ) {
+            if( ArtemisLib.Get().nativeWasFailDemo() ) {
+                Notifier.ShowOk( this, R.string.dialog_demofail);
+                return;
+            }
             Notifier.ShowOk( this, R.string.dialog_err_encode);
             return;
         }
@@ -236,7 +224,7 @@ public class ActivityNew extends Activity {
         AppLogic.Get().addTokenArray(shares.split("\n"));
 
         if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_parse ); }
-        if( AppLogic.Get().detectedDecode ) { Notifier.ShowOk( this, R.string.dialog_info_decode ); }
+// leaks?        if( AppLogic.Get().detectedDecode ) { Notifier.ShowOk( this, R.string.dialog_info_decode ); }
         if( AppLogic.Get().detectedDecode ) { this.finish(); }
     }
 
