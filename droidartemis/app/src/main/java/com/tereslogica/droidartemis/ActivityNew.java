@@ -33,16 +33,18 @@ public class ActivityNew extends Activity {
 
     public class NumberItem implements AbstractItem {
         public View containerView;
+        public TextView titleView;
+        public EditText valueView;
 
         public NumberItem( LayoutInflater inflater, LinearLayout layout, String _t, String _v ) {
             containerView = inflater.inflate( R.layout.creator_number, layout, false );
+            titleView = ((TextView) containerView.findViewById(R.id.numsetting_title));
+            valueView = ((EditText) containerView.findViewById( R.id.numsetting_value));
 
-            // configure
+            // configure view-holder pattern
 
-            containerView.setTag(R.id.numsetting_title, ((TextView) containerView.findViewById(R.id.numsetting_title)));
-
-            EditText valueView = ((EditText) containerView.findViewById( R.id.numsetting_value));
-            containerView.setTag(R.id.numsetting_value, valueView);
+            containerView.setTag( R.id.numsetting_title, titleView );
+            containerView.setTag( R.id.numsetting_value, valueView );
 
             Button moreButton = ((Button) containerView.findViewById( R.id.button_more ));
             Button lessButton = ((Button) containerView.findViewById( R.id.button_less ));
@@ -54,9 +56,8 @@ public class ActivityNew extends Activity {
             moreButton.setTag( R.id.numsetting_value, valueView );
             lessButton.setTag( R.id.numsetting_value, valueView );
 
-            // configureview
+            // init properties
 
-            TextView titleView = ((TextView) containerView.getTag(R.id.numsetting_title));
             //valueView.setInputType( InputType.TYPE_CLASS_NUMBER );
             valueView.addTextChangedListener(
                     new TextWatcher() {
@@ -90,35 +91,38 @@ public class ActivityNew extends Activity {
                 }
             });
 
-            // setvalues
+            // set values
 
             setTitle(_t);
             setValue(_v);
             layout.addView( containerView );
         }
 
-        public void setTitle( String t ) { ((TextView) containerView.getTag( R.id.numsetting_title )).setText( t ); }
-        public void setValue( String v ) { ((EditText) containerView.getTag( R.id.numsetting_value )).setText( v ); }
-        public String getValue() { return ((EditText) containerView.getTag( R.id.numsetting_value )).getText().toString(); }
+        public void setTitle( String t ) { titleView.setText( t.subSequence(0, t.length()) ); }
+        public void setValue( String v ) { valueView.setText( v.subSequence(0, v.length()) ); }
+        public String getValue() { return valueView.getText().toString(); }
     }
 
     public class TextItem implements AbstractItem {
         public View containerView;
+        public EditText textView;
 
         public TextItem( LayoutInflater inflater, LinearLayout layout, String _t, String _v ) {
             containerView = inflater.inflate( R.layout.creator_text, layout, false );
+            textView = ((EditText) containerView.findViewById(R.id.txtsetting_value));
 
-            // configure
+            // configure view-holder pattern
 
-            TextView textView = ((TextView) containerView.findViewById(R.id.txtsetting_value));
             containerView.setTag(R.id.txtsetting_value, textView);
+
+            // init properties
 
             textView.addTextChangedListener(
                     new TextWatcher() {
                         public void afterTextChanged(Editable s) {
                             if (s.length() > 20) {
                                 Notifier.ShowOk(thisActivity, R.string.dialog_demofail);
-                                setValue( s.toString().substring(0,19) );
+                                setValue(s.toString().substring(0, 19));
                             }
                             for (int i = 0; i < s.length(); i++) {
                                 if (s.charAt(i) == '\n') {
@@ -127,21 +131,25 @@ public class ActivityNew extends Activity {
                                 }
                             }
                         }
-                        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                        public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+                        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        }
+
+                        public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        }
                     }
             );
 
-            // setvalues
+            // set values
 
             setTitle(_t);
             setValue(_v);
             layout.addView( containerView );
         }
 
-        public void setTitle( String t ) { ((EditText) containerView.getTag( R.id.txtsetting_value )).setHint( t ); }
-        public void setValue( String v ) { ((EditText) containerView.getTag( R.id.txtsetting_value )).setText( v ); }
-        public String getValue() { return ((EditText) containerView.getTag( R.id.txtsetting_value )).getText().toString(); }
+        public void setTitle( String t ) { textView.setHint( t.subSequence(0, t.length()) ); }
+        public void setValue( String v ) { textView.setText( v.subSequence(0, v.length()) ); }
+        public String getValue() { return textView.getText().toString(); }
     }
 
     ///////////////////////////
