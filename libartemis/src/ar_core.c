@@ -119,18 +119,13 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	if( numShares < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 	if( numShares < numThres ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 
-	{
-		int clueCount = 0;
-		for( byteptr* ppClue = clueTbl; *ppClue; ppClue++ ) { clueCount++; }
-		if( clueCount != ( numShares + 1 ) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
-	}
+    {
+        int clueCount = 0;
+        for( byteptr* ppClue = clueTbl; *ppClue; ppClue++ ) { clueCount++; }
+        if( clueCount != (numShares +1) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
+    }
 
-	///////////
-	// alloc tmp storage
 
-	if( !(shareArr = malloc( sizeof(gfPoint) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	if( !(shareIDArr = malloc( sizeof(word16) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
 	///////////
 	// general vars
@@ -140,6 +135,13 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	size_t acluelen = strlen( clueTbl[ 0 ] ); // 0 for message clue
 	size_t msgoffset = loclen + acluelen; // msg comes after clue + location
+
+	///////////
+	// alloc tmp storage
+
+	if( !(shareArr = malloc( sizeof(gfPoint) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+	if( !(shareIDArr = malloc( sizeof(word16) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+	if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
 	///////////
 	// alloc return values

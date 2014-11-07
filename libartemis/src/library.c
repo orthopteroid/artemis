@@ -281,7 +281,7 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	{
 		int clueCount = 0;
 		for( byteptr* ppClue = clueTbl; *ppClue; ppClue++ ) { clueCount++; }
-		if( clueCount != ( shares + 1 ) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
+		if( clueCount != (shares +1) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
 	}
 
 	size_t messlen = message ? strlen( message ) : 0;
