@@ -42,8 +42,11 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@+id/numsetting_value"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textSize="38sp"
-        android:text="Text" />
+        android:text="Text"
+        android:enabled="true"
+        android:layout_alignBottom="@+id/numsetting_value"
+        android:gravity="center_vertical|right"
+        android:textStyle="normal"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </RelativeLayout>
