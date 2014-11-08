@@ -287,6 +287,20 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	size_t messlen = message ? strlen( message ) : 0;
 	if( messlen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
+#if defined(AR_DEMO)
+
+    // check RC_DEMO_7K_3L_20C
+    {
+        int demofail = 0;
+        demofail |= (shares > 7) ? 1 : 0;
+        demofail |= (threshold > 3) ? 1 : 0;
+        demofail |= (messlen > 20) ? 1 : 0;
+        for( byteptr* ppClue = clueTbl; *ppClue; ppClue++ ) { demofail |= (strlen( *ppClue ) > 20) ? 1 : 0; }
+        if( demofail ) { rc = RC_DEMO_7K_3L_20C; LOGFAIL( rc ); goto EXIT; }
+    }
+
+#endif // AR_DEMO
+
 	// +1 to include \0
 	if( rc = ar_core_create( &arecord, &srecordtbl, shares, threshold, message, (word16)messlen + 1, clueTbl, szLocation ) ) { LOGFAIL( rc ); goto EXIT; }
 

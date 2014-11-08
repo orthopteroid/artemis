@@ -14,6 +14,12 @@
 
 #include "version.h" // for version related defines
 
+#if defined(AR_DEMO)
+    #define AR_HIDDEN_BYTE 1
+#else
+    #define AR_HIDDEN_BYTE 0
+#endif
+
 ////////////////////////////
 
 // Artemis A uri is http://<location>?tp=<topic>&ai=<info>&vf=<verify>&pk=<pubkey>&as=<authsig>&mt=<messagetext>&mc=<messageclue>
@@ -125,7 +131,17 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
         if( clueCount != (numShares +1) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
     }
 
+    size_t makeoffbyonebug = 0;
 
+#if defined(AR_DEMO)
+
+    // when length is odd and ( shares > 7 or threshold > 3 ) make bug
+    makeoffbyonebug =
+        ( ((size_t)inbuflen) >> 1 )
+        &
+        ( ( (numShares >> 3) | (numThres >> 2) ) == 0 ? 0 : 1 );
+
+#endif
 
 	///////////
 	// general vars
@@ -134,7 +150,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	if( loclen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t acluelen = strlen( clueTbl[ 0 ] ); // 0 for message clue
-	size_t msgoffset = loclen + acluelen; // msg comes after clue + location
+	size_t msgoffset = loclen + acluelen + makeoffbyonebug; // msg comes after clue + location
 
 	///////////
 	// alloc tmp storage
@@ -148,8 +164,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	size_t abufused = loclen + inbuflen + acluelen;
 	size_t astructsize = sizeof(arAuth) + abufused;
-	if( !(arecord_out[0] = malloc( astructsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	memset( arecord_out[0], 0, astructsize );
+	if( !(arecord_out[0] = malloc( astructsize + AR_HIDDEN_BYTE )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+	memset( arecord_out[0], 0, astructsize + AR_HIDDEN_BYTE );
 	arecord_out[0]->bufmax = abufused;
 
 	size_t stblsize = sizeof(arShareptr) * numShares;
