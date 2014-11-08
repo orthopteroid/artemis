@@ -5,8 +5,8 @@
 
 #include "ec_types.h"
 
-//#define ENABLE_TESTFAIL
 //#define SHOW_FAILURES
+//#define ENABLE_FUZZING
 
 /////////////////////////////
 #define AR_STR_HELPER(x) #x

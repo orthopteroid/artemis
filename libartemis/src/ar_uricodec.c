@@ -919,7 +919,7 @@ void ar_uri_test()
 		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl[i] ); }
 		free( srecordtbl );
 
-#if defined(ENABLE_TESTFAIL)
+#if defined(ENABLE_FUZZING)
 
 		{
 			// test failure with too few shares
@@ -965,7 +965,7 @@ void ar_uri_test()
 			free( buf[1] );
 		}
 
-#endif // ENABLE_TESTFAIL
+#endif // ENABLE_FUZZING
 
 		free( arecord_ );
 		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }

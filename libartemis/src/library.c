@@ -492,7 +492,7 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 
 	// validate
 
-	if( strcmp( arecordLoc, szLocation ) != 0 ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+	if( strcmp( arecordLoc, szLocation ) != 0 ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
 
 	if( rc = ar_core_check_topic( 0, pARecord, 0, 0 ) ) { LOGFAIL( rc ); goto EXIT; } // conv failure code
 
@@ -504,8 +504,8 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 		if( invalidBoolArr_out_opt )
 		{
 			if( !(pBoolArr = malloc( srecordCount )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+			*invalidBoolArr_out_opt = pBoolArr; // reassign before possible failures below
 		}
-		*invalidBoolArr_out_opt = pBoolArr; // reassign before possible failures below
 		
 		if( rc = ar_core_check_topic( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL( rc ); goto EXIT; } // conv failure code
 		
@@ -560,6 +560,9 @@ void library_test()
 		rc = library_uri_validate( &validation, location, recordArr );
 		TESTASSERT( rc == 0 );
 		free( validation );
+
+		rc = library_uri_validate( 0, location, recordArr );
+		TESTASSERT( rc == 0 );
 	}
 	
 	{
@@ -576,9 +579,16 @@ void library_test()
 		rc = library_uri_validate( &validation, location, recordArr );
 		TESTASSERT( rc == 0 );
 		free( validation );
+
+		rc = library_uri_validate( 0, location, recordArr );
+		TESTASSERT( rc == 0 );
 	}
-	
-#if defined(ENABLE_TESTFAIL)
+	location[0]++; // break location
+	rc = library_uri_validate( 0, location, recordArr );
+	TESTASSERT( rc == RC_LOCATION );
+	location[0]--; // unbreak location
+
+#if defined(ENABLE_FUZZING)
 
 	// now break something
 	recordArr[ 3 + strlen(recordArr) / 2 ]++;
@@ -586,7 +596,7 @@ void library_test()
 	TESTASSERT( rc != 0 );
 	free( validation );
 
-#endif // ENABLE_TESTFAIL
+#endif // ENABLE_FUZZING
 
 	free( recordArr );
 	free( message );

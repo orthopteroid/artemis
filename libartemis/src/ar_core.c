@@ -613,7 +613,7 @@ void ar_core_test()
 
 	TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
 
-#if defined(ENABLE_TESTFAIL)
+#if defined(ENABLE_FUZZING)
 
 	///////////////////
 	// now start breaking things....
@@ -642,7 +642,7 @@ void ar_core_test()
 	TESTASSERT( checkarr[0] ); // all fail
 	TESTASSERT( checkarr[1] );
 
-#endif // ENABLE_TESTFAIL
+#endif // ENABLE_FUZZING
 
 EXIT:
 
