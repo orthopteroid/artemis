@@ -6,4 +6,10 @@
         <item>Most Complete</item>
         <item>Least Complete</item>
     </string-array>
+    <string-array name="dialog_topicactions">
+        <item>Zip and Share</item>
+        <item></item>
+        <item>Delete</item>
+        <item>Delete All</item>
+    </string-array>
 </resources>

@@ -28,35 +28,58 @@ public class ActivityTopics extends FragmentActivity {
 
     public static final int ACTIVITY_COMPLETE = 0;
 
+    public final static String INTENT_SHARE = "intent-share";
+    public final static String INTENT_DELETEONE = "intent-deleteone";
+    public final static String INTENT_DELETEALL = "intent-deleteall";
+    public final static String INTENT_PACKAGE = "intent-package";
+    public final static String EXTRA_TOPICSTRING = "intent-topic";
+    public final static String EXTRA_URISTRING = "intent-uristring";
+
     ////////////////
 
     private FragmentActivity thisActivity;
-
-    private ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
-
     private FakeScanner fs;
-
-    private ArrayList<ArtemisTopic> topicArrayList = new ArrayList<ArtemisTopic>();
+    private LocalBroadcastManager lbm;
     private ListView listView;
+    private ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
+    private ArrayList<ArtemisTopic> topicArrayList = new ArrayList<ArtemisTopic>();
+
+    ////////////////
 
     private BroadcastReceiver shareIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             //Notifier.ShowMessage(thisActivity, "sharing!" );
-            new Packager( thisActivity, intent.getStringExtra(Notifier.EXTRA_TOPICSTRING) );
+            new Packager( thisActivity, intent.getStringExtra( EXTRA_TOPICSTRING ) );
         }
     };
 
     private BroadcastReceiver packageIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Uri uri = Uri.parse( intent.getStringExtra(Notifier.EXTRA_URISTRING) );
+            Uri uri = Uri.parse( intent.getStringExtra( EXTRA_URISTRING ) );
             //Notifier.ShowMessage(thisActivity, "packaged uri: " + uri.toString() );
             Intent intent2 = new Intent( android.content.Intent.ACTION_SEND, uri );
             intent2.setType("application/zip");
             intent2.addFlags( Intent.FLAG_GRANT_READ_URI_PERMISSION );
             intent2.putExtra( Intent.EXTRA_STREAM, uri );
             startActivity(Intent.createChooser(intent2, "Send Images"));
+        }
+    };
+
+    private BroadcastReceiver deleteoneIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ArtemisSQL.Get().delTopic( intent.getStringExtra( EXTRA_TOPICSTRING ) );
+            refreshListView();
+        }
+    };
+
+    private BroadcastReceiver deleteallIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ArtemisSQL.Get().delAll();
+            refreshListView();
         }
     };
 
@@ -146,8 +169,11 @@ public class ActivityTopics extends FragmentActivity {
 
     @Override
     protected void onDestroy() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(shareIntentReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(packageIntentReceiver);
+        lbm.unregisterReceiver(shareIntentReceiver);
+        lbm.unregisterReceiver(packageIntentReceiver);
+        lbm.unregisterReceiver(deleteoneIntentReceiver);
+        lbm.unregisterReceiver(deleteallIntentReceiver);
+
         super.onDestroy();
     }
 
@@ -157,8 +183,12 @@ public class ActivityTopics extends FragmentActivity {
         setContentView(R.layout.topic_page);
         thisActivity = this;
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(shareIntentReceiver, new IntentFilter( Notifier.INTENT_SHARE ));
-        LocalBroadcastManager.getInstance(this).registerReceiver(packageIntentReceiver, new IntentFilter( Notifier.INTENT_PACKAGE ));
+        lbm = LocalBroadcastManager.getInstance( thisActivity );
+
+        lbm.registerReceiver(shareIntentReceiver, new IntentFilter( INTENT_SHARE ));
+        lbm.registerReceiver(packageIntentReceiver, new IntentFilter( INTENT_PACKAGE ));
+        lbm.registerReceiver(deleteoneIntentReceiver, new IntentFilter( INTENT_DELETEONE ));
+        lbm.registerReceiver(deleteallIntentReceiver, new IntentFilter( INTENT_DELETEALL ));
 
         ArtemisSQL.Init( this );
         ArtemisLib.Init();
@@ -167,52 +197,58 @@ public class ActivityTopics extends FragmentActivity {
         ////////////////
 
         listView = (ListView) findViewById(R.id.topic_list);
-        listView.setAdapter(new TopicArrayAdapter(getApplicationContext()));
-        /*
-        listView.setOnItemLongClickListener(
-                new AdapterView.OnItemLongClickListener() {
-                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        String topic = ((TextView) view.findViewById(R.id.topic)).getText().toString();
-                        ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
+        listView.setAdapter( new TopicArrayAdapter(getApplicationContext()) );
 
-                        boolean shareMode = false;
-                        String message = oTopic.message;
-                        if( oTopic.isARecordPresent() == false ) { message = getResources().getString( R.string.sharelist_nomessage ); }
-                        else if( oTopic.message.length() == 0 ) { message = getResources().getString( R.string.sharelist_needmorekeys ); }
-                        else { shareMode = true; }
+        AdapterView.OnItemLongClickListener oilcl = new AdapterView.OnItemLongClickListener() {
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                final String topic = ((TextView) view.findViewById(R.id.topic)).getText().toString();
+                ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
 
-                        if( shareMode ) {
-                            Notifier.ShowMessageAndPosiblyShare(thisActivity, topic, message);
-                        } else {
-                            Notifier.ShowMessage(thisActivity, message);
+                DialogInterface.OnClickListener ocl = new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int _which) {
+                        Intent intent = null;
+                        switch( _which ) {
+                            case 0:
+                                intent = new Intent( INTENT_SHARE );
+                                intent.putExtra( EXTRA_TOPICSTRING, topic );
+                                break;
+                            case 1:
+                                // blank!
+                                break;
+                            case 2:
+                                intent = new Intent( INTENT_DELETEONE );
+                                intent.putExtra( EXTRA_TOPICSTRING, topic );
+                                break;
+                            case 3:
+                                intent = new Intent( INTENT_DELETEALL );
+                                break;
+                            default:
                         }
-                        return false;
+                        if( intent != null ) { lbm.sendBroadcast( intent ); }
+                        refreshListView();
                     }
-                }
-        );
-        */
+                };
+                Notifier.ShowOptions( thisActivity, R.array.dialog_topicactions, ocl );
+
+                return false;
+            }
+        };
+        listView.setOnItemLongClickListener( oilcl );
+
         listView.setOnItemClickListener(
             new OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-/*
-                    Intent i = new Intent(getApplicationContext(), ShareListActivity.class);
-                    i.putExtra("topic", ((TextView) view.findViewById(R.id.topic)).getText().toString());
-                    startActivity(i);
-*/
                     String topic = ((TextView) view.findViewById(R.id.topic)).getText().toString();
                     ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
 
-                    boolean shareMode = false;
-                    String message = oTopic.message;
-                    if( oTopic.isARecordPresent() == false ) { message = getResources().getString( R.string.sharelist_nomessage ); }
-                    else if( oTopic.message.length() == 0 ) { message = getResources().getString( R.string.sharelist_needmorekeys ); }
-                    else { shareMode = true; }
-
-                    if( shareMode ) {
-                        Notifier.ShowMessageAndPosiblyShare(thisActivity, topic, message);
-                    } else {
-                        Notifier.ShowMessage(thisActivity, message);
+                    String message = oTopic.message; // default, assuming it exists
+                    if( oTopic.isARecordPresent() == false ) {
+                        message = getResources().getString( R.string.sharelist_nomessage );
+                    } else if( oTopic.message.length() == 0 ) {
+                        message = getResources().getString( R.string.sharelist_needmorekeys );
                     }
+
+                    Notifier.ShowMessage(thisActivity, message);
                 }
             }
         );
@@ -241,11 +277,6 @@ public class ActivityTopics extends FragmentActivity {
             }
         };
         Notifier.ShowOptions( this, R.array.dialog_sorttopics, ocl);
-    }
-
-    public void onClickPurge(View v) {
-        ArtemisSQL.Get().delAll();
-        refreshListView();
     }
 
     public void onClickHack(View v) {

@@ -36,9 +36,9 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/sort_button"
         android:layout_toRightOf="@+id/sort_button"
-        android:text="H"
+        android:text="Hack"
         android:onClick="onClickHack"
-        />
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
         android:id="@+id/new_button"
@@ -48,19 +48,7 @@
         android:onClick="onClickNew"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:layout_above="@+id/topic_list"
-        android:layout_toLeftOf="@+id/button_keys"
-        android:layout_toRightOf="@+id/hack" />
-
-    <Button
-        android:id="@+id/button_keys"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/topic_list"
-        android:layout_alignRight="@+id/topic_list"
-        android:layout_alignParentRight="false"
-        android:text="@string/button_purge"
-        android:onClick="onClickPurge"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:layout_alignRight="@+id/topic_list" />
 
     <View
         android:id="@+id/sep"

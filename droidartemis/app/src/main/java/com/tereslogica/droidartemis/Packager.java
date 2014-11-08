@@ -196,7 +196,7 @@ public class Packager {
             if( this.isCancelled() ) { return; }
             if( uri == null ) { return; }
 
-            LocalBroadcastManager.getInstance(cxt).sendBroadcast( (new Intent(Notifier.INTENT_PACKAGE)).putExtra( Notifier.EXTRA_URISTRING, uri.toString() ) );
+            LocalBroadcastManager.getInstance(cxt).sendBroadcast( (new Intent( ActivityTopics.INTENT_PACKAGE )).putExtra( ActivityTopics.EXTRA_URISTRING, uri.toString() ) );
         }
     }
 
