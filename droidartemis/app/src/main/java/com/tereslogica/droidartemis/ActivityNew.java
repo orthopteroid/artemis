@@ -27,6 +27,7 @@ public class ActivityNew extends Activity {
         public void setTitle( String t );
         public void setValue( String v );
         public String getValue();
+        public void removeFromLayout( LinearLayout layout );
     }
 
     ///////////////////////////////
@@ -71,12 +72,17 @@ public class ActivityNew extends Activity {
                     }
             );
 
+            // weird hack
+            final LinearLayout layoutClone = layout;
+            final LayoutInflater inflaterClone = inflater;
+
             moreButton.setOnClickListener( new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     try {
                         String value = getValue();
                         setValue( String.valueOf( Integer.parseInt( value ) + 1 ) );
+                        settings.add( (AbstractItem)new TextItem( layoutClone, inflaterClone, "Optional Key Clue", "") );
                     } catch( Exception e ) {}
                 }
             });
@@ -86,7 +92,14 @@ public class ActivityNew extends Activity {
                 public void onClick(View view) {
                     try {
                         String value = getValue();
-                        setValue( String.valueOf( Integer.parseInt( value ) + ( ( Integer.parseInt( value ) < 2 ) ? 0 : -1 ) ) );
+                        int delta =  ( Integer.parseInt( value ) < 2 ) ? 0 : -1;
+                        setValue( String.valueOf( Integer.parseInt( value ) + delta ) );
+                        if( delta == - 1 ) {
+                            int lastItem = settings.size() -1; // -1 to remove last
+                            AbstractItem lastClue = settings.get( lastItem );
+                            lastClue.removeFromLayout( layoutClone );
+                            settings.remove( lastItem );
+                        }
                     } catch( Exception e ) {}
                 }
             });
@@ -98,6 +111,7 @@ public class ActivityNew extends Activity {
             layout.addView( containerView );
         }
 
+        public void removeFromLayout( LinearLayout layout ) { layout.removeView( containerView ); }
         public void setTitle( String t ) { titleView.setText( t.subSequence(0, t.length()) ); }
         public void setValue( String v ) { valueView.setText( v.subSequence(0, v.length()) ); }
         public String getValue() { return valueView.getText().toString(); }
@@ -147,6 +161,7 @@ public class ActivityNew extends Activity {
             layout.addView( containerView );
         }
 
+        public void removeFromLayout( LinearLayout layout ) { layout.removeView( containerView ); }
         public void setTitle( String t ) { textView.setHint( t.subSequence(0, t.length()) ); }
         public void setValue( String v ) { textView.setText( v.subSequence(0, v.length()) ); }
         public String getValue() { return textView.getText().toString(); }
