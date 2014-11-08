@@ -266,13 +266,12 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void delTopic( ArtemisTopic oTopic ) {
-        String topic = oTopic.topic;
-
+    public void delTopic( String topic ) {
+        int deleterows = 0;
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("BEGIN;");
-        db.execSQL("DELETE FROM "+SHARES+" WHERE "+TOPIC+" = '"+topic+"' );");
-        db.execSQL("DELETE FROM "+TOPICS+" WHERE "+TOPIC+" = '"+topic+"' );");
+        deleterows += db.delete( SHARES, TOPIC+" = ?", new String[] { topic } );
+        deleterows += db.delete( TOPICS, TOPIC+" = ?", new String[] { topic } );
         db.execSQL("COMMIT;");
         db.close();
     }
