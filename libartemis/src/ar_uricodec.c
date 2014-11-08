@@ -782,6 +782,7 @@ void ar_uri_test()
 		char* clues_rw[4] = {clues_r[0], clues_r[1], clues_r[2], 0}; // table ends in 0
 		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
 		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
+		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
 
 		// clear
 		memset( &bufa, 0, sizeof(byte2048) );
