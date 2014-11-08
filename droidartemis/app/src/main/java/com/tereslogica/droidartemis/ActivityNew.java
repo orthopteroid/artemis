@@ -36,7 +36,7 @@ public class ActivityNew extends Activity {
         public TextView titleView;
         public EditText valueView;
 
-        public NumberItem( LayoutInflater inflater, LinearLayout layout, String _t, String _v ) {
+        public NumberItem( LinearLayout layout, LayoutInflater inflater, String _t, String _v ) {
             containerView = inflater.inflate( R.layout.creator_number, layout, false );
             titleView = ((TextView) containerView.findViewById(R.id.numsetting_title));
             valueView = ((EditText) containerView.findViewById( R.id.numsetting_value));
@@ -107,7 +107,7 @@ public class ActivityNew extends Activity {
         public View containerView;
         public EditText textView;
 
-        public TextItem( LayoutInflater inflater, LinearLayout layout, String _t, String _v ) {
+        public TextItem( LinearLayout layout, LayoutInflater inflater, String _t, String _v ) {
             containerView = inflater.inflate( R.layout.creator_text, layout, false );
             textView = ((EditText) containerView.findViewById(R.id.txtsetting_value));
 
@@ -163,12 +163,12 @@ public class ActivityNew extends Activity {
         thisActivity = this;
 
         settings.clear();
-        settings.add( (AbstractItem)new NumberItem( inflater, layout, "Keys", "2") );
-        settings.add( (AbstractItem)new NumberItem( inflater, layout, "Locks", "2") );
-        settings.add( (AbstractItem)new TextItem( inflater, layout, "Message to be Encrypted", "A Secret") );
-        settings.add( (AbstractItem)new TextItem( inflater, layout, "Optional Message Clue", "mc") );
-        settings.add( (AbstractItem)new TextItem( inflater, layout, "Optional Key Clue", "c1") );
-        settings.add( (AbstractItem)new TextItem( inflater, layout, "Optional Key Clue", "c2") );
+        settings.add( (AbstractItem)new NumberItem( layout, inflater, "Keys", "2") );
+        settings.add( (AbstractItem)new NumberItem( layout, inflater, "Locks", "2") );
+        settings.add( (AbstractItem)new TextItem( layout, inflater, "Message to be Encrypted", "A Secret") );
+        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Message Clue", "") );
+        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
+        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
     }
 
     ////////
@@ -176,22 +176,39 @@ public class ActivityNew extends Activity {
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-/*
-        savedInstanceState.putString("keys", settings.get(0).value);
-        savedInstanceState.putString("locks", settings.get(1).value);
-        savedInstanceState.putString("message", settings.get(2).value);
+        savedInstanceState.putString( "keys", settings.get(0).getValue() );
+        savedInstanceState.putString( "locks", settings.get(1).getValue() );
+        savedInstanceState.putString( "mtext", settings.get(2).getValue() );
+        savedInstanceState.putString( "mclue", settings.get(3).getValue() );
+        savedInstanceState.putString( "kc1", settings.get(4).getValue() );
+        savedInstanceState.putString( "kc2", settings.get(5).getValue() );
+
+        int extraclues = settings.size() -6; // -6 since array starts at 0
+        savedInstanceState.putInt( "extraclues", extraclues );
+        for( int i = 0; i < extraclues; i++ ) {
+            savedInstanceState.putString( Integer.toString(i), settings.get(i +6).getValue() );
+        }
         super.onSaveInstanceState(savedInstanceState);
-*/
     }
 
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
-/*
         super.onRestoreInstanceState(savedInstanceState);
-        settings.get(0).value = savedInstanceState.getString("keys");
-        settings.get(1).value = savedInstanceState.getString("locks");
-        settings.get(2).value = savedInstanceState.getString("message");
-*/
+        settings.get(0).setValue(savedInstanceState.getString("keys"));
+        settings.get(1).setValue(savedInstanceState.getString("locks"));
+        settings.get(2).setValue(savedInstanceState.getString("mtext"));
+        settings.get(3).setValue( savedInstanceState.getString("mclue") );
+        settings.get(4).setValue( savedInstanceState.getString("kc1") );
+        settings.get(5).setValue( savedInstanceState.getString("kc2") );
+
+        LinearLayout layout = (LinearLayout) findViewById(R.id.generic_linear);
+        LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        int extraclues = savedInstanceState.getInt("extraclues");
+        for( int i = 0; i < extraclues; i++ ) {
+            String clueText = savedInstanceState.getString( Integer.toString(i) );
+            settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", clueText) );
+        }
     }
 
     ////////
