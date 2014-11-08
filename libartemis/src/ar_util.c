@@ -88,8 +88,8 @@ int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len )
 
 	if( !table_out ) { rc = RC_NULL; LOGFAIL( rc ); return rc; }
 
-	// TODO: one day, fix this to allow tables of only 0, 1 or 2 elements
-	if( len < 3 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); return rc; }
+	// TODO: one day, fix this to allow tables of only 0 or 1 elements. no need now since can't have < 2 shares or locks
+	if( len < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); return rc; }
 
 	*table_out = 0;
 

@@ -544,20 +544,39 @@ void library_test()
 	int shares = 2;
 	int threshold = 2;
 	byteptr location = "foo.bar";
-	byteptr clueArr = "main clue\nfirst clue\nsecond clue";
-	byteptr message_in = "something shared between friends";
+	byteptr message_in = "between friends";
 
-	rc = library_uri_encoder( &recordArr, shares, threshold, location, clueArr, message_in );
-	TESTASSERT( rc == 0 );
+	{
+		byteptr clueArr = "main clue\nfirst clue\nsecond clue";
 
-	rc = library_uri_decoder( &message, location, recordArr );
-	TESTASSERT( rc == 0 );
+		rc = library_uri_encoder( &recordArr, shares, threshold, location, clueArr, message_in );
+		TESTASSERT( rc == 0 );
 
-	TESTASSERT( strcmp( message_in, message ) == 0 );
+		rc = library_uri_decoder( &message, location, recordArr );
+		TESTASSERT( rc == 0 );
 
-	rc = library_uri_validate( &validation, location, recordArr );
-	TESTASSERT( rc == 0 );
-	free( validation );
+		TESTASSERT( strcmp( message_in, message ) == 0 );
+
+		rc = library_uri_validate( &validation, location, recordArr );
+		TESTASSERT( rc == 0 );
+		free( validation );
+	}
+	
+	{
+		byteptr clueArr = "\n\n";
+
+		rc = library_uri_encoder( &recordArr, shares, threshold, location, clueArr, message_in );
+		TESTASSERT( rc == 0 );
+
+		rc = library_uri_decoder( &message, location, recordArr );
+		TESTASSERT( rc == 0 );
+
+		TESTASSERT( strcmp( message_in, message ) == 0 );
+
+		rc = library_uri_validate( &validation, location, recordArr );
+		TESTASSERT( rc == 0 );
+		free( validation );
+	}
 	
 #if defined(ENABLE_TESTFAIL)
 
