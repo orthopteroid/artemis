@@ -137,8 +137,5 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Platform</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\Program Files (x86)\gevorkyan.org\MicroProfiler\micro-profiler.initializer.cpp">
-      <Filter>Platform</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
