@@ -287,7 +287,7 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	size_t messlen = message ? strlen( message ) : 0;
 	if( messlen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
-#if 0 //defined(AR_DEMO)
+#if defined(AR_DEMO)
 
     // check RC_DEMO_7K_3L_20C
     {
