@@ -564,6 +564,16 @@ void library_test()
 		rc = library_uri_validate( 0, location, recordArr );
 		TESTASSERT( rc == 0 );
 
+#if defined(ENABLE_FUZZING)
+
+		// now break something
+		recordArr[ 3 + strlen(recordArr) / 2 ]++;
+		rc = library_uri_validate( &validation, location, recordArr );
+		TESTASSERT( rc != 0 );
+		free( validation );
+
+#endif // ENABLE_FUZZING
+
 		free( recordArr );
 		free( message );
 	}
@@ -594,16 +604,6 @@ void library_test()
 		free( recordArr );
 		free( message );
 	}
-
-#if defined(ENABLE_FUZZING)
-
-	// now break something
-	recordArr[ 3 + strlen(recordArr) / 2 ]++;
-	rc = library_uri_validate( &validation, location, recordArr );
-	TESTASSERT( rc != 0 );
-	free( validation );
-
-#endif // ENABLE_FUZZING
 
 #endif // _DEBUG
 
