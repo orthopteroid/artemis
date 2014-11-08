@@ -935,7 +935,7 @@ void ar_uri_test()
 			buf[0]=(byteptr)strdup( bufa );
 			buf[1]=(byteptr)strdup( bufs0 );
 
-			for( int j=0; j<400; j++)
+			for( int j=0; j<10; j++)
 			{
 				free( arecord_ );
 				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }
@@ -964,6 +964,38 @@ void ar_uri_test()
 			}
 			free( buf[0] );
 			free( buf[1] );
+		}
+
+		{
+			// test failure from uri streching
+			byteptr bufa_stretch=(byteptr)malloc( strlen( bufa ) + 1 );
+
+			for( int j=0; j<10; j++)
+			{
+				free( arecord_ );
+				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }
+
+				size_t ii = ar_util_rnd32() % strlen( bufa );
+				{
+					strncpy_s( bufa_stretch, strlen( bufa ) + 1, bufa, ii );
+					bufa_stretch[ii] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
+					strncpy_s( bufa_stretch +ii +1, strlen( bufa ) -ii, bufa +ii +1, strlen( bufa ) -1 -ii );
+
+					rc = 0;
+					rc = ar_uri_parse_a( &arecord_, bufa_stretch );
+					rc = ar_uri_parse_s( &srecordtbl_[0], bufs0 );
+					rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 );
+					rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
+					if( !rc )
+					{
+						// sometimes there won't be failures, because a delim may be replaced with another delim for instance
+						TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
+					}
+
+					free( cleartext_out );
+				}
+			}
+			free( bufa_stretch );
 		}
 
 #endif // ENABLE_FUZZING
