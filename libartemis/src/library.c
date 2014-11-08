@@ -287,7 +287,7 @@ int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byte
 	size_t messlen = message ? strlen( message ) : 0;
 	if( messlen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
-#if defined(AR_DEMO)
+#if 0 //defined(AR_DEMO)
 
     // check RC_DEMO_7K_3L_20C
     {
@@ -563,6 +563,9 @@ void library_test()
 
 		rc = library_uri_validate( 0, location, recordArr );
 		TESTASSERT( rc == 0 );
+
+		free( recordArr );
+		free( message );
 	}
 	
 	{
@@ -582,11 +585,15 @@ void library_test()
 
 		rc = library_uri_validate( 0, location, recordArr );
 		TESTASSERT( rc == 0 );
+
+		location[0]++; // break location
+		rc = library_uri_validate( 0, location, recordArr );
+		TESTASSERT( rc == RC_LOCATION );
+		location[0]--; // unbreak location
+
+		free( recordArr );
+		free( message );
 	}
-	location[0]++; // break location
-	rc = library_uri_validate( 0, location, recordArr );
-	TESTASSERT( rc == RC_LOCATION );
-	location[0]--; // unbreak location
 
 #if defined(ENABLE_FUZZING)
 
@@ -597,9 +604,6 @@ void library_test()
 	free( validation );
 
 #endif // ENABLE_FUZZING
-
-	free( recordArr );
-	free( message );
 
 #endif // _DEBUG
 
