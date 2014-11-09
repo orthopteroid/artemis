@@ -935,10 +935,10 @@ void ar_uri_test()
 			buf[0]=(byteptr)strdup( bufa );
 			buf[1]=(byteptr)strdup( bufs0 );
 
-			for( int j=0; j<10; j++)
+			for( int j=0; j<400; j++)
 			{
 				free( arecord_ );
-				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }
+				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); srecordtbl_[i] = 0; }
 
 				byteptr p = buf[ ar_util_rnd32() & 0x01 ];
 				size_t ii = ar_util_rnd32() % strlen( p );
@@ -946,18 +946,16 @@ void ar_uri_test()
 					byte bb = p[ii];
 					p[ii] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
 
-					rc = 0;
 					rc = ar_uri_parse_a( &arecord_, buf[0] );
-					rc = ar_uri_parse_s( &srecordtbl_[0], buf[1] );
-					rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 );
-					rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
+					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[0], buf[1] ); }
+					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 ); }
+					if( !rc ) { rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares ); }
 					if( !rc )
 					{
 						// sometimes there won't be failures, because a delim may be replaced with another delim for instance
 						TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
 					}
-
-					free( cleartext_out );
+					if( cleartext_out ) { free( cleartext_out ); cleartext_out = 0; }
 
 					p[ii] = bb; // clean
 				}
@@ -968,31 +966,29 @@ void ar_uri_test()
 
 		{
 			// test failure from uri streching
-			byteptr bufa_stretch=(byteptr)malloc( strlen( bufa ) + 1 );
+			byteptr bufa_stretch=(byteptr)malloc( strlen( bufa ) +1 +1 ); // +1 for extra char, +1 for /0
 
-			for( int j=0; j<10; j++)
+			for( int j=0; j<400; j++)
 			{
 				free( arecord_ );
-				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }
+				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); srecordtbl_[i] = 0; }
 
 				size_t ii = ar_util_rnd32() % strlen( bufa );
 				{
 					strncpy_s( bufa_stretch, strlen( bufa ) + 1, bufa, ii );
 					bufa_stretch[ii] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
-					strncpy_s( bufa_stretch +ii +1, strlen( bufa ) -ii, bufa +ii +1, strlen( bufa ) -1 -ii );
+					strncpy_s( bufa_stretch +ii +1, strlen( bufa ) -ii, bufa +ii, strlen( bufa ) -1 -ii );
 
-					rc = 0;
 					rc = ar_uri_parse_a( &arecord_, bufa_stretch );
-					rc = ar_uri_parse_s( &srecordtbl_[0], bufs0 );
-					rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 );
-					rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
+					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[0], bufs0 ); }
+					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 ); }
+					if( !rc ) { rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares ); }
 					if( !rc )
 					{
 						// sometimes there won't be failures, because a delim may be replaced with another delim for instance
 						TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
 					}
-
-					free( cleartext_out );
+					if( cleartext_out ) { free( cleartext_out ); cleartext_out = 0; }
 				}
 			}
 			free( bufa_stretch );
