@@ -108,9 +108,9 @@ int library_isdebug()
 {
 #if defined(_DEBUG)
 	return 1;
-#else // _DEBUG
+#else
 	return 0;
-#endif // _DEBUG
+#endif
 }
 
 int library_istest()
@@ -125,7 +125,11 @@ void library_settest()
 
 int library_isdemo()
 {
-	return AR_DEMO;
+#if defined(AR_DEMO)
+	return 1;
+#else
+	return 0;
+#endif
 }
 
 word16 library_version()
