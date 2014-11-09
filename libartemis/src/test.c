@@ -12,12 +12,14 @@
 #include "test.h"
 #include "library.h"
 
+#include "version.h"
+
 #include <stdio.h>
 
 void test_all()
 {
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 
 	library_settest();
 
@@ -40,9 +42,9 @@ void test_all()
 	library_uri_encoder( &shares, 5, 3, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message three" ); printf( "%s\n", shares ); library_free( &shares );
 	library_uri_encoder( &shares, 5, 2, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message two" );   printf( "%s\n", shares ); library_free( &shares );
 
-#else // _DEBUG
+#else
 
 	printf("# no tests in this build\n");
 
-#endif // _DEBUG
+#endif
 }

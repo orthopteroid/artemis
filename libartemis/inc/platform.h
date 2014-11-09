@@ -6,6 +6,7 @@
 #include "ec_types.h"
 
 //#define SHOW_FAILURES
+//#define ENABLE_TESTS
 //#define ENABLE_FUZZING
 
 /////////////////////////////
@@ -78,7 +79,7 @@
 			#define DEBUGHALT assert(0)
 		#endif
 	#else
-		#define DEBUGPRINT (0)
+		#define DEBUGHALT (0)
 	#endif
 #endif
 

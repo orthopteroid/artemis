@@ -11,7 +11,7 @@
 #include "ar_util.h"
 #include "version.h"
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 	#include "ar_core.h" // for testing
 #endif
 
@@ -373,7 +373,7 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 	size_t tokenlen = 0;
 	word32 stateArr[] = {'tp=\0', 'ai=\0', 'vf=\0', 'pk=\0', 'as=\0', 'mt=\0', 'mc=\0', 0 };
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 
 	// impose some robustness on the order of the tags....
 	int k = sizeof(stateArr) / sizeof(word32) -1 -1; // -1 conv from size to count, -1 to omit EOA marker
@@ -449,7 +449,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 	size_t tokenlen = 0;
 	word32 stateArr[] = {'tp=\0', 'si=\0', 'sh=\0', 'ss=\0', 'sc=\0', 0 };
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 
 	// impose some robustness on the order of the tags....
 	int k = sizeof(stateArr) / sizeof(word32) -1 -1; // -1 conv from size to count, -1 to omit EOA marker
@@ -734,7 +734,7 @@ EXIT:
 void ar_uri_test()
 {
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 
 	printf("# ar_uri_test: ");
 

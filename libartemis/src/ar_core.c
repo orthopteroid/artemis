@@ -598,7 +598,7 @@ EXIT:
 void ar_core_test()
 {
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 
 	printf("# ar_core_test\n");
 

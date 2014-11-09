@@ -89,18 +89,18 @@ PRAGMA_OPTIMIZE
 
 int ar_util_istest()
 {
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 	return testflag;
-#else // _DEBUG
+#else
 	return 0;
-#endif // _DEBUG
+#endif
 }
 
 void ar_util_settest()
 {
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 	testflag = 1;
-#endif // _DEBUG
+#endif
 }
 
 ////////////////////
@@ -449,7 +449,7 @@ int ar_util_isvalid7bit( byteptr szRecord )
 void ar_util_test()
 {
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 
 	printf("# ar_util_test\n");
 

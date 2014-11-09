@@ -182,7 +182,7 @@ void sha1_digest( sha1Digest digest, byteptr bytes, size_t len )
 void sha1_test()
 {
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 
 	#define bufSize 2000
 	char buf[ bufSize ];
@@ -222,7 +222,7 @@ void sha1_test()
 		TESTASSERT( 0 );
 	}
 
-#endif //_DEBUG
+#endif
 
 }
 

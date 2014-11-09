@@ -531,7 +531,7 @@ EXIT:
 void library_test()
 {
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 
 	DEBUGPRINT("# library_test\n");
 
@@ -605,6 +605,6 @@ void library_test()
 		free( message );
 	}
 
-#endif // _DEBUG
+#endif
 
 }

@@ -12,10 +12,8 @@
 #include "ec_crypt.h"	// for testing
 #include "ar_util.h"	// for testing
 
-#if defined(_DEBUG)
-
-#include "version.h"
-
+#if defined(ENABLE_TESTS)
+#include "version.h" // for testing
 #endif
 
 ///////////
@@ -123,7 +121,7 @@ EXIT:
 void ar_shamir_test()
 {
 
-#if defined(_DEBUG)
+#if defined(ENABLE_TESTS)
 
 	{
 		printf("# test shamir roundtrip\n");
