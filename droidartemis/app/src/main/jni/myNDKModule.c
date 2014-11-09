@@ -15,7 +15,7 @@
 // http://stackoverflow.com/questions/5859673/should-you-call-releasestringutfchars-if-getstringutfchars-returned-a-copy
 
 char* szBlank = "";
-char* szLocation = "foo.bar";
+char* szLocation = "arcanashare.webhop.net";
 
 static int rc = 0;
 
