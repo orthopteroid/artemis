@@ -19,12 +19,12 @@
 void test_all()
 {
 
+	DEBUGPRINT( "*************\nAR_LOCATION %s\nAR_LOCHASH 0x%X\n*************\n", AR_LOCATION, ar_util_strcrc( AR_LOCATION ) );
+	ASSERT( ar_util_strcrc( AR_LOCATION ) == AR_LOCHASH );
+
 #if defined(ENABLE_TESTS)
 
 	library_settest();
-
-	DEBUGPRINT( "*************\nAR_LOCATION %s\nAR_LOCHASH 0x%X\n*************\n", AR_LOCATION, ar_util_strcrc( AR_LOCATION ) );
-	ASSERT( ar_util_strcrc( AR_LOCATION ) == AR_LOCHASH );
 
 	printf("# tests starting\n");
 	sha1_test();

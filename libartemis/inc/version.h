@@ -16,8 +16,8 @@
 #define AR_CRYPTKEYUNITS	AR_UNITS-2 // 112 bits @ 136 gf_m
 #define AR_SIGNKEYUNITS		AR_UNITS-4 // 80 bits @ 136 gf_m
 
-#define AR_LOCATION "arcanashare.webhop.net"
-#define AR_LOCHASH 0xAC
+#define AR_LOCATION "tereslogica.com"
+#define AR_LOCHASH 0x0D
 
 #define AR_VERSION 1
 #define AR_DEMO
