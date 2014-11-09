@@ -112,9 +112,8 @@ void gfSetLUnit (gfPoint p, lunit u)
 void gfCopy (gfPoint p, const gfPoint q)
 	/* sets p := q */
 {
-	size_t b = (q[0] + 1) * sizeof(lunit);
-	if( b > sizeof(gfPoint) ) { LOGFAIL( RC_INTERNAL ); b = sizeof(gfPoint); }
-	memcpy( p, q, b );
+	if( !gfIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return; }
+	memcpy( p, q, (q[0] + 1) * sizeof(lunit) );
 } /* gfCopy */
 
 // TODO: optimize
@@ -237,34 +236,38 @@ void gfMultiply (gfPoint r, const gfPoint p, const gfPoint q)
 	memset( lg, 0, sizeof(lg) );
 } /* gfMultiply */
 
-// TODO: optimize
+
 void gfSquare (gfPoint r, const gfPoint p)
 	/* sets r := p^2 mod (x^GF_K + x^GF_T + 1) */
 {
 	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; }
+	if( (p[0]*2-1) > GF_POINT_UNITS ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; } // no room for square
 
 	int i;
 	ltemp x;
 
-	if (p[0]) {
+	if( p[0] )
+	{
 		/* in what follows, note that (x != 0) => (x^2 = exp((2 * log(x)) % TOGGLE)): */
 		i = p[0];
-		if ((x = logt[p[i]]) != TOGGLE) { /* p[i] != 0 */
+		if( (x = logt[p[i]]) != TOGGLE ) /* p[i] != 0 */
+		{
 			r[2*i - 1] = expt[(x += x) >= TOGGLE ? x - TOGGLE : x];
 		} else {
 			r[2*i - 1] = 0;
 		}
-		for (i = p[0] - 1; i; i--) {
+		for( i = p[0] - 1; i; i-- )
+		{
 			r[2*i] = 0;
-			if ((x = logt[p[i]]) != TOGGLE) { /* p[i] != 0 */
+			if( (x = logt[p[i]]) != TOGGLE ) /* p[i] != 0 */
+			{
 				r[2*i - 1] = expt[(x += x) >= TOGGLE ? x - TOGGLE : x];
 			} else {
 				r[2*i - 1] = 0;
 			}
 		}
-		r[0] = 2*p[0] - 1;
-		/* reduce r mod (x^GF_K + x^GF_T + 1): */
-		gfReduce (r);
+		r[0] = 2*p[0] - 1; // set length
+		gfReduce(r); /* reduce r mod (x^GF_K + x^GF_T + 1): */
 	} else {
 		r[0] = 0;
 	}
@@ -379,6 +382,8 @@ void gfSquareRoot (gfPoint p, lunit b)
 {
 	int i;
 	gfPoint q;
+
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return; }
 
 	q[0] = 1; q[1] = b;
 	if ((GF_M - 1) & 1) {
@@ -538,6 +543,8 @@ int gfUnpack (gfPoint p, const vlPoint k)
 		vlShortRshift (x, GF_L); /* this only works if GF_L <= 16 */
 	}
 	p[0] = n;
+
+	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return 1; }
 
 	return 0;
 } /* gfUnpack */

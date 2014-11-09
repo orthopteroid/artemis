@@ -7,7 +7,7 @@
 #include "ec_param.h"
 #include "ec_vlong.h"
 
-#define GF_POINT_UNITS	(2*(GF_K+1))
+#define GF_POINT_UNITS	( ( GF_K +1 ) *2 +1 ) // +1 for ??, *2 for holding square result, +1 for square-overflow
 
 #if GF_L < 8 || GF_L > 16
 	#error "this implementation assumes 8 <= GF_L <= 16"
@@ -28,10 +28,9 @@
 #endif
 
 // little endian format, i think
-typedef lunit gfPoint [GF_POINT_UNITS];
+typedef lunit gfPoint [ GF_POINT_UNITS +1 ]; // +1 for length
 
-
-#define gfIsValid(p) (p[0] < GF_POINT_UNITS)
+#define gfIsValid(p) (p[0] <= GF_POINT_UNITS)
 
 /* interface functions: */
 

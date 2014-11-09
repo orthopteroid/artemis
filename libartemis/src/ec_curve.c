@@ -82,6 +82,7 @@ int ecCalcY (ecPoint *p, int ybit)
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return 1; }
 	if( !gfIsValid( p->x ) ) { LOGFAIL( RC_INTERNAL ); return 1; }
 
+	int rc = 0;
 	gfPoint a, b, t;
 
 	b[0] = 1; b[1] = EC_B;
@@ -93,26 +94,28 @@ int ecCalcY (ecPoint *p, int ybit)
 	gfSquare (t, p->x); /* keep t = x^2 for beta evaluation */
 	gfMultiply (a, t, p->x);
 	gfAdd (a, a, b); /* now a == alpha */
-	if( a[0] == 0 ) { p->y[0] = 0; gfClear (a); gfClear (t); return 1; }
+	if( a[0] == 0 ) { p->y[0] = 0; rc=1; goto EXIT; }
 
 	/* evaluate beta = alpha/x^2 = x + EC_B/x^2 */
 	gfSmallDiv(t, EC_B);
-	if( 1 == gfInvert(a, t) ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 1; }
+	if( 1 == gfInvert(a, t) ) { LOGFAIL( RC_INTERNAL ); rc=1; goto EXIT; }
 	gfAdd(a, p->x, a); /* now a == beta */
 
 	/* check if a solution exists: */
-	if( gfTrace(a) != 0 ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 1; }
+	if( gfTrace(a) != 0 ) { LOGFAIL( RC_INTERNAL ); rc=1; goto EXIT; }
 
 	/* solve equation t^2 + t + beta = 0 so that gfYbit(t) == ybit: */
-	if( gfSolveQuad(t, a) == 1 ) { LOGFAIL( RC_INTERNAL ); gfClear(a); gfClear(t); return 0; }
+	if( gfSolveQuad(t, a) == 1 ) { LOGFAIL( RC_INTERNAL ); rc=0; goto EXIT; }
 
 	if( gfYbit (t) != ybit ) { t[1] ^= 1; }
 
 	/* compute y = x*t: */
 	gfMultiply(p->y, p->x, t);
 
-	gfClear (a); gfClear (t);
-	return 0;
+EXIT:
+	gfClear(a);
+	gfClear(t);
+	return rc;
 } /* ecCalcY */
 
 
