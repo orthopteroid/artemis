@@ -77,7 +77,7 @@ public class AppLogic {
             cursor.close();
             //
             String oldMess = oTopic.message;
-            oTopic.message = ArtemisLib.Get().nativeDecode( /* "arcanashare.webhop.net", */ tokenArrStr );
+            oTopic.message = ArtemisLib.Get().nativeDecode( "tereslogica.com", tokenArrStr );
             boolean decodeOK = ArtemisLib.Get().nativeDidFail() == false;
             boolean newMessage = oldMess.compareTo( oTopic.message ) != 0;
             if( newMessage && decodeOK ) { detectedDecode = true; } // set, without exception

@@ -17,7 +17,7 @@ public class ArtemisLib {
     public native boolean nativeDidFail();
     public native boolean nativeWasFailDemo();
 
-    public native String nativeDecode( /* String location, */ String recordArr ); // recordArr is \n delimited
+    public native String nativeDecode( String location, String recordArr ); // recordArr is \n delimited
 
     public native int[] nativeInfo( String record ); // type, shares, threshold
     public native String nativeTopic( String record );

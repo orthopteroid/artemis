@@ -15,7 +15,6 @@
 // http://stackoverflow.com/questions/5859673/should-you-call-releasestringutfchars-if-getstringutfchars-returned-a-copy
 
 char* szBlank = "";
-char* szLocation = "arcanashare.webhop.net";
 
 static int rc = 0;
 
@@ -44,16 +43,18 @@ JNIEXPORT jboolean JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeWa
     return jok;
 }
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jRecordArr)
+JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jLoc, jstring jRecordArr)
 {
     byte* cMessage_out = 0;
     jstring jMessage_out;
 
+    const char *cLoc = (*env)->GetStringUTFChars(env, jLoc, 0);
     const char *cRecordArr = (*env)->GetStringUTFChars(env, jRecordArr, 0);
 
+    DEBUGPRINT( "cLoc %s", cLoc );
     DEBUGPRINT( "cRecordArr %s", cRecordArr );
 
-    rc = library_uri_decoder( &cMessage_out, (byte*)szLocation, (byte*)cRecordArr );
+    rc = library_uri_decoder( &cMessage_out, (byte*)cLoc, (byte*)cRecordArr );
 
     DEBUGPRINT( "cMessage_out %X", (unsigned int)cMessage_out );
     if( cMessage_out) {
@@ -68,6 +69,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeDec
     if( cMessage_out ) { library_free( &cMessage_out ); }
 
     (*env)->ReleaseStringUTFChars( env, jRecordArr, cRecordArr );
+    (*env)->ReleaseStringUTFChars( env, jLoc, cLoc );
 
     return jMessage_out;
 }
