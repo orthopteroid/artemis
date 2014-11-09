@@ -32,6 +32,8 @@
 static lunit *expt = NULL; /* index range is [0..(BASE-2)] */
 static lunit *logt = NULL; /* index range is [1..(BASE-1)], but logt[0] is set to (BASE-1) */
 
+PRAGMA_PUSH
+PRAGMA_OPTIMIZE
 
 int gfInit (void)
 	/* initialize the library ---> MUST be called before any other gf-function */
@@ -549,3 +551,4 @@ int gfUnpack (gfPoint p, const vlPoint k)
 	return 0;
 } /* gfUnpack */
 
+PRAGMA_POP

@@ -82,6 +82,9 @@ static byte b8crc[] = {
 
 	};
 
+PRAGMA_PUSH
+PRAGMA_OPTIMIZE
+
 ////////////////////
 
 int ar_util_istest()
@@ -515,3 +518,4 @@ void ar_util_test()
 #endif
 }
 
+PRAGMA_POP

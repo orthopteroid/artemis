@@ -41,6 +41,9 @@
 #include "ec_param.h"
 #include "ec_vlong.h"
 
+PRAGMA_PUSH
+PRAGMA_OPTIMIZE
+
 int vlIsZero(const vlPoint p)
 {
 	if( p[0] == 0 ) { return 1; }
@@ -354,3 +357,5 @@ void vlSetWord32Ptr( vlPoint p, word16 maxWord16s, word32* q )
 	}
 	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
 }
+
+PRAGMA_POP

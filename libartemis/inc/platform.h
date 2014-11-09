@@ -16,18 +16,20 @@
 #if !defined(PLATFORM_PRAGMAS)
 	#define PLATFORM_PRAGMAS
 	#if defined(_WINDOWS)
-		#define PRAGMA_SOMETHING __pragma("something")
 		#define PRAGMA_PUSH
 		#define PRAGMA_POP
-		#define PRAGMA_O3
-	#elif defined(__ANDROID__)        
+		#define PRAGMA_OPTIMIZE		__pragma(optimize( "g", on ))
+		#define PRAGMA_WARN(x)		__pragma(warning(x))
+	#elif defined(__ANDROID__)
 		#define PRAGMA_PUSH
 		#define PRAGMA_POP
-		#define PRAGMA_O3
+		#define PRAGMA_OPTIMIZE
+		#define PRAGMA_WARN(x)
 	#else
-		#define PRAGMA_PUSH _Pragma("GCC push_options")
-		#define PRAGMA_POP _Pragma("GCC pop_options")
-		#define PRAGMA_O3 _Pragma("GCC optimize(\"O3\")")
+		#define PRAGMA_PUSH			_Pragma("GCC push_options")
+		#define PRAGMA_POP			_Pragma("GCC pop_options")
+		#define PRAGMA_OPTIMIZE		_Pragma("GCC optimize(\"O3\")")
+		#define PRAGMA_WARN(x)
 	#endif
 #endif
 

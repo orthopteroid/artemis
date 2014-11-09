@@ -43,7 +43,7 @@ A million repetitions of "a"
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
 PRAGMA_PUSH
-PRAGMA_O3
+PRAGMA_OPTIMIZE
 
 void sha1_transform( word32 state[5], byte buffer[64])
 {
@@ -103,8 +103,6 @@ void sha1_transform( word32 state[5], byte buffer[64])
     /* Wipe variables */
     a = b = c = d = e = 0;
 }
-
-PRAGMA_POP
 
 /* Initialize new context */
 
@@ -227,3 +225,5 @@ void sha1_test()
 #endif //_DEBUG
 
 }
+
+PRAGMA_POP

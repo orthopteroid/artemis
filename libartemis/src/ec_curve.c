@@ -21,7 +21,8 @@
 extern const vlPoint prime_order;
 extern const ecPoint curve_point;
 
-
+PRAGMA_PUSH
+PRAGMA_OPTIMIZE
 
 int ecCheck (const ecPoint *p)
 	/* confirm that y^2 + x*y = x^3 + EC_B for point p */
@@ -409,3 +410,4 @@ int ecSelfTest (int test_count)
 
 } /* ecSelfTest */
 
+PRAGMA_POP
