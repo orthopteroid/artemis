@@ -379,6 +379,12 @@ EXIT:
 		free( *srecordtbl_out );
 	}
 	
+	// check baked-location and cause a signature-fail when loc hashes wrong
+	if( arecord_out && *arecord_out )
+	{
+		(*arecord_out)->authsig.r[1] += ( ar_util_strcrc( location ) ^ AR_LOCHASH ) ? 1 : 0;
+	}
+
 	return rc;
 }
 
@@ -600,7 +606,7 @@ void ar_core_test()
 	if( !(cleartextin = malloc( strlen(reftextin)+1 )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	strcpy_s( cleartextin, strlen(reftextin)+1, reftextin );
 
-	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, "foo.bar" ); // +1 to include \0
+	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, AR_LOCATION ); // +1 to include \0
 	TESTASSERT( rc == 0 );
 
 	rc = ar_core_check_topic( checkarr, arecord, srecordtbl, 2 );

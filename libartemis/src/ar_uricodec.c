@@ -759,7 +759,7 @@ void ar_uri_test()
 	arSharetbl		srecordtbl_;
 
 	char* clues_r[4] = {"topiclue", "clue1", "clue2", 0}; // is a table, ends with 0
-	char* location = "foo.bar";
+	char* location = AR_LOCATION;
 
 	char cleartextin[20];
 	byteptr cleartext_out;

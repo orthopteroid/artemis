@@ -16,6 +16,8 @@
 #define AR_CRYPTKEYUNITS	AR_UNITS-2 // 112 bits @ 136 gf_m
 #define AR_SIGNKEYUNITS		AR_UNITS-4 // 80 bits @ 136 gf_m
 
+#define AR_LOCATION "arcanashare.webhop.net"
+#define AR_LOCHASH 0xAC
 // some sanity checks
 STATICASSERT( AR_VERIFYUNITS < AR_UNITS );
 STATICASSERT( AR_TOPICUNITS < AR_UNITS );

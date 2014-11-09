@@ -21,6 +21,9 @@ void test_all()
 
 	library_settest();
 
+	DEBUGPRINT( "*************\nAR_LOCATION %s\nAR_LOCHASH 0x%X\n*************\n", AR_LOCATION, ar_util_strcrc( AR_LOCATION ) );
+	ASSERT( ar_util_strcrc( AR_LOCATION ) == AR_LOCHASH );
+
 	printf("# tests starting\n");
 	sha1_test();
 	ar_shamir_test();
@@ -32,10 +35,10 @@ void test_all()
 
 	byteptr shares;
 	
-	library_uri_encoder( &shares, 5, 5, "foo.bar", "main\none\ntwo\nthree\nfour\nfive", "message five" );  printf( "%s\n", shares ); library_free( &shares );
-	library_uri_encoder( &shares, 5, 4, "foo.bar", "main\none\ntwo\nthree\nfour\nfive", "message four" );  printf( "%s\n", shares ); library_free( &shares );
-	library_uri_encoder( &shares, 5, 3, "foo.bar", "main\none\ntwo\nthree\nfour\nfive", "message three" ); printf( "%s\n", shares ); library_free( &shares );
-	library_uri_encoder( &shares, 5, 2, "foo.bar", "main\none\ntwo\nthree\nfour\nfive", "message two" );   printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 5, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message five" );  printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 4, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message four" );  printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 3, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message three" ); printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 2, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message two" );   printf( "%s\n", shares ); library_free( &shares );
 
 #else // _DEBUG
 

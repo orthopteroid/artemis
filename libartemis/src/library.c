@@ -543,7 +543,7 @@ void library_test()
 
 	int shares = 2;
 	int threshold = 2;
-	byteptr location = "foo.bar";
+	byteptr location = AR_LOCATION;
 	byteptr message_in = "between friends";
 
 	{

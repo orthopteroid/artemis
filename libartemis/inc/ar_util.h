@@ -30,6 +30,7 @@ int ar_util_4BAto16BA( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr 
 
 int ar_util_strcat( byteptr dst, size_t dstsize, byteptr src );
 int ar_util_strncat( byteptr dst, size_t dstsize, byteptr src, size_t srcsize );
+byte ar_util_strcrc( byteptr sz );
 
 ////////
 
