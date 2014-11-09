@@ -59,7 +59,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     public  static final int    MESSAGE_COL     = 5;
     private static final String CLUES           = "clues";
     private static final String CLUES_DEFAULT   = "''";
-    private static final String CLUES_TYPE      = "TEXT NOT NULL";
+    private static final String CLUES_TYPE      = "TEXT";
     private static final String CLUES_DECL      = CLUES+" "+CLUES_TYPE;
     public  static final int    CLUES_COL       = 6;
     private static final String LOCATION        = "location";
@@ -233,6 +233,7 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     }
 
     public void addShareAndTopic( ArtemisShare oShare, ArtemisTopic oTopic ) {
+        // TODO: zomg exceptions!
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("BEGIN;");
         String query1 = "INSERT INTO "+SHARES+" VALUES ( "+KEY_DEFAULT+", ?, ?, ? );";

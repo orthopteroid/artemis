@@ -159,9 +159,10 @@ int library_uri_clue( byteptr* clue_out, byteptr szShare )
 
 	if( rc = ar_uri_locate_clue( &pFirst, &pLast, szShare ) ) { LOGFAIL( rc ); goto EXIT; }
 
-	size_t clen = pLast - pFirst + 1; // but, overestimates because of b64 encoding
-	if( clen > 0 )
+	if( pFirst != 0 )
 	{
+		size_t clen = pLast - pFirst + 1; // but, overestimates because of b64 encoding
+		
 		if( !(*clue_out = malloc( clen + 1 )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } // +1 for \0
 		
 		size_t deltalen = 0;

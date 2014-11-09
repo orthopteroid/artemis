@@ -159,9 +159,12 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_droidartemis_ArtemisLib_nativeClu
 
     rc = library_uri_clue( &cClue_out, (byteptr)cRecord );
 
-    jClue_out = (*env)->NewStringUTF( env, cClue_out );
-
-    library_free( &cClue_out );
+    if( rc == 0 && cClue_out ) {
+        jClue_out = (*env)->NewStringUTF( env, cClue_out );
+    } else {
+        jClue_out = (*env)->NewStringUTF( env, szBlank );
+    }
+    if( cClue_out ) { library_free( &cClue_out ); }
 
     (*env)->ReleaseStringUTFChars( env, jRecord, cRecord );
 
