@@ -23,6 +23,8 @@ public class ActivityNew extends Activity {
 
     private ArrayList<AbstractItem> settings = new ArrayList<AbstractItem>();
 
+    public enum NumType { key, lock };
+
     public interface AbstractItem {
         public void setTitle( String t );
         public void setValue( String v );
@@ -33,11 +35,14 @@ public class ActivityNew extends Activity {
     ///////////////////////////////
 
     public class NumberItem implements AbstractItem {
+        public NumType numType;
         public View containerView;
         public TextView titleView;
         public EditText valueView;
 
-        public NumberItem( LinearLayout layout, LayoutInflater inflater, String _t, String _v ) {
+        public NumberItem( LinearLayout layout, LayoutInflater inflater, String _t, String _v, NumType _nt ) {
+            numType = _nt;
+
             containerView = inflater.inflate( R.layout.creator_number, layout, false );
             titleView = ((TextView) containerView.findViewById(R.id.numsetting_title));
             valueView = ((EditText) containerView.findViewById( R.id.numsetting_value));
@@ -81,9 +86,11 @@ public class ActivityNew extends Activity {
                 public void onClick(View view) {
                     try {
                         String value = getValue();
-                        setValue( String.valueOf( Integer.parseInt( value ) + 1 ) );
-                        settings.add( (AbstractItem)new TextItem( layoutClone, inflaterClone, "Optional Key Clue", "") );
-                    } catch( Exception e ) {}
+                        setValue(String.valueOf(Integer.parseInt(value) + 1));
+                        if( numType == NumType.key ) {
+                            settings.add((AbstractItem) new TextItem(layoutClone, inflaterClone, "Optional Key Clue", ""));
+                        }
+                    } catch (Exception e) {}
                 }
             });
 
@@ -94,11 +101,13 @@ public class ActivityNew extends Activity {
                         String value = getValue();
                         int delta =  ( Integer.parseInt( value ) < 2 ) ? 0 : -1;
                         setValue( String.valueOf( Integer.parseInt( value ) + delta ) );
-                        if( delta == - 1 ) {
-                            int lastItem = settings.size() -1; // -1 to remove last
-                            AbstractItem lastClue = settings.get( lastItem );
-                            lastClue.removeFromLayout( layoutClone );
-                            settings.remove( lastItem );
+                        if( numType == NumType.key ) {
+                            if (delta == -1) {
+                                int lastItem = settings.size() - 1; // -1 to remove last
+                                AbstractItem lastClue = settings.get(lastItem);
+                                lastClue.removeFromLayout(layoutClone);
+                                settings.remove(lastItem);
+                            }
                         }
                     } catch( Exception e ) {}
                 }
@@ -146,11 +155,8 @@ public class ActivityNew extends Activity {
                             }
                         }
 
-                        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                        }
-
-                        public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        }
+                        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                        public void onTextChanged(CharSequence s, int start, int before, int count) {}
                     }
             );
 
@@ -178,8 +184,8 @@ public class ActivityNew extends Activity {
         thisActivity = this;
 
         settings.clear();
-        settings.add( (AbstractItem)new NumberItem( layout, inflater, "Keys", "2") );
-        settings.add( (AbstractItem)new NumberItem( layout, inflater, "Locks", "2") );
+        settings.add( (AbstractItem)new NumberItem( layout, inflater, "Keys", "2", NumType.key ) );
+        settings.add( (AbstractItem)new NumberItem( layout, inflater, "Locks", "2", NumType.lock ) );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Message to be Encrypted", "A Secret") );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Message Clue", "") );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
@@ -239,7 +245,7 @@ public class ActivityNew extends Activity {
         ////////////////////////
 
         StringBuilder clues = new StringBuilder( 1024 );
-        clues.append( settings.get(3).getValue() );
+        clues.append( settings.get(3).getValue() ); // message clue
         {
             for( int i = 4; i < settings.size(); i++) { // 4 >= are the key clues
                 clues.append( '\n' );
