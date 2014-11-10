@@ -140,19 +140,11 @@ public class ArtemisSQL extends SQLiteOpenHelper {
 
     private static ArtemisSQL instance = null;
 
-    private ArtemisSQL(Context context) {
-        super(context, NAME, null, VERSION);
-    }
+    private ArtemisSQL(Context cxt) { super(cxt, NAME, null, VERSION); }
 
-    static void Init(Context context) {
-        if( instance == null ) { instance = new ArtemisSQL( context ); }
-    }
-    static void Cleanup() {
-        instance = null;
-    }
-    static ArtemisSQL Get() {
-        return instance;
-    }
+    static void Init(Context _cxt) { if( instance == null ) { instance = new ArtemisSQL(_cxt); } }
+    static void Cleanup() { instance = null; }
+    static ArtemisSQL Get() { return instance; }
 
     /////////////////
 
@@ -222,34 +214,39 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     public ArtemisShare getShareInfo( String share ) {
         ArtemisShare oShare = null;
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT * FROM "+SHARES+" WHERE "+SHARE+" = ? ;";
-        Cursor cursor = db.rawQuery( query, new String[] { share } );
-        if( cursor.moveToFirst() ) {
-            oShare = new ArtemisShare( cursor );
+        try {
+            String query = "SELECT * FROM " + SHARES + " WHERE " + SHARE + " = ? ;";
+            Cursor cursor = db.rawQuery(query, new String[]{share});
+            if (cursor.moveToFirst()) {
+                oShare = new ArtemisShare(cursor);
+            }
+            cursor.close();
+        } finally {
+            db.close();
         }
-        cursor.close();
-        db.close();
         return oShare;
     }
 
     public void addShareAndTopic( ArtemisShare oShare, ArtemisTopic oTopic ) {
-        // TODO: zomg exceptions!
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("BEGIN;");
-        String query1 = "INSERT INTO "+SHARES+" VALUES ( "+KEY_DEFAULT+", ?, ?, ? );";
-        Cursor cursor1 = db.rawQuery( query1, new String[] { oShare.topic, oShare.share, Integer.toString( oShare.stype ) } );
-        cursor1.moveToFirst();
-        cursor1.close();
-        String query2 = "INSERT INTO "+TOPICS+" VALUES ( "+KEY_DEFAULT+", ?, ?, ?, ?, "+MESSAGE_DEFAULT+", ?, ?, ? );";
-        Cursor cursor2 = db.rawQuery( query2, new String[] {
-                oTopic.topic,
-                Integer.toString( oTopic.scount ), Integer.toString( oTopic.ssize ), Integer.toString( oTopic.tsize ),
-                oTopic.clues, oTopic.location, Integer.toString( oTopic.mindicator )
-        } );
-        cursor2.moveToFirst();
-        cursor2.close();
-        db.execSQL("COMMIT;");
-        db.close();
+        try {
+            db.execSQL("BEGIN;");
+            String query1 = "INSERT INTO " + SHARES + " VALUES ( " + KEY_DEFAULT + ", ?, ?, ? );";
+            Cursor cursor1 = db.rawQuery(query1, new String[]{oShare.topic, oShare.share, Integer.toString(oShare.stype)});
+            cursor1.moveToFirst();
+            cursor1.close();
+            String query2 = "INSERT INTO " + TOPICS + " VALUES ( " + KEY_DEFAULT + ", ?, ?, ?, ?, " + CLEARTEXT_DEFAULT + ", ?, ?, ? );";
+            Cursor cursor2 = db.rawQuery(query2, new String[]{
+                    oTopic.topic,
+                    Integer.toString(oTopic.scount), Integer.toString(oTopic.ssize), Integer.toString(oTopic.tsize),
+                    oTopic.clues, oTopic.location, Integer.toString(oTopic.indicateURIA)
+            });
+            cursor2.moveToFirst();
+            cursor2.close();
+            db.execSQL("COMMIT;");
+        } finally {
+            db.close();
+        }
     }
 
     //////////////
