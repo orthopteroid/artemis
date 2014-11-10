@@ -31,13 +31,13 @@
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
-        android:id="@+id/hack"
+        android:id="@+id/test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/sort_button"
         android:layout_toRightOf="@+id/sort_button"
-        android:text="Hack"
-        android:onClick="onClickHack"
+        android:text="Test"
+        android:onClick="onClickTest"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button

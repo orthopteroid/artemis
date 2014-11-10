@@ -279,7 +279,7 @@ public class ActivityTopics extends FragmentActivity {
         Notifier.ShowOptions( this, R.array.dialog_sorttopics, ocl);
     }
 
-    public void onClickHack(View v) {
+    public void onClickTest(View v) {
         if( fs == null) {
             fs = new FakeScanner();
         }
