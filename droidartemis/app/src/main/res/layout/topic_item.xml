@@ -25,7 +25,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:typeface="monospace"
-        android:text="2/3/5"
+        android:text="M 2K 3L (5)"
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceSmall"
         />
@@ -40,6 +40,6 @@
         android:text="clue, clue, clue, clue, ....."
         android:textIsSelectable="false"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        />
+        android:layout_alignParentRight="true" />
 
 </RelativeLayout>

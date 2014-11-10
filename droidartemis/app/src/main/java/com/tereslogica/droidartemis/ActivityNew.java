@@ -254,7 +254,8 @@ public class ActivityNew extends Activity {
         }
         int keys = Integer.parseInt( settings.get(0).getValue() );
         int locks = Integer.parseInt( settings.get(1).getValue() );
-        String shares = ArtemisLib.Get().nativeEncode( keys, locks, "tereslogica.com", clues.toString(), settings.get(2).getValue() );
+        String uri = thisActivity.getApplicationContext().getResources().getString(R.string.app_uri);
+        String shares = ArtemisLib.Get().nativeEncode( keys, locks, uri, clues.toString(), settings.get(2).getValue() );
 
         if( ArtemisLib.Get().nativeDidFail() ) {
             if( ArtemisLib.Get().nativeWasFailDemo() ) {

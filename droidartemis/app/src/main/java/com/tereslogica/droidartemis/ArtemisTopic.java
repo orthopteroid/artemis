@@ -1,7 +1,6 @@
 package com.tereslogica.droidartemis;
 
 import android.database.Cursor;
-import android.graphics.Paint;
 import android.view.View;
 import android.widget.TextView;
 
@@ -16,18 +15,20 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
     public int scount;
     public int ssize;
     public int tsize;
-    public String message;  // but not shown on topic_page
-    public int mindicator;
+    public String cleartext;  // but not shown on topic_page
+    public int indicateURIA;
+
+    public String sc_str, ss_str, ts_str, m_str;
 
     public ArtemisTopic( String _topic, int _ssize, int _tsize, String _clue, String _location, int _mindicator ) {
         topic = _topic;
         scount = 0; // might be zero, if this share is an arecord
         ssize = _ssize;
         tsize = _tsize;
-        message = "?";
+        cleartext = "?";
         clues = _clue;
         location = _location;
-        mindicator = _mindicator;
+        indicateURIA = _mindicator;
     }
 
     public ArtemisTopic(Cursor cursor) {
@@ -35,22 +36,27 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
         scount = cursor.getInt( ArtemisSQL.SCOUNT_COL );
         ssize = cursor.getInt( ArtemisSQL.SSIZE_COL );
         tsize = cursor.getInt( ArtemisSQL.TSIZE_COL );
-        message = cursor.getString( ArtemisSQL.MESSAGE_COL );
+        cleartext = cursor.getString( ArtemisSQL.CLEARTEXT_COL);
         clues = cursor.getString( ArtemisSQL.CLUES_COL );
         location = cursor.getString( ArtemisSQL.LOCATION_COL );
-        mindicator = cursor.getInt( ArtemisSQL.MINDICATOR_COL );
+        indicateURIA = cursor.getInt( ArtemisSQL.URIAFLAG_COL);
+
+        sc_str = Integer.toString( scount );
+        ss_str = Integer.toString( ssize );
+        ts_str = Integer.toString( tsize );
+        m_str = indicateURIA == 1 ? "M" : "";
     }
 
     public void addClue( String clue ) {
-        clues = clues+", "+clue;
+        if( clue.length() > 0 ) { clues = clues+", "+clue; }
     }
 
     public void incCount() {
         scount++;
     }
 
-    public void setMIndicator() { mindicator = 1; }
-    public boolean isARecordPresent() { return mindicator == 1; }
+    public void setIndicateURIA() { indicateURIA = 1; }
+    public boolean isURIAPresent() { return indicateURIA == 1; }
 
     ///////////
 
@@ -63,14 +69,20 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
     public void configureView( View rowView ) {
         ((TextView) rowView.getTag( R.id.topic )).setText( topic );
 
+        StringBuilder sb = new StringBuilder(80);
+        if( cleartext.length() > 0 ) { sb.append('*'); sb.append(' '); }
+        sb.append(m_str); sb.append(' ');
+        sb.append(sc_str); sb.append('K'); sb.append(' ');
+        sb.append(ts_str); sb.append('L'); sb.append(' ');
+        sb.append(ss_str); sb.append('T');
+        ((TextView) rowView.getTag( R.id.details )).setText( sb.toString() );
+
         // http://fupeg.blogspot.ca/2010/01/strikethrough-android.html
-        String detailsString = Integer.toString( scount )+"/"+Integer.toString( tsize )+"/"+Integer.toString( ssize );
-        TextView detailsView = ((TextView) rowView.getTag( R.id.details ));
-        int mibits = detailsView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG; // add
-        if( mindicator != 0 ) { mibits ^= Paint.STRIKE_THRU_TEXT_FLAG; }        // remove
-        if( scount >= tsize ) { mibits |= Paint.FAKE_BOLD_TEXT_FLAG; }
-        detailsView.setPaintFlags( mibits );
-        detailsView.setText(detailsString);
+        //TextView mindicatorView = ((TextView) rowView.getTag( R.id.indicateURIA ));
+        //int mibits = mindicatorView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG; // add
+        //if( indicateURIA != 0 ) { mibits ^= Paint.STRIKE_THRU_TEXT_FLAG; }        // remove
+        //if( scount >= tsize ) { mibits |= Paint.FAKE_BOLD_TEXT_FLAG; }
+        //mindicatorView.setPaintFlags( mibits );
 
         ((TextView) rowView.getTag( R.id.clues )).setText( clues );
     }

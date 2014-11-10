@@ -11,7 +11,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,7 +61,7 @@ public class ActivityTopics extends FragmentActivity {
             Intent intent2 = new Intent( android.content.Intent.ACTION_SEND, uri );
             intent2.setType("application/zip");
             intent2.addFlags( Intent.FLAG_GRANT_READ_URI_PERMISSION );
-            intent2.putExtra( Intent.EXTRA_STREAM, uri );
+            intent2.putExtra(Intent.EXTRA_STREAM, uri);
             startActivity(Intent.createChooser(intent2, "Send Images"));
         }
     };
@@ -70,7 +69,7 @@ public class ActivityTopics extends FragmentActivity {
     private BroadcastReceiver deleteoneIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            ArtemisSQL.Get().delTopic( intent.getStringExtra( EXTRA_TOPICSTRING ) );
+            ArtemisSQL.Get().delTopic(intent.getStringExtra(EXTRA_TOPICSTRING));
             refreshListView();
         }
     };
@@ -126,7 +125,7 @@ public class ActivityTopics extends FragmentActivity {
         LayoutInflater inflater;
 
         public TopicArrayAdapter(Context cxt) {
-            super(cxt, R.layout.topic_item, /* R.id.topic,*/ topicArrayList);
+            super(cxt, R.layout.topic_item, topicArrayList);
             inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
@@ -160,10 +159,6 @@ public class ActivityTopics extends FragmentActivity {
         refreshListView();
     }
 
-    public void removeScannedItem( String item ) {
-        Log.d("libartemis", "remove " + item);
-    }
-
     //////////////////////
     // http://developer.android.com/reference/android/app/Activity.html#ActivityLifecycle
 
@@ -192,7 +187,7 @@ public class ActivityTopics extends FragmentActivity {
 
         ArtemisSQL.Init( this );
         ArtemisLib.Init();
-        AppLogic.Init();
+        AppLogic.Init( this );
 
         ////////////////
 
@@ -241,10 +236,10 @@ public class ActivityTopics extends FragmentActivity {
                     String topic = ((TextView) view.findViewById(R.id.topic)).getText().toString();
                     ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
 
-                    String message = oTopic.message; // default, assuming it exists
-                    if( oTopic.isARecordPresent() == false ) {
+                    String message = oTopic.cleartext; // default, assuming it exists
+                    if( oTopic.isURIAPresent() == false ) {
                         message = getResources().getString( R.string.sharelist_nomessage );
-                    } else if( oTopic.message.length() == 0 ) {
+                    } else if( oTopic.cleartext.length() == 0 ) {
                         message = getResources().getString( R.string.sharelist_needmorekeys );
                     }
 

@@ -5,9 +5,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import java.util.ArrayList;
-import java.util.List;
-
 // http://myandroidtipsandtricks.blogspot.ca/2011/10/using-sqlite-database-in-android.html
 // http://androidgreeve.blogspot.ca/2013/12/Android-Basic-SQLLite-Database-tutorial.html
 // http://stackoverflow.com/questions/5310962/do-efficient-sqlite-inserts-with-android
@@ -52,11 +49,11 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final String TSIZE_TYPE      = "INTEGER NOT NULL";
     private static final String TSIZE_DECL      = TSIZE+" "+TSIZE_TYPE;
     public  static final int    TSIZE_COL       = 4;
-    private static final String MESSAGE         = "message";
-    private static final String MESSAGE_DEFAULT = "''";
-    private static final String MESSAGE_TYPE    = "TEXT";
-    private static final String MESSAGE_DECL    = MESSAGE+" "+MESSAGE_TYPE;
-    public  static final int    MESSAGE_COL     = 5;
+    private static final String CLEARTEXT       = "cleartext";
+    private static final String CLEARTEXT_DEFAULT = "''";
+    private static final String CLEARTEXT_TYPE  = "TEXT";
+    private static final String CLEARTEXT_DECL  = CLEARTEXT +" "+ CLEARTEXT_TYPE;
+    public  static final int    CLEARTEXT_COL   = 5;
     private static final String CLUES           = "clues";
     private static final String CLUES_DEFAULT   = "''";
     private static final String CLUES_TYPE      = "TEXT";
@@ -66,10 +63,10 @@ public class ArtemisSQL extends SQLiteOpenHelper {
     private static final String LOCATION_TYPE   = "TEXT NOT NULL";
     private static final String LOCATION_DECL   = LOCATION+" "+LOCATION_TYPE;
     public  static final int    LOCATION_COL    = 7;
-    private static final String MINDICATOR      = "mindicator";
-    private static final String MINDICATOR_TYPE = "INTEGER NOT NULL";
-    private static final String MINDICATOR_DECL = MINDICATOR+" "+MINDICATOR_TYPE;
-    public  static final int    MINDICATOR_COL  = 8;
+    private static final String URIAFLAG        = "uria";
+    private static final String URIAFLAG_TYPE   = "INTEGER NOT NULL";
+    private static final String URIAFLAG_DECL   = URIAFLAG +" "+ URIAFLAG_TYPE;
+    public  static final int    URIAFLAG_COL    = 8;
     private static final String CALC_COMPLETE   = "complete";
 
     private static final String TOPICS = "topics";
@@ -78,8 +75,8 @@ public class ArtemisSQL extends SQLiteOpenHelper {
             KEY_DECL+" , "+TOPIC_DECL+" , "+SHARE_DECL+" , "+STYPE_DECL;
     private static final String TOPICS_SCHEMA =
             KEY_DECL+" , "+TOPIC_DECL+" , "+SCOUNT_DECL+" , "+SSIZE_DECL+" , "+
-            TSIZE_DECL+" , "+MESSAGE_DECL+" , "+CLUES_DECL+" , "+LOCATION_DECL+" , "+
-            MINDICATOR_DECL;
+            TSIZE_DECL+" , "+ CLEARTEXT_DECL +" , "+CLUES_DECL+" , "+LOCATION_DECL+" , "+
+                    URIAFLAG_DECL;
 
     private void getTopicQueryParms( StringBuilder col, StringBuilder ord, SortOrder so ) {
         col.delete(0,ord.length());
@@ -161,24 +158,42 @@ public class ArtemisSQL extends SQLiteOpenHelper {
         return oTopic;
     }
 
-    public void addShareUpdateTopic( ArtemisShare oShare, ArtemisTopic oTopic) {
-        String topic = oTopic.topic;
-        String clues = oTopic.clues;
-        String message = oTopic.message;
-        String mindicator = Integer.toString( oTopic.mindicator );
-        String count = Integer.toString( oTopic.scount );
+    public void addShareUpdateTopic( ArtemisShare oShare, ArtemisTopic oTopic ) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("BEGIN;");
-        String query1 = "INSERT INTO "+SHARES+" VALUES ( "+KEY_DEFAULT+", ?, ?, ? );";
-        Cursor cursor1 = db.rawQuery( query1, new String [] { oShare.topic, oShare.share, Integer.toString( oShare.stype ) } );
-        cursor1.moveToFirst();
-        cursor1.close();
-        String query2 = "UPDATE "+TOPICS+" SET "+SCOUNT+" = ?, "+CLUES+" = ?, "+MESSAGE+" = ?, "+MINDICATOR+" = ? WHERE "+TOPIC+" = ? ;";
-        Cursor cursor2 = db.rawQuery( query2, new String [] { count, clues, message, mindicator, topic } );
-        cursor2.moveToFirst();
-        cursor2.close();
-        db.execSQL("COMMIT;");
-        db.close();
+        try {
+            String topic = oTopic.topic;
+            String clues = oTopic.clues;
+            String message = oTopic.cleartext;
+            String indicator = Integer.toString(oTopic.indicateURIA);
+            String count = Integer.toString(oTopic.scount);
+
+            db.execSQL("BEGIN;");
+            String query1 = "INSERT INTO " + SHARES + " VALUES ( " + KEY_DEFAULT + ", ?, ?, ? );";
+            Cursor cursor1 = db.rawQuery(query1, new String[]{oShare.topic, oShare.share, Integer.toString(oShare.stype)});
+            cursor1.moveToFirst();
+            cursor1.close();
+            String query2 = "UPDATE " + TOPICS + " SET " + SCOUNT + " = ?, " + CLUES + " = ?, " + CLEARTEXT + " = ?, " + URIAFLAG + " = ? WHERE " + TOPIC + " = ? ;";
+            Cursor cursor2 = db.rawQuery(query2, new String[]{count, clues, message, indicator, topic});
+            cursor2.moveToFirst();
+            cursor2.close();
+            db.execSQL("COMMIT;");
+        } finally {
+            db.close();
+        }
+    }
+
+    public void updateTopicMessage( String topic, String message ) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            db.execSQL("BEGIN;");
+            String query2 = "UPDATE " + TOPICS + " SET " + CLEARTEXT + " = ? WHERE " + TOPIC + " = ? ;";
+            Cursor cursor2 = db.rawQuery(query2, new String[]{message, topic});
+            cursor2.moveToFirst();
+            cursor2.close();
+            db.execSQL("COMMIT;");
+        } finally {
+            db.close();
+        }
     }
 
     public Cursor getTopicsCursor( SortOrder so ) {
