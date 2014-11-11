@@ -254,7 +254,7 @@ EXIT:
 
 //////////////////
 
-int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byteptr szLocation, byteptr clueArr, byteptr message )
+int library_uri_encoder( byteptr* recordArr_out, word16 shares, byte threshold, byteptr szLocation, byteptr clueArr, byteptr message )
 {
 	int rc = 0;
 

@@ -21,7 +21,7 @@ DLLDECL int library_uri_topic( byteptr* topic_out, byteptr szShare );
 DLLDECL int library_uri_clue( byteptr* clue_out, byteptr szShare );
 DLLDECL int library_uri_location( byteptr* location_out, byteptr szShare );
 
-DLLDECL int library_uri_encoder( byteptr* recordArr_out, int shares, int threshold, byteptr szLocation, byteptr clueArr, byteptr message );
+DLLDECL int library_uri_encoder( byteptr* recordArr_out, word16 shares, byte threshold, byteptr szLocation, byteptr clueArr, byteptr message );
 DLLDECL int library_uri_decoder( byteptr* message_out, byteptr szLocation, byteptr recordArr );
 
 DLLDECL void library_free( byteptr* object );
