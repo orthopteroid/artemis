@@ -12,12 +12,10 @@ android {
         applicationId 'com.tereslogica.acanashare'
         minSdkVersion 8
         targetSdkVersion 8
+
+        // see productFlavors section for versionCode/Name magic
         versionCode 1
         versionName '1.0'
-
-        // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
-        // http://tools.android.com/tech-docs/new-build-system/tips
-        //versionCode = 123
 
         // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
         ndk {
@@ -38,7 +36,7 @@ android {
         release {
             debuggable false
             jniDebugBuild false
-            runProguard false
+            runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             //signingConfig signingConfigs.release
 
@@ -95,50 +93,37 @@ android {
     ///////////////
     // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
     // http://tools.android.com/tech-docs/new-build-system/tips
+    // http://www.tuicool.com/articles/b6VrUz
+    // http://ph0b.com/improving-x86-support-of-android-apps-libs-engines/#ArchDependentAPKs
 
-    // 2 dimensions of flavors. API is more important than ABI.
+    // 2 dimensions of flavors. API & ABI
     flavorDimensions "abi"
 
     productFlavors {
-        /*
         x86 {
             flavorDimensions "abi"
-            ndk {
-                abiFilter "x86"
-            }
-            // this is the flavor part of the version code.
-            // It must be higher than the arm one for devices supporting both, as x86 is preferred.
+            ndk { abiFilter "x86" }
             versionCode = 4
         }
-        */
         arm {
             flavorDimensions "abi"
-            ndk {
-                abiFilter "armeabi"
-            }
+            ndk { abiFilter "armeabi" }
             versionCode = 3
         }
-        /*
         armv7 {
             flavorDimensions "abi"
-            ndk {
-                abiFilter "armeabi-v7a"
-            }
+            ndk { abiFilter "armeabi-v7a" }
             versionCode = 2
         }
         mips {
             flavorDimensions "abi"
-            ndk {
-                abiFilter "mips"
-            }
+            ndk { abiFilter "mips" }
             versionCode = 1
         }
         fat {
             flavorDimensions "abi"
-            // fat binary, lowest version code to be the last option
             versionCode = 0
         }
-        */
     }
 
     // make per-variant version code
