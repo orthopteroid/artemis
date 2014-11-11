@@ -1,4 +1,4 @@
-#include "com_tereslogica_acanashare_ArtemisLib.h"
+#include "ArtemisLib.h"
 
 #include "library.h"
 #include "ar_codes.h"
@@ -83,13 +83,16 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeEncod
     const char *cMess = (*env)->GetStringUTFChars(env, jMess, 0);
     const char *cClues = (*env)->GetStringUTFChars(env, jClues, 0);
 
+    word16 cKeys = (word16)jKeys;
+    byte cLocks = (byte)jLocks;
+
     DEBUGPRINT( "jKeys %d", jKeys );
     DEBUGPRINT( "jLocks %d", jLocks );
     DEBUGPRINT( "cLoc %s", cLoc );
     DEBUGPRINT( "cClues %s", cClues );
     DEBUGPRINT( "cMess %s", cMess );
 
-    rc = library_uri_encoder( &cShares_out, jKeys, jLocks, cLoc, cClues, cMess );
+    rc = library_uri_encoder( &cShares_out, cKeys, cLocks, (byteptr)cLoc, (byteptr)cClues, (byteptr)cMess );
 
     DEBUGPRINT( "cShares_out %X", (unsigned int)cShares_out );
     if( cShares_out) {
