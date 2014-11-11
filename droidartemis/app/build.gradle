@@ -7,7 +7,7 @@ android {
     ////////////////
 
     defaultConfig {
-        applicationId 'com.tereslogica.droidartemis'
+        applicationId 'com.tereslogica.acanashare'
         minSdkVersion 8
         targetSdkVersion 8
         versionCode 1

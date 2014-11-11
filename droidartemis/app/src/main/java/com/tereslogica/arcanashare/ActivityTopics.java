@@ -1,4 +1,4 @@
-package com.tereslogica.droidartemis;
+package com.tereslogica.acanashare;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
