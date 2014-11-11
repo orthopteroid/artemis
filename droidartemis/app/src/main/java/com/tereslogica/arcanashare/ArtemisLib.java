@@ -4,7 +4,7 @@ public class ArtemisLib {
 
     static {
         // only works with arm?
-        System.loadLibrary("myNDKModule");
+        System.loadLibrary("ArtemisLib");
     }
 
     // value is used as a collating order on share_page

@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+// http://blog.gaku.net/ndk/    <----- ndk/gradle hacks
+
 android {
     compileSdkVersion 20
     buildToolsVersion '20.0.0'
@@ -19,7 +21,7 @@ android {
 
         // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
         ndk {
-            moduleName "myNDKModule"
+            moduleName "ArtemisLib"
             cFlags "-std=c99 -Wno-multichar -I${project.buildDir}/../src/main/jni/libartemis-inc"
         }
     }
@@ -42,7 +44,7 @@ android {
 
             // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
             ndk {
-                moduleName "myNDKModule"
+                moduleName "ArtemisLib"
             }
         }
         debug {
@@ -55,7 +57,7 @@ android {
 
             // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
             ndk {
-                moduleName "myNDKModule"
+                moduleName "ArtemisLib"
                 ldLibs "log"
                 cFlags "-g -D_DEBUG -DNDK_DEBUG=1"
             }
