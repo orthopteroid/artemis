@@ -57,50 +57,46 @@ STATICASSERT( AR_SIGNKEYUNITS < AR_UNITS );
 
 //////////////////////////
 
-static void sha1_process_vlpoint( sha1_context* c, size_t* pdeltalen, byteptr composebuf, vlPoint v )
+static void sha1_process_vlpoint( sha1_context* c, vlPoint v )
 {
-	ar_util_u16_host2packet( pdeltalen, composebuf, sizeof(composebuf), v+1, v[0] );
+	size_t deltalen = 0;
+	char composebuf[ sizeof(vlPoint) ];
+	ar_util_u16_host2packet( &deltalen, composebuf, sizeof(vlPoint), v+1, v[0] );
 	sha1_process( c, composebuf, (unsigned)(v[0] * sizeof(word16)) );
+	memset( composebuf, 0, sizeof(composebuf) );
 }
 
-static void sha1_process_blob16( sha1_context* c, size_t* pdeltalen, byteptr composebuf, word16 blob16 )
+static void sha1_process_blob16( sha1_context* c, word16 blob16 )
 {
-	ar_util_u16_host2packet( pdeltalen, composebuf, sizeof(composebuf), &blob16, 1 );
+	size_t deltalen = 0;
+	char composebuf[ sizeof(word16) ];
+	ar_util_u16_host2packet( &deltalen, composebuf, sizeof(word16), &blob16, 1 );
 	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+	memset( composebuf, 0, sizeof(composebuf) );
 }
 
 //////
 
 static void ar_core_mac_arecord( sha1_context* c, arAuthptr pa, byte version, size_t buflen )
 {
-	size_t deltalen = 0;
-	char composebuf[ sizeof(vlPoint) ];
-
-	sha1_process_vlpoint( c, &deltalen, composebuf, pa->topic );
-	sha1_process_vlpoint( c, &deltalen, composebuf, pa->verify );
-	sha1_process_blob16( c, &deltalen, composebuf, pa->shares );
-	sha1_process_blob16( c, &deltalen, composebuf, pa->threshold );
-	sha1_process_blob16( c, &deltalen, composebuf, version );
-	sha1_process_vlpoint( c, &deltalen, composebuf, pa->pubkey );
+	sha1_process_vlpoint( c, pa->topic );
+	sha1_process_vlpoint( c, pa->verify );
+	sha1_process_blob16( c, pa->shares );
+	sha1_process_blob16( c, pa->threshold );
+	sha1_process_blob16( c, version );
+	sha1_process_vlpoint( c, pa->pubkey );
 	sha1_process( c, pa->buf, (unsigned)(buflen) );
-
-	memset( composebuf, 0, sizeof(composebuf) );
 }
 
 static void ar_core_mac_srecord( sha1_context* c, arShareptr ps, byte version, size_t buflen )
 {
-	size_t deltalen = 0;
-	char composebuf[ sizeof(vlPoint) ];
-
-	sha1_process_vlpoint( c, &deltalen, composebuf, ps->topic );
-	sha1_process_blob16( c, &deltalen, composebuf, ps->shares );
-	sha1_process_blob16( c, &deltalen, composebuf, ps->threshold );
-	sha1_process_blob16( c, &deltalen, composebuf, version );
-	sha1_process_blob16( c, &deltalen, composebuf, ps->shareid );
-	sha1_process_vlpoint( c, &deltalen, composebuf, ps->share );
+	sha1_process_vlpoint( c, ps->topic );
+	sha1_process_blob16( c, ps->shares );
+	sha1_process_blob16( c, ps->threshold );
+	sha1_process_blob16( c, version );
+	sha1_process_blob16( c, ps->shareid );
+	sha1_process_vlpoint( c, ps->share );
 	sha1_process( c, ps->buf, (unsigned)(buflen) );
-
-	memset( composebuf, 0, sizeof(composebuf) );
 }
 
 //////////////////////////
