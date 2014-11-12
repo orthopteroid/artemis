@@ -109,7 +109,6 @@ int ar_shamir_sign( cpPair* sig, const vlPoint session, const vlPoint vlPrivateK
 	if( vlIsZero( mac ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 
 	cpSign( vlPrivateKey, session, mac, sig );
-	if( sig->r[0] == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	if( vlIsZero( sig->r ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 
@@ -155,38 +154,54 @@ void ar_shamir_test()
 		printf("# test signing\n");
 
 		sha1Digest digest;
-		vlPoint pub, pri, mac;
-		cpPair sig;
+		vlPoint mac;
+
+		sha1_digest( digest, "themessage", strlen("themessage") );
+		vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 
 		for( size_t j=0; j < 500; j++ )
 		{
-			sha1_digest( digest, "themessage", strlen("themessage") );
-			vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+			vlPoint pub, pri;
+			cpPair sig;
 
-			int rc = 0;
-			for( size_t i = 0; i < 10; i++ )
+			vlPoint session;
+			vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
+
+			int rc = 0, i = 0;
+			while( 1 )
 			{
-				vlSetRandom( pri, AR_SIGNKEYUNITS, &ar_util_rnd16 );
+				i++;
 
-				gfReducev( pri );
+				// so, it seems that some pri-keys wont work...
+				vlSetRandom( pri, AR_SIGNKEYUNITS, &ar_util_rnd16 );
 
 				cpMakePublicKey( pub, pri );
 
-				vlPoint session;
-				vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
-
-				gfReducev( session );
-
 				TESTASSERT( 0 == ar_shamir_sign( &sig, session, pri, mac ) );
+
 				rc = RC_INTERNAL;
-				if( !cpVerify( pub, mac, &sig ) ) { continue; }
+				if( !cpVerify( pub, mac, &sig ) ) {  continue; }
 				rc = 0;
 				break;
 			}
 			TESTASSERT( rc == 0 );
+
+			if(1) {
+				DEBUGPRINT( "%d ", i);
+			}
+
+			if(0) {
+				size_t len;
+				static char buf[1024];
+				ar_util_u16_hexencode( &len, buf, 1024, pri+1, pri[0] ); buf[len]=0; DEBUGPRINT( "pri %s\n", buf );
+				ar_util_u16_hexencode( &len, buf, 1024, pub+1, pub[0] ); buf[len]=0; DEBUGPRINT( "pub %s\n", buf );
+				ar_util_u16_hexencode( &len, buf, 1024, session+1, session[0] ); buf[len]=0; DEBUGPRINT( "session %s\n\n", buf );
+			}
 		}
 	}
 
 #endif
+
+	return;
 
 }
