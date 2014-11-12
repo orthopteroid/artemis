@@ -770,8 +770,18 @@ void ar_uri_test()
 	word16 stype, shares;
 	byte threshold;
 
-	int numtests = 100;
-	for( int i=0; i<numtests; i++ )
+#if defined(ENABLE_FUZZING)
+
+	int numi = 500;
+	for( int i=0; i<numi; i++ )
+
+#else
+
+	int numi = 100;
+	for( int i=0; i<numi; i++ )
+
+#endif
+
 	{
 		int rc = 0;
 
@@ -999,10 +1009,10 @@ void ar_uri_test()
 		free( arecord_ );
 		for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); }
 		free( srecordtbl_ );
-	
-		if(i > 0 &&  i % 10 == 0 ) { printf("%d",9 - i / (numtests / 9)); }
+
+		if( i%20==0) { DEBUGPRINT( "uri%d ", numi / 20 - i / 20 ); }
 	}
-	putchar('\n');
+	DEBUGPRINT("\n");
 
 #endif
 

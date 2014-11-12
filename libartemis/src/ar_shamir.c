@@ -158,8 +158,16 @@ void ar_shamir_test()
 		vlPoint mac;
 		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
 
+#if defined(ENABLE_FUZZING)
 
 		for( size_t j=0; j < 500; j++ )
+
+#else
+
+		for( size_t j=0; j < 100; j++ )
+
+#endif
+
 		{
 			vlPoint pub, pri;
 			cpPair sig;
@@ -191,6 +199,9 @@ void ar_shamir_test()
 				ar_util_u16_hexencode( &len, buf, 1024, pub+1, pub[0] ); buf[len]=0; DEBUGPRINT( "pub %s\n", buf );
 				ar_util_u16_hexencode( &len, buf, 1024, session+1, session[0] ); buf[len]=0; DEBUGPRINT( "session %s\n\n", buf );
 			}
+
+#if defined(ENABLE_FUZZING)
+
 			// can we be sure that once we can sign a mac, we can sign any mac?
 			for( int i=0; i<20; i++)
 			{
@@ -199,11 +210,12 @@ void ar_shamir_test()
 
 				TESTASSERT( 0 == ar_shamir_sign( &sig, session, pub, pri, mac ) );
 			}
+
+#endif // ENABLE_FUZZING
+
 		}
 	}
 
 #endif
-
-	return;
 
 }
