@@ -243,7 +243,7 @@ void gfSquare (gfPoint r, const gfPoint p)
 	/* sets r := p^2 mod (x^GF_K + x^GF_T + 1) */
 {
 	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; }
-	if( (p[0]*2-1) > GF_POINT_UNITS ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; } // no room for square
+	if( !gfRoomForSquare(p) ) { LOGFAIL( RC_INTERNAL ); gfClear( r ); return; } // no room for square
 
 	int i;
 	ltemp x;

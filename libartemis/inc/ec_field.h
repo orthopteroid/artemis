@@ -31,6 +31,7 @@
 typedef lunit gfPoint [ GF_POINT_UNITS +1 ]; // +1 for length
 
 #define gfIsValid(p) (p[0] <= GF_POINT_UNITS)
+#define gfRoomForSquare(p) ((p[0]*2-1) <= GF_POINT_UNITS)
 
 /* interface functions: */
 
