@@ -154,29 +154,37 @@ void ar_shamir_test()
 	{
 		printf("# test signing\n");
 
+		sha1Digest digest;
 		vlPoint pub, pri, mac;
 		cpPair sig;
 
-		vlSetRandom( pri, AR_SIGNKEYUNITS, &ar_util_rnd16 );
-
-		cpMakePublicKey( pub, pri );
-
-		sha1Digest digest;
-		sha1_digest( digest, "themessage", strlen("themessage") );
-		vlSetWord32Ptr( mac, AR_MACUNITS, digest );
-
-		int rc = 0;
-		for( size_t i = 0; i < 100; i++ )
+		for( size_t j=0; j < 500; j++ )
 		{
-			vlPoint session;
-			vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
-			rc = ar_shamir_sign( &sig, session, pri, mac );
-			if( !rc ) { break; }
-			if( rc == RC_ARG ) { continue; }
+			sha1_digest( digest, "themessage", strlen("themessage") );
+			vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+
+			int rc = 0;
+			for( size_t i = 0; i < 10; i++ )
+			{
+				vlSetRandom( pri, AR_SIGNKEYUNITS, &ar_util_rnd16 );
+
+				gfReducev( pri );
+
+				cpMakePublicKey( pub, pri );
+
+				vlPoint session;
+				vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
+
+				gfReducev( session );
+
+				TESTASSERT( 0 == ar_shamir_sign( &sig, session, pri, mac ) );
+				rc = RC_INTERNAL;
+				if( !cpVerify( pub, mac, &sig ) ) { continue; }
+				rc = 0;
+				break;
+			}
 			TESTASSERT( rc == 0 );
 		}
-
-		TESTASSERT( cpVerify( pub, mac, &sig ) );
 	}
 
 #endif
