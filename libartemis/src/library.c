@@ -166,7 +166,7 @@ int library_uri_clue( byteptr* clue_out, byteptr szShare )
 		if( !(*clue_out = malloc( clen + 1 )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } // +1 for \0
 		
 		size_t deltalen = 0;
-		if( rc = ar_util_6BAto8BA( &deltalen, *clue_out, clen, pFirst, clen ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_util_u8_b64decode( &deltalen, *clue_out, clen, pFirst, clen ) ) { LOGFAIL( rc ); goto EXIT; }
 
 		(*clue_out)[ deltalen ] = 0;
 	}

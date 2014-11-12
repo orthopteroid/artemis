@@ -14,17 +14,17 @@ int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len );
 int ar_util_30Bto6BA( byteptr out, word32 in );
 int ar_util_6BAto30B( word32ptr out, byteptr in );
 
-int ar_util_8BAto4BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
-int ar_util_4BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
+int ar_util_u8_hexencode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
+int ar_util_u8_hexdecode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
 
-int ar_util_8BAto6BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
-int ar_util_6BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
+int ar_util_u8_b64encode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
+int ar_util_u8_b64decode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
 
-int ar_util_16BAto8BA( size_t* deltalen, byteptr   buf, size_t bufsize, word16ptr in, size_t insize );
-int ar_util_8BAto16BA( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr   in, size_t insize );
+int ar_util_u16_host2packet( size_t* deltalen, byteptr   buf, size_t bufsize, word16ptr in, size_t insize );
+int ar_util_u16_packet2host( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr   in, size_t insize );
 
-int ar_util_16BAto4BA( size_t* deltalen, byteptr   buf, size_t bufsize, word16ptr in, size_t insize );
-int ar_util_4BAto16BA( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr   in, size_t insize );
+int ar_util_u16_hexencode( size_t* deltalen, byteptr   buf, size_t bufsize, word16ptr in, size_t insize );
+int ar_util_u16_hexdecode( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr   in, size_t insize );
 
 ////////
 

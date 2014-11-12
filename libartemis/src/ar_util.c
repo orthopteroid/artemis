@@ -163,7 +163,7 @@ int ar_util_6BAto30B( word32ptr out, byteptr in )
 
 ////////////////////
 
-int ar_util_8BAto4BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u8_hexencode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
@@ -179,7 +179,7 @@ int ar_util_8BAto4BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 	return rc;
 }
 
-int ar_util_4BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u8_hexdecode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
@@ -197,7 +197,7 @@ int ar_util_4BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in,
 
 ////////////////////
 
-int ar_util_8BAto6BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u8_b64encode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
 {
 	int p=0, rc=0;
 	size_t j=0, i=0;
@@ -218,7 +218,7 @@ PAD:
 	return rc;
 }
 
-int ar_util_6BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u8_b64decode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
 {
 	int p=0, rc=0;
 	size_t j=0, i=0;
@@ -241,7 +241,7 @@ PAD:
 
 ///////////
 
-int ar_util_16BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr in, size_t insize )
+int ar_util_u16_host2packet( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
@@ -257,7 +257,7 @@ int ar_util_16BAto8BA( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr 
 	return rc;
 }
 
-int ar_util_8BAto16BA( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr   in, size_t insize )
+int ar_util_u16_packet2host( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr   in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
@@ -277,7 +277,7 @@ EOS:
 
 //////////////////
 
-int ar_util_16BAto4BA( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr in, size_t insize )
+int ar_util_u16_hexencode( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr in, size_t insize )
 {
 	int rc=0;
 	size_t j=0, i=0;
@@ -295,7 +295,7 @@ int ar_util_16BAto4BA( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr 
 	return rc;
 }
 
-int ar_util_4BAto16BA( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u16_hexdecode( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
@@ -323,8 +323,8 @@ int ar_util_txt2vl( vlPoint v, char* buf, size_t bufsize )
 	vlClear( v );
 	size_t deltalen = 0;
 	char tmp[ sizeof(vlPoint) + 2 ] = {0};
-	if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(vlPoint), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_8BAto16BA( &deltalen, &v[1], words, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u8_b64decode( &deltalen, tmp, sizeof(vlPoint), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u16_packet2host( &deltalen, &v[1], words, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 	v[0] = (word16)deltalen;
 	if( !vlIsValid( v ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); vlClear( v ); goto EXIT; }
 EXIT:
@@ -339,8 +339,8 @@ int ar_util_vl2txt( char* buf, size_t bufsize, vlPoint v )
 	size_t deltalen = 0;
 	size_t buflen = strlen(buf);
 	char tmp[ sizeof( vlPoint) + 2 ] = {0};
-	if( rc = ar_util_16BAto8BA( &deltalen, tmp, sizeof(vlPoint), v+1, v[0] ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_8BAto6BA( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u16_host2packet( &deltalen, tmp, sizeof(vlPoint), v+1, v[0] ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u8_b64encode( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 	buf[ buflen + deltalen ] = 0;
 EXIT:
 	return rc;
@@ -353,8 +353,8 @@ int ar_util_txttow16( word16* pw, char* buf, size_t bufsize )
 	*pw = 0;
 	size_t deltalen = 0;
 	char tmp[ sizeof(word16) + 2 ] = {0};
-	if( rc = ar_util_6BAto8BA( &deltalen, tmp, sizeof(word16), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_8BAto16BA( &deltalen, pw, 1, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u8_b64decode( &deltalen, tmp, sizeof(word16), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u16_packet2host( &deltalen, pw, 1, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 EXIT:
 	return rc;
 }
@@ -365,8 +365,8 @@ int ar_util_w16totxt( char* buf, size_t bufsize, word16* pw )
 	size_t deltalen = 0;
 	size_t buflen = strlen(buf);
 	char tmp[ sizeof(word16) + 2 ] = {0};
-	if( rc = ar_util_16BAto8BA( &deltalen, tmp, sizeof(vlPoint), pw, 1 ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_8BAto6BA( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u16_host2packet( &deltalen, tmp, sizeof(vlPoint), pw, 1 ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u8_b64encode( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 EXIT:
 	return rc;
 }
@@ -479,7 +479,7 @@ void ar_util_test()
 			size_t deltalen = 0;
 			byteptr appendpos = buf1;
 			size_t appendsize = BUFSIZE;
-			rc = ar_util_8BAto6BA( &deltalen, appendpos, appendsize, txt, strlen(txt) );
+			rc = ar_util_u8_b64encode( &deltalen, appendpos, appendsize, txt, strlen(txt) );
 			ASSERT( rc == 0 );
 			buf1[ deltalen ] = 0;
 		}
@@ -487,7 +487,7 @@ void ar_util_test()
 			size_t deltalen = 0;
 			byteptr appendpos = buf2;
 			size_t appendsize = BUFSIZE;
-			rc = ar_util_6BAto8BA( &deltalen, appendpos, appendsize, buf1, strlen(buf1) );
+			rc = ar_util_u8_b64decode( &deltalen, appendpos, appendsize, buf1, strlen(buf1) );
 			ASSERT( rc == 0 );
 			buf2[ deltalen ] = 0;
 		}

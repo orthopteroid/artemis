@@ -16,8 +16,6 @@
 
 // some sanity checks
 STATICASSERT( AR_VERIFYUNITS < AR_UNITS );
-STATICASSERT( AR_TOPICUNITS < AR_UNITS );
-STATICASSERT( AR_MACUNITS < AR_UNITS );
 STATICASSERT( AR_SHARECOEFUNITS < AR_UNITS );
 STATICASSERT( AR_SESSIONUNITS < AR_UNITS );
 STATICASSERT( AR_CRYPTKEYUNITS < AR_UNITS );
@@ -59,54 +57,49 @@ STATICASSERT( AR_SIGNKEYUNITS < AR_UNITS );
 
 //////////////////////////
 
-static void ar_core_mac_arecord( sha1_context* c, vlPoint vlTopic, vlPoint vlVerify, word16 shares, byte thresh, byte version, vlPoint vlPubkey, byteptr buf, size_t buflen )
+static void sha1_process_vlpoint( sha1_context* c, size_t* pdeltalen, byteptr composebuf, vlPoint v )
 {
-	word16 blob16 = 0;
+	ar_util_u16_host2packet( pdeltalen, composebuf, sizeof(composebuf), v+1, v[0] );
+	sha1_process( c, composebuf, (unsigned)(v[0] * sizeof(word16)) );
+}
+
+static void sha1_process_blob16( sha1_context* c, size_t* pdeltalen, byteptr composebuf, word16 blob16 )
+{
+	ar_util_u16_host2packet( pdeltalen, composebuf, sizeof(composebuf), &blob16, 1 );
+	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
+}
+
+//////
+
+static void ar_core_mac_arecord( sha1_context* c, arAuthptr pa, byte version, size_t buflen )
+{
 	size_t deltalen = 0;
 	char composebuf[ sizeof(vlPoint) ];
 
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlTopic+1, vlTopic[0] );
-	sha1_process( c, composebuf, (unsigned)(vlTopic[0] * sizeof(word16)) );
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlVerify+1, vlVerify[0] );
-	sha1_process( c, composebuf, (unsigned)(vlVerify[0] * sizeof(word16)) );
-	blob16 = shares;
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
-	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-	blob16 = thresh;
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
-	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-	blob16 = version;
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
-	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlPubkey+1, vlPubkey[0] );
-	sha1_process( c, composebuf, (unsigned)(vlPubkey[0] * sizeof(word16)) );
-	sha1_process( c, buf, (unsigned)(buflen) );
+	sha1_process_vlpoint( c, &deltalen, composebuf, pa->topic );
+	sha1_process_vlpoint( c, &deltalen, composebuf, pa->verify );
+	sha1_process_blob16( c, &deltalen, composebuf, pa->shares );
+	sha1_process_blob16( c, &deltalen, composebuf, pa->threshold );
+	sha1_process_blob16( c, &deltalen, composebuf, version );
+	sha1_process_vlpoint( c, &deltalen, composebuf, pa->pubkey );
+	sha1_process( c, pa->buf, (unsigned)(buflen) );
+
 	memset( composebuf, 0, sizeof(composebuf) );
 }
 
-static void ar_core_mac_srecord( sha1_context* c, vlPoint vlTopic, word16 shares, byte thresh, byte version, word16 shareid, vlPoint vlShare, byteptr buf, size_t buflen )
+static void ar_core_mac_srecord( sha1_context* c, arShareptr ps, byte version, size_t buflen )
 {
-	word16 blob16 = 0;
 	size_t deltalen = 0;
 	char composebuf[ sizeof(vlPoint) ];
 
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlTopic+1, vlTopic[0] );
-	sha1_process( c, composebuf, (unsigned)(vlTopic[0] * sizeof(word16)) );
-	blob16 = shares;
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
-	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-	blob16 = thresh;
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
-	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-	blob16 = version;
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
-	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-	blob16 = shareid;
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), &blob16, 1 );
-	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
-	ar_util_16BAto8BA( &deltalen, composebuf, sizeof(composebuf), vlShare+1, vlShare[0] );
-	sha1_process( c, composebuf, (unsigned)(vlShare[0] * sizeof(word16)) );
-	sha1_process( c, buf, (unsigned)(buflen) );
+	sha1_process_vlpoint( c, &deltalen, composebuf, ps->topic );
+	sha1_process_blob16( c, &deltalen, composebuf, ps->shares );
+	sha1_process_blob16( c, &deltalen, composebuf, ps->threshold );
+	sha1_process_blob16( c, &deltalen, composebuf, version );
+	sha1_process_blob16( c, &deltalen, composebuf, ps->shareid );
+	sha1_process_vlpoint( c, &deltalen, composebuf, ps->share );
+	sha1_process( c, ps->buf, (unsigned)(buflen) );
+
 	memset( composebuf, 0, sizeof(composebuf) );
 }
 
@@ -233,7 +226,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 		size_t deltalen = 0;
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
-		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
+		ar_util_u16_host2packet( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
 		rc4( cryptkeyBArr, 16, rc4cranks, arecord_out[0]->buf + msgoffset, inbuflen );
 
 		vlClear( vlCryptkey );
@@ -285,10 +278,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			sha1Digest digest;
 			sha1_context c[1];
 			sha1_initial( c );
-			{
-				arAuthptr pa = arecord_out[0];
-				ar_core_mac_arecord( c, pa->topic, pa->verify, pa->shares, pa->threshold, AR_VERSION, pa->pubkey, pa->buf, abufused );
-			}
+
+			ar_core_mac_arecord( c, arecord_out[0], AR_VERSION, abufused );
+
 			sha1_final( c, digest );
 			vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 		}
@@ -348,10 +340,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 				sha1Digest digest;
 				sha1_context c[1];
 				sha1_initial( c );
-				{
-					arShareptr ps = (*srecordtbl_out)[i];
-					ar_core_mac_srecord( c, ps->topic, ps->shares, ps->threshold, AR_VERSION, ps->shareid, ps->share, ps->buf, sbufused );
-				}
+
+				ar_core_mac_srecord( c, (*srecordtbl_out)[i], AR_VERSION, sbufused );
+
 				sha1_final( c, digest );
 				vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 			}
@@ -458,7 +449,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 
 		size_t deltalen = 0;
 		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
-		ar_util_16BAto8BA( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
+		ar_util_u16_host2packet( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
 		rc4( cryptkeyBArr, 16, rc4cranks, *buf_out, arecord->msglen );
 
 		gfClear( gfCryptkey );
@@ -549,10 +540,9 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 			sha1Digest digest;
 			sha1_context c[1];
 			sha1_initial( c );
-			{
-				arAuthptr pa = arecord;
-				ar_core_mac_arecord( c, pa->topic, pa->verify, pa->shares, pa->threshold, AR_VERSION, pa->pubkey, pa->buf, abufused );
-			}
+
+			ar_core_mac_arecord( c, arecord, AR_VERSION, abufused );
+
 			sha1_final( c, digest );
 			vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 		}
@@ -574,10 +564,9 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 				sha1Digest digest;
 				sha1_context c[1];
 				sha1_initial( c );
-				{
-					arShareptr ps = srecordtbl_opt[i];
-					ar_core_mac_srecord( c, ps->topic, ps->shares, ps->threshold, AR_VERSION, ps->shareid, ps->share, ps->buf, sbufused );
-				}
+
+				ar_core_mac_srecord( c, srecordtbl_opt[i], AR_VERSION, sbufused );
+
 				sha1_final( c, digest );
 				vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 			}

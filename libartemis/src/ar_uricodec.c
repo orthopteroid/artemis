@@ -422,12 +422,12 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 		case 'mc=\0':
 			if( pARecord->cluelen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 			buflen = strlen(buf);
-			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen, pARecord->cluelen );
+			rc = ar_util_u8_b64encode( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + pARecord->loclen, pARecord->cluelen );
 			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'mt=\0':
 			buflen = strlen(buf);
-			rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + msgoffset, pARecord->msglen );
+			rc = ar_util_u8_b64encode( &tokenlen, buf + buflen, bufsize - buflen, pARecord->buf + msgoffset, pARecord->msglen );
 			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { LOGFAIL( rc ); goto EXIT; }
 			break;
 		}
@@ -497,7 +497,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 		case 'sc=\0':
 			if( pSRecord->cluelen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 			buflen = strlen(buf);
-			if( rc = ar_util_8BAto6BA( &tokenlen, buf + buflen, bufsize - buflen, pSRecord->buf + pSRecord->loclen, pSRecord->cluelen ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_u8_b64encode( &tokenlen, buf + buflen, bufsize - buflen, pSRecord->buf + pSRecord->loclen, pSRecord->cluelen ) ) { LOGFAIL( rc ); goto EXIT; }
 			buf[ tokenlen + buflen ] = 0;
 			break;
 		}
@@ -611,13 +611,13 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 
 	if( uClue > 0 ) // optional
 	{
-		if( rc = ar_util_6BAto8BA( &deltalen, bufloc, (*arecord_out)->bufmax - buflen, pClue, uClue ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_util_u8_b64decode( &deltalen, bufloc, (*arecord_out)->bufmax - buflen, pClue, uClue ) ) { LOGFAIL( rc ); goto EXIT; }
 		(*arecord_out)->cluelen = (word16)(deltalen);
 		bufloc += deltalen;
 		buflen += deltalen;
 	}
 
-	if( rc = ar_util_6BAto8BA( &deltalen, bufloc, (*arecord_out)->bufmax - buflen, pMessage, uMessage ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u8_b64decode( &deltalen, bufloc, (*arecord_out)->bufmax - buflen, pMessage, uMessage ) ) { LOGFAIL( rc ); goto EXIT; }
 	(*arecord_out)->msglen = (word16)(deltalen);
 
 EXIT:
@@ -720,7 +720,7 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 
 	if( uClue > 0 ) // optional
 	{
-		if( rc = ar_util_6BAto8BA( &deltalen, bufloc, (*srecord_out)->bufmax - buflen, pClue, uClue ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_util_u8_b64decode( &deltalen, bufloc, (*srecord_out)->bufmax - buflen, pClue, uClue ) ) { LOGFAIL( rc ); goto EXIT; }
 		(*srecord_out)->cluelen = (word16)(deltalen);
 	}
 
@@ -812,7 +812,7 @@ void ar_uri_test()
 			size_t cluelen = 0;
 			if( s != e )
 			{
-				rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
+				rc = ar_util_u8_b64decode( &cluelen, clue, 80, s, e-s+1 );
 				TESTASSERT( rc == 0 );
 			}
 			clue[ cluelen ] = 0;
@@ -839,7 +839,7 @@ void ar_uri_test()
 			size_t cluelen = 0;
 			if( s != e )
 			{
-				rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
+				rc = ar_util_u8_b64decode( &cluelen, clue, 80, s, e-s+1 );
 				TESTASSERT( rc == 0 );
 			}
 			clue[ cluelen ] = 0;
@@ -866,7 +866,7 @@ void ar_uri_test()
 			size_t cluelen = 0;
 			if( s != e )
 			{
-				rc = ar_util_6BAto8BA( &cluelen, clue, 80, s, e-s+1 );
+				rc = ar_util_u8_b64decode( &cluelen, clue, 80, s, e-s+1 );
 				TESTASSERT( rc == 0 );
 			}
 			clue[ cluelen ] = 0;
