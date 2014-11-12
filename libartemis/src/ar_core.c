@@ -248,13 +248,30 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	}
 
 	/////////
-	// construct keypair
+	// construct a valid keypair
 
-	vlPoint priSigningkey;
-	vlSetRandom( priSigningkey, AR_SIGNKEYUNITS, &ar_util_rnd16 );
+	vlPoint pubSigningkey, priSigningkey;
 
-	vlPoint pubSigningkey;
-	cpMakePublicKey( pubSigningkey, priSigningkey );
+	{
+		cpPair sig;
+
+		vlPoint mac;
+		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
+
+		vlPoint session;
+		vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
+
+		size_t i = 0;
+		do {
+			if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
+
+			vlSetRandom( priSigningkey, AR_SIGNKEYUNITS, &ar_util_rnd16 );
+			cpMakePublicKey( pubSigningkey, priSigningkey );
+			rc = ar_shamir_sign( &sig, session, pubSigningkey, priSigningkey, mac );
+		} while( rc == RC_PRIVATEKEY );
+		if(1) { DEBUGPRINT( "sign%d ", i); }
+		if( rc ) { LOGFAIL( rc ); goto EXIT; }
+	}
 
 	//////////
 	// sign the auth record
@@ -269,7 +286,6 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	cpPair authsig;
 	{
 		vlPoint mac;
-		vlClear( mac );
 		{
 			sha1Digest digest;
 			sha1_context c[1];
@@ -281,16 +297,10 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 		}
 
-		for( size_t i = 0; i < 100; i++ )
-		{
-			vlPoint session;
-			vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
-			rc = ar_shamir_sign( &authsig, session, priSigningkey, mac );
-			if( !rc ) { break; }
-			if( rc == RC_ARG ) { continue; }
-			if( rc ) { LOGFAIL( rc ); goto EXIT; }
-		}
-		if( rc ) { LOGFAIL( rc ); goto EXIT; }
+		vlPoint session;
+		vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
+
+		if( rc = ar_shamir_sign( &authsig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 	cpCopy( &arecord_out[0]->authsig, &authsig );
@@ -331,7 +341,6 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		cpPair sharesig;
 		{
 			vlPoint mac;
-			vlClear( mac );
 			{
 				sha1Digest digest;
 				sha1_context c[1];
@@ -343,16 +352,10 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 				vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 			}
 
-			for( size_t i = 0; i < 100; i++ )
-			{
-				vlPoint session;
-				vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
-				rc = ar_shamir_sign( &sharesig, session, priSigningkey, mac );
-				if( !rc ) { break; }
-				if( rc == RC_ARG ) { continue; }
-				if( rc ) { LOGFAIL( rc ); goto EXIT; }
-			}
-			if( rc ) { LOGFAIL( rc ); goto EXIT; }
+			vlPoint session;
+			vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
+
+			if( rc = ar_shamir_sign( &sharesig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 		}
 
 		cpCopy( &(*srecordtbl_out)[i]->sharesig, &sharesig );
@@ -494,7 +497,7 @@ int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordt
 		sha1_digest( digest, arecord->buf, arecord->msglen + arecord->loclen + arecord->cluelen );
 		vlSetWord32Ptr( topic, AR_TOPICUNITS, digest );
 	}
-	if( !vlEqual( arecord->topic, topic ) ) { rc = RC_AUTH_TOPIC; LOGFAIL( rc ); goto EXIT; }
+	if( !vlEqual( arecord->topic, topic ) ) { rc = RC_TOPIC; LOGFAIL( rc ); goto EXIT; }
 
 	if( srecordtbl_opt && numSRecords > 0 )
 	{
@@ -531,7 +534,6 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 
 	{
 		vlPoint mac;
-		vlClear( mac );
 		{
 			sha1Digest digest;
 			sha1_context c[1];
@@ -542,7 +544,8 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 			sha1_final( c, digest );
 			vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 		}
-		if( !cpVerify( arecord->pubkey, mac, &arecord->authsig ) ) { rc = RC_AUTH_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
+
+		if( !cpVerify( arecord->pubkey, mac, &arecord->authsig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 	}
 
 	// check sharesignatures to ensure data integreity
@@ -553,9 +556,8 @@ int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srec
 		{
 			arShareptr pSRecord = srecordtbl_opt[i];
 			size_t sbufused = pSRecord->loclen + pSRecord->cluelen;
-			//
+
 			vlPoint mac;
-			vlClear( mac );
 			{
 				sha1Digest digest;
 				sha1_context c[1];

@@ -96,6 +96,4 @@ int  gfSelfTest (int test_count);
 void gfReduce (gfPoint p);
 	/* previously static/private */
 
-void gfReducev( vlPoint v );
-
 #endif // _EC_FIELD_H_

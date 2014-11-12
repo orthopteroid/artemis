@@ -184,14 +184,6 @@ void gfReduce (gfPoint p)
 	}
 } /* gfReduce */
 
-void gfReducev( vlPoint v )
-{
-	gfPoint gf;
-	gfUnpack( gf, v );
-	gfReduce( gf );
-	gfPack( gf, v );
-}
-
 void gfMultiply (gfPoint r, const gfPoint p, const gfPoint q)
 	/* sets r := p * q mod (x^GF_K + x^GF_T + 1) */
 {

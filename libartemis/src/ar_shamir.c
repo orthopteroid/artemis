@@ -155,11 +155,9 @@ void ar_shamir_test()
 	{
 		printf("# test signing\n");
 
-		sha1Digest digest;
 		vlPoint mac;
+		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
 
-		sha1_digest( digest, "themessage", strlen("themessage") );
-		vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 
 		for( size_t j=0; j < 500; j++ )
 		{
@@ -183,7 +181,7 @@ void ar_shamir_test()
 			TESTASSERT( rc == 0 );
 
 			if(1) {
-				DEBUGPRINT( "%d ", i);
+				DEBUGPRINT( "sign%d ", i);
 			}
 
 			if(0) {
@@ -192,6 +190,14 @@ void ar_shamir_test()
 				ar_util_u16_hexencode( &len, buf, 1024, pri+1, pri[0] ); buf[len]=0; DEBUGPRINT( "pri %s\n", buf );
 				ar_util_u16_hexencode( &len, buf, 1024, pub+1, pub[0] ); buf[len]=0; DEBUGPRINT( "pub %s\n", buf );
 				ar_util_u16_hexencode( &len, buf, 1024, session+1, session[0] ); buf[len]=0; DEBUGPRINT( "session %s\n\n", buf );
+			}
+			// can we be sure that once we can sign a mac, we can sign any mac?
+			for( int i=0; i<20; i++)
+			{
+				vlPoint mac;
+				vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
+
+				TESTASSERT( 0 == ar_shamir_sign( &sig, session, pub, pri, mac ) );
 			}
 		}
 	}
