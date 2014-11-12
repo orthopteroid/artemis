@@ -13,9 +13,9 @@ typedef word16 vlPoint [VL_UNITS +1 ]; // +1 for length
 
 #define vlIsValid(p) (p[0] <= VL_UNITS)
 
-void vlClear (vlPoint p);
+#define vlIsZero(p) (p[0] == 0)
 
-int vlIsZero(const vlPoint p);
+void vlClear (vlPoint p);
 
 word16 vlGetWord16(vlPoint p, word16 i);
 void vlSetWord16(vlPoint p, word16 u);
