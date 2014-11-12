@@ -99,7 +99,7 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 	if( gfShareIDArr ) free( gfShareIDArr );
 }
 
-int ar_shamir_sign( cpPair* sig, const vlPoint session, const vlPoint vlPrivateKey, const vlPoint mac )
+int ar_shamir_sign( cpPair* sig, const vlPoint session, const vlPoint vlPublicKey, const vlPoint vlPrivateKey, const vlPoint mac )
 {
 	int rc = 0;
 
@@ -111,6 +111,8 @@ int ar_shamir_sign( cpPair* sig, const vlPoint session, const vlPoint vlPrivateK
 	cpSign( vlPrivateKey, session, mac, sig );
 
 	if( vlIsZero( sig->r ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+
+	if( !cpVerify( vlPublicKey, mac, sig ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 
@@ -168,22 +170,16 @@ void ar_shamir_test()
 			vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
 
 			int rc = 0, i = 0;
-			while( 1 )
-			{
-				i++;
+			do {
+				if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
 
 				// so, it seems that some pri-keys wont work...
 				vlSetRandom( pri, AR_SIGNKEYUNITS, &ar_util_rnd16 );
 
 				cpMakePublicKey( pub, pri );
 
-				TESTASSERT( 0 == ar_shamir_sign( &sig, session, pri, mac ) );
-
-				rc = RC_INTERNAL;
-				if( !cpVerify( pub, mac, &sig ) ) {  continue; }
-				rc = 0;
-				break;
-			}
+				rc = ar_shamir_sign( &sig, session, pub, pri, mac );
+			} while( rc == RC_PRIVATEKEY );
 			TESTASSERT( rc == 0 );
 
 			if(1) {
