@@ -221,9 +221,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlCryptkey, 0 ));
 
 		size_t deltalen = 0;
-		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
-		ar_util_u16_host2packet( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, 16, rc4cranks, arecord_out[0]->buf + msgoffset, inbuflen );
+		byte cryptkeyBArr[ sizeof(vlPoint) +2 ]; // +2 for spare
+		ar_util_u16_host2packet( &deltalen, cryptkeyBArr, sizeof(vlPoint), vlCryptkey + 1, vlCryptkey[0] );
+		rc4( cryptkeyBArr, vlCryptkey[0] *2, rc4cranks, arecord_out[0]->buf + msgoffset, inbuflen ); // *2 for characters
 
 		vlClear( vlCryptkey );
 	}
@@ -444,9 +444,9 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 		word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlCryptkey, 0 ));
 
 		size_t deltalen = 0;
-		byte cryptkeyBArr[ 16 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // 128 bits = 16 bytes
-		ar_util_u16_host2packet( &deltalen, cryptkeyBArr, 16, vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, 16, rc4cranks, *buf_out, arecord->msglen );
+		byte cryptkeyBArr[ sizeof(vlPoint) +2 ]; // +2 for spare
+		ar_util_u16_host2packet( &deltalen, cryptkeyBArr, sizeof(vlPoint), vlCryptkey + 1, vlCryptkey[0] );
+		rc4( cryptkeyBArr, vlCryptkey[0] *2, rc4cranks, *buf_out, arecord->msglen ); // *2 for characters
 
 		gfClear( gfCryptkey );
 	}
