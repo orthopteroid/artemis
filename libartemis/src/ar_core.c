@@ -15,11 +15,12 @@
 #include "version.h" // for version related defines
 
 // some sanity checks
-STATICASSERT( AR_VERIFYUNITS < AR_UNITS );
-STATICASSERT( AR_SHARECOEFUNITS < AR_UNITS );
-STATICASSERT( AR_SESSIONUNITS < AR_UNITS );
-STATICASSERT( AR_CRYPTKEYUNITS < AR_UNITS );
-STATICASSERT( AR_SIGNKEYUNITS < AR_UNITS );
+STATICASSERT( AR_TOPICUNITS < VL_UNITS );
+STATICASSERT( AR_MACUNITS < VL_UNITS );
+STATICASSERT( AR_VERIFYUNITS < VL_UNITS );
+STATICASSERT( AR_CRYPTKEYUNITS < VL_UNITS );
+STATICASSERT( AR_SESSKEYUNITS < VL_UNITS );
+STATICASSERT( AR_PRIVKEYUNITS < VL_UNITS );
 
 #if defined(AR_DEMO)
     #define AR_HIDDEN_BYTE 1
@@ -97,6 +98,22 @@ static void ar_core_mac_srecord( sha1_context* c, arShareptr ps, byte version, s
 	sha1_process_blob16( c, ps->shareid );
 	sha1_process_vlpoint( c, ps->share );
 	sha1_process( c, ps->buf, (unsigned)(buflen) );
+}
+
+//////////////////////////
+
+static int ar_core_sign( cpPair* sig, const vlPoint session, const vlPoint vlPublicKey, const vlPoint vlPrivateKey, const vlPoint mac )
+{
+	int rc = 0;
+
+	// ensure pubkey is valid, sign mac and verify
+	ecPoint t2;
+	if( ecUnpack( &t2, vlPublicKey ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
+	cpSign( vlPrivateKey, session, mac, sig );
+	if( vlIsZero( sig->r ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
+	if( !cpVerify( vlPublicKey, mac, sig ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
+EXIT:
+	return rc;
 }
 
 //////////////////////////
@@ -209,7 +226,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	for( word16 t = 0; t < numThres; t++ )
 	{
 		vlPoint vlTmp;
-		vlSetRandom( vlTmp, AR_SHARECOEFUNITS, &ar_util_rnd16 );
+		vlSetRandom( vlTmp, AR_CRYPTKEYUNITS, &ar_util_rnd16 );
 		gfUnpack( gfCryptCoefArr[t], vlTmp );
 		gfReduce( gfCryptCoefArr[t] );
 	}
@@ -253,23 +270,24 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	vlPoint pubSigningkey, priSigningkey;
 
 	{
+		// use placeholder vars to test the signature
 		cpPair sig;
-
 		vlPoint mac;
-		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
-
 		vlPoint session;
-		vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
+		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
+		vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
 		size_t i = 0;
-		do {
+		for( rc = RC_PRIVATEKEY; rc == RC_PRIVATEKEY; )
+		{
 			if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
 
-			vlSetRandom( priSigningkey, AR_SIGNKEYUNITS, &ar_util_rnd16 );
+			vlSetRandom( priSigningkey, AR_PRIVKEYUNITS, &ar_util_rnd16 );
+
 			cpMakePublicKey( pubSigningkey, priSigningkey );
-			rc = ar_shamir_sign( &sig, session, pubSigningkey, priSigningkey, mac );
-		} while( rc == RC_PRIVATEKEY );
-		if(1) { DEBUGPRINT( "sign%d ", i); }
+
+			rc = ar_core_sign( &sig, session, pubSigningkey, priSigningkey, mac );
+		}
 		if( rc ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
@@ -298,9 +316,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		}
 
 		vlPoint session;
-		vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
+		vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
-		if( rc = ar_shamir_sign( &authsig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_core_sign( &authsig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 	cpCopy( &arecord_out[0]->authsig, &authsig );
@@ -353,9 +371,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			}
 
 			vlPoint session;
-			vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
+			vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
-			if( rc = ar_shamir_sign( &sharesig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_core_sign( &sharesig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 		}
 
 		cpCopy( &(*srecordtbl_out)[i]->sharesig, &sharesig );
@@ -602,7 +620,7 @@ void ar_core_test()
 	if( !(cleartextin = malloc( strlen(reftextin)+1 )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	strcpy_s( cleartextin, strlen(reftextin)+1, reftextin );
 
-	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, AR_LOCATION ); // +1 to include \0
+	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, AR_LOCSTR ); // +1 to include \0
 	TESTASSERT( rc == 0 );
 
 	rc = ar_core_check_topic( checkarr, arecord, srecordtbl, 2 );

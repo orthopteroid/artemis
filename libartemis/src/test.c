@@ -19,8 +19,8 @@
 void test_all()
 {
 
-	DEBUGPRINT( "*************\nAR_LOCATION %s\nAR_LOCHASH 0x%X\n*************\n", AR_LOCATION, ar_util_strcrc( AR_LOCATION ) );
-	ASSERT( ar_util_strcrc( AR_LOCATION ) == AR_LOCHASH );
+	DEBUGPRINT( "*************\nAR_LOCSTR %s\nAR_LOCHASH 0x%X\n*************\n", AR_LOCSTR, ar_util_strcrc( AR_LOCSTR ) );
+	ASSERT( ar_util_strcrc( AR_LOCSTR ) == AR_LOCHASH );
 
 #if defined(ENABLE_TESTS)
 
@@ -37,10 +37,10 @@ void test_all()
 
 	byteptr shares;
 	
-	library_uri_encoder( &shares, 5, 5, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message five" );  printf( "%s\n", shares ); library_free( &shares );
-	library_uri_encoder( &shares, 5, 4, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message four" );  printf( "%s\n", shares ); library_free( &shares );
-	library_uri_encoder( &shares, 5, 3, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message three" ); printf( "%s\n", shares ); library_free( &shares );
-	library_uri_encoder( &shares, 5, 2, AR_LOCATION, "main\none\ntwo\nthree\nfour\nfive", "message two" );   printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 5, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", "message five" );  printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 4, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", "message four" );  printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 3, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", "message three" ); printf( "%s\n", shares ); library_free( &shares );
+	library_uri_encoder( &shares, 5, 2, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", "message two" );   printf( "%s\n", shares ); library_free( &shares );
 
 #else
 

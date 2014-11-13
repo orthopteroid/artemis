@@ -373,7 +373,7 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 	size_t tokenlen = 0;
 	word32 stateArr[] = {'tp=\0', 'ai=\0', 'vf=\0', 'pk=\0', 'as=\0', 'mt=\0', 'mc=\0', 0 };
 
-#if defined(ENABLE_TESTS)
+#if defined(ENABLE_FUZZING)
 
 	// impose some robustness on the order of the tags....
 	int k = sizeof(stateArr) / sizeof(word32) -1 -1; // -1 conv from size to count, -1 to omit EOA marker
@@ -449,7 +449,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 	size_t tokenlen = 0;
 	word32 stateArr[] = {'tp=\0', 'si=\0', 'sh=\0', 'ss=\0', 'sc=\0', 0 };
 
-#if defined(ENABLE_TESTS)
+#if defined(ENABLE_FUZZING)
 
 	// impose some robustness on the order of the tags....
 	int k = sizeof(stateArr) / sizeof(word32) -1 -1; // -1 conv from size to count, -1 to omit EOA marker
@@ -759,7 +759,7 @@ void ar_uri_test()
 	arSharetbl		srecordtbl_;
 
 	char* clues_r[4] = {"topiclue", "clue1", "clue2", 0}; // is a table, ends with 0
-	char* location = AR_LOCATION;
+	char* location = AR_LOCSTR;
 
 	char cleartextin[20];
 	byteptr cleartext_out;

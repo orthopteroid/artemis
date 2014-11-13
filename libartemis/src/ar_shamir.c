@@ -99,26 +99,6 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 	if( gfShareIDArr ) free( gfShareIDArr );
 }
 
-int ar_shamir_sign( cpPair* sig, const vlPoint session, const vlPoint vlPublicKey, const vlPoint vlPrivateKey, const vlPoint mac )
-{
-	int rc = 0;
-
-	if( !vlIsValid( vlPrivateKey ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
-	if( !vlIsValid( session ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
-	if( !vlIsValid( mac ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
-	if( vlIsZero( mac ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
-
-	cpSign( vlPrivateKey, session, mac, sig );
-
-	if( vlIsZero( sig->r ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
-
-	if( !cpVerify( vlPublicKey, mac, sig ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
-
-EXIT:
-
-	return rc;
-}
-
 void ar_shamir_test()
 {
 
@@ -138,7 +118,7 @@ void ar_shamir_test()
 		{
 			for( int t=0;t<2;t++ )
 			{
-				vlSetRandom( vlTmp, AR_SHARECOEFUNITS, &ar_util_rnd16 );
+				vlSetRandom( vlTmp, AR_CRYPTKEYUNITS, &ar_util_rnd16 );
 				gfUnpack( gfCryptCoef[t], vlTmp );
 				gfReduce( gfCryptCoef[t] );
 			}
@@ -151,6 +131,32 @@ void ar_shamir_test()
 			TESTASSERT( gfEqual( gfCryptCoef[0], keyRecovered ) );
 		}
 	}
+
+#if 0
+	{
+		printf("# test ecPacking\n");
+
+		for( int i=0; i<100; i++ )
+		{
+			vlPoint vl0, vl1;
+			vlSetRandom( vl0, VL_UNITS, &ar_util_rnd16 );
+
+			if(0){
+				gfPoint g;
+				gfUnpack(g, vl0);
+				gfReduce(g);
+				gfPack(g, vl0);
+			}
+
+			ecPoint ec0, ec1;
+			ecUnpack( &ec0, vl0 );
+			ecPack( &ec0, vl1 );
+			ecUnpack( &ec1, vl1 );
+			TESTASSERT( ecEqual( &ec0, &ec1 ) );
+			TESTASSERT( vlEqual( vl0, vl1 ) );
+		}
+	}
+#endif
 
 	{
 		printf("# test signing\n");
@@ -173,23 +179,30 @@ void ar_shamir_test()
 			cpPair sig;
 
 			vlPoint session;
-			vlSetRandom( session, AR_SESSIONUNITS, &ar_util_rnd16 );
+			vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
 			int rc = 0, i = 0;
-			do {
+			for( rc = RC_PRIVATEKEY; rc == RC_PRIVATEKEY; )
+			{
 				if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
 
 				// so, it seems that some pri-keys wont work...
-				vlSetRandom( pri, AR_SIGNKEYUNITS, &ar_util_rnd16 );
+				vlSetRandom( pri, AR_PRIVKEYUNITS, &ar_util_rnd16 );
 
 				cpMakePublicKey( pub, pri );
 
-				rc = ar_shamir_sign( &sig, session, pub, pri, mac );
-			} while( rc == RC_PRIVATEKEY );
+				ecPoint t2;
+				if( ecUnpack( &t2, pub ) ) { continue; }
+
+				cpSign( pri, session, mac, &sig );
+				if( vlIsZero( sig.r ) ) { continue; }
+				if( !cpVerify( pub, mac, &sig ) ) { continue; }
+				rc = 0;
+			}
 			TESTASSERT( rc == 0 );
 
 			if(1) {
-				DEBUGPRINT( "sign%d ", i);
+				DEBUGPRINT( "%d ", i);
 			}
 
 			if(0) {
@@ -200,6 +213,8 @@ void ar_shamir_test()
 				ar_util_u16_hexencode( &len, buf, 1024, session+1, session[0] ); buf[len]=0; DEBUGPRINT( "session %s\n\n", buf );
 			}
 
+			TESTASSERT( cpVerify( pub, mac, &sig ) );
+
 #if defined(ENABLE_FUZZING)
 
 			// can we be sure that once we can sign a mac, we can sign any mac?
@@ -208,7 +223,9 @@ void ar_shamir_test()
 				vlPoint mac;
 				vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
 
-				TESTASSERT( 0 == ar_shamir_sign( &sig, session, pub, pri, mac ) );
+				cpSign( pri, session, mac, &sig );
+				TESTASSERT( 0 == vlIsZero( sig.r ) );
+				TESTASSERT( cpVerify( pub, mac, &sig ) );
 			}
 
 #endif // ENABLE_FUZZING

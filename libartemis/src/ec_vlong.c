@@ -286,7 +286,7 @@ void vlRemainder(vlPoint u, const vlPoint v)
 		vlShortLshift( t, 1 );
 		shift += 1;
 	}
-	while ( 1 )
+	while ( u[0] )
 	{
 		if ( vlGreater( t, u ) )
 		{

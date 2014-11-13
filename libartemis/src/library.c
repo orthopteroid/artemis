@@ -548,7 +548,7 @@ void library_test()
 
 	int shares = 2;
 	int threshold = 2;
-	byteptr location = AR_LOCATION;
+	byteptr location = AR_LOCSTR;
 	byteptr message_in = "between friends";
 
 	{

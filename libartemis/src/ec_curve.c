@@ -299,7 +299,7 @@ int ecUnpack (ecPoint *p, const vlPoint k)
 	/* unpacks a vlPoint into a curve point */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return 1; }
-	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
+	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); return 1; }
 
 	int yb;
 	vlPoint a;
@@ -307,7 +307,7 @@ int ecUnpack (ecPoint *p, const vlPoint k)
 	vlCopy(a, k);
 	yb = a[0] ? a[1] & 1 : 0;
 	vlShortRshift(a, 1);
-	if( 1 == gfUnpack( p->x, a ) ) { LOGFAIL( RC_INTERNAL ); return 1; }
+	if( 1 == gfUnpack( p->x, a ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
 
 	if( p->x[0] || yb ) { return ecCalcY(p, yb); }
 
