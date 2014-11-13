@@ -153,8 +153,8 @@ public class ActivityTopics extends FragmentActivity {
 
     public void addScannedItem( String share ) {
         AppLogic.Get().addToken(share);
-        if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_parse); }
-        if( AppLogic.Get().detectedDecode ) { Notifier.ShowOk( this, R.string.dialog_info_decode); }
+        if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_decode, null ); }
+        if( AppLogic.Get().detectedDecode ) { Notifier.ShowOk( this, R.string.dialog_info_decode, null ); }
 
         refreshListView();
     }
@@ -185,9 +185,14 @@ public class ActivityTopics extends FragmentActivity {
         lbm.registerReceiver(deleteoneIntentReceiver, new IntentFilter( INTENT_DELETEONE ));
         lbm.registerReceiver(deleteallIntentReceiver, new IntentFilter( INTENT_DELETEALL ));
 
+        Prefs.Init( this );
         ArtemisSQL.Init( this );
         ArtemisLib.Init();
         AppLogic.Init( this );
+
+        ////////////
+
+        sortOrder = ArtemisSQL.SortOrder.values()[ Prefs.GetInt( Prefs.TOPIC_SORTORDER, ArtemisSQL.SortOrder.NATURAL.ordinal() ) ];
 
         ////////////////
 
@@ -247,6 +252,16 @@ public class ActivityTopics extends FragmentActivity {
                 }
             }
         );
+
+        //////////
+
+        if( false == Prefs.GetBool( Prefs.EULA_VERSION, false ) ) {
+            Notifier.ShowOk(thisActivity, R.string.eula, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int _which) {
+                    Prefs.SetBool(Prefs.EULA_VERSION, true);
+                }
+            });
+        }
     }
 
     @Override
@@ -269,6 +284,7 @@ public class ActivityTopics extends FragmentActivity {
                         ArtemisSQL.SortOrder.LEASTCOMPLETE
                 };
                 sortOrder = orderings[_which];
+                Prefs.SetInt( Prefs.TOPIC_SORTORDER, sortOrder.ordinal() );
                 refreshListView();
             }
         };
@@ -284,8 +300,7 @@ public class ActivityTopics extends FragmentActivity {
             default: selectedid=0; break;
         }
 
-        Notifier.ShowOptionsWhich( this, R.array.dialog_sorttopics, selectedid, ocl);
-
+        Notifier.ShowOptions_Which(this, R.array.dialog_sorttopics, selectedid, ocl);
     }
 
     public void onClickTest(View v) {
@@ -307,7 +322,7 @@ public class ActivityTopics extends FragmentActivity {
             intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
             startActivityForResult( intent, ACTIVITY_COMPLETE);
         } catch (Exception e1) {
-            Notifier.ShowOk( this, R.string.dialog_noscanner);
+            Notifier.ShowOk( this, R.string.dialog_noscanner, null );
         }
     }
 

@@ -9,8 +9,7 @@ import android.content.DialogInterface;
 
 public class Notifier {
 
-    public static void ShowOk(Context cxt, int stringid) {
-        String message = cxt.getResources().getString( stringid );
+    public static void ShowMessage(Context cxt, String message) {
         String title = cxt.getResources().getString(R.string.app_name);
         String response = cxt.getResources().getString(R.string.button_ok);
         new AlertDialog.Builder(cxt)
@@ -21,14 +20,15 @@ public class Notifier {
                 .show();
     }
 
-    public static void ShowMessage(Context cxt, String message) {
+    public static void ShowOk(Context cxt, int stringid, DialogInterface.OnClickListener ocl) {
+        String message = cxt.getResources().getString( stringid );
         String title = cxt.getResources().getString(R.string.app_name);
         String response = cxt.getResources().getString(R.string.button_ok);
         new AlertDialog.Builder(cxt)
                 .setIcon(R.drawable.app_icon)
                 .setTitle(title)
                 .setMessage(message)
-                .setNeutralButton(response, null)
+                .setNeutralButton(response, ocl)
                 .show();
     }
 
@@ -41,7 +41,7 @@ public class Notifier {
                 .show();
     }
 
-    public static void ShowOptionsWhich(Context cxt, int listid, int selectedid, DialogInterface.OnClickListener ocl ) {
+    public static void ShowOptions_Which(Context cxt, int listid, int selectedid, DialogInterface.OnClickListener ocl) {
         String title = cxt.getResources().getString(R.string.app_name);
         new AlertDialog.Builder(cxt)
                 .setIcon(R.drawable.app_icon)

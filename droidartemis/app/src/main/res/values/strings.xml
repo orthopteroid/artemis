@@ -3,7 +3,6 @@
 
     <string name="app_name">ArcanaShare</string>
     <string name="app_uri">tereslogica.com</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="dialog_noscanner">Scanner app not found.</string>
     <string name="dialog_nonativelib">Installation error: native library not found.</string>
@@ -12,7 +11,6 @@
     <string name="dialog_info_decode">New message decoded!</string>
     <string name="dialog_err_encode">There was an encoding failure.</string>
     <string name="dialog_err_decode">There was a decoding failure.</string>
-    <string name="dialog_err_parse">There was a parse failure.</string>
     <string name="sharelist_messagedecodeerror">Unable to decode message.</string>
     <string name="sharelist_needmorekeys">More keys needed to unlock message.</string>
     <string name="sharelist_nomessage">Message not yet scanned.</string>
@@ -28,5 +26,7 @@
     <string name="button_accept">Accept</string>
     <string name="button_more">More</string>
     <string name="button_less">Less</string>
+
+    <string name="eula">By using this software you agree to the following condition:\n\nThis software is provided as is WITHOUT WARRANTY of any kind express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the author or copyright holder be liable for any claim damages or other liability, whether in an action of court, tort or otherwise, arising from or out of, or in connection with, the software or the use or other dealings in the software.</string>
 
 </resources>

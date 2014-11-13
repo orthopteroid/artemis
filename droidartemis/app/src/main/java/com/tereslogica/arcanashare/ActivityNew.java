@@ -144,12 +144,12 @@ public class ActivityNew extends Activity {
                     new TextWatcher() {
                         public void afterTextChanged(Editable s) {
                             if (s.length() > 20) {
-                                Notifier.ShowOk(thisActivity, R.string.dialog_demofail);
+                                Notifier.ShowOk( thisActivity, R.string.dialog_demofail, null );
                                 setValue(s.toString().substring(0, 19));
                             }
                             for (int i = 0; i < s.length(); i++) {
                                 if (s.charAt(i) == '\n') {
-                                    Notifier.ShowOk(thisActivity, R.string.dialog_nomultiline);
+                                    Notifier.ShowOk( thisActivity, R.string.dialog_nomultiline, null );
                                     break;
                                 }
                             }
@@ -237,7 +237,7 @@ public class ActivityNew extends Activity {
     public void onClickAccept(View view) {
         for( int i = 2; i < settings.size(); i++) { // 2 >= are user text
             if( settings.get(i).getValue().indexOf('\n') >= 0) {
-                Notifier.ShowOk( this, R.string.dialog_nomultiline);
+                Notifier.ShowOk( this, R.string.dialog_nomultiline, null );
                 return;
             }
         }
@@ -259,10 +259,10 @@ public class ActivityNew extends Activity {
 
         if( ArtemisLib.Get().nativeDidFail() ) {
             if( ArtemisLib.Get().nativeWasFailDemo() ) {
-                Notifier.ShowOk( this, R.string.dialog_demofail);
+                Notifier.ShowOk( this, R.string.dialog_demofail, null );
                 return;
             }
-            Notifier.ShowOk( this, R.string.dialog_err_encode);
+            Notifier.ShowOk( this, R.string.dialog_err_encode, null );
             return;
         }
 
@@ -270,7 +270,7 @@ public class ActivityNew extends Activity {
 
         AppLogic.Get().addTokenArray(shares.split("\n"));
 
-        if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_parse ); }
+        if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_decode, null ); }
         if( AppLogic.Get().detectedDecode ) { this.finish(); }
     }
 

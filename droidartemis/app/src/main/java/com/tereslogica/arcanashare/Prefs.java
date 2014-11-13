@@ -1,0 +1,38 @@
+package com.tereslogica.arcanashare;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+
+/**
+ * Created by john on 13/11/14.
+ */
+public class Prefs {
+    public final static String TOPIC_SORTORDER = "topic-sort-order";
+    public static final String EULA_VERSION = "eula-version-1";
+
+    private static SharedPreferences preferences;
+
+    //////////////
+
+    private Prefs() {}
+    static void Init( Activity _a ) {
+        preferences = _a.getPreferences(Context.MODE_PRIVATE);
+    }
+    static void Cleanup() {}
+
+    /////////////
+
+    static int GetInt( String foo, int defvalue ) {
+        return preferences.getInt( foo, defvalue );
+    }
+    static void SetInt( String foo, int newvalue ) {
+        preferences.edit().putInt( foo, newvalue ).commit();
+    }
+    static boolean GetBool( String foo, boolean defvalue ) {
+        return preferences.getBoolean( foo, defvalue );
+    }
+    static void SetBool( String foo, boolean newvalue ) {
+        preferences.edit().putBoolean( foo, newvalue ).commit();
+    }
+}
