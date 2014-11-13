@@ -1,4 +1,4 @@
-package com.tereslogica.acanashare;
+package com.tereslogica.arcanashare;
 
 import android.content.Context;
 import android.database.Cursor;

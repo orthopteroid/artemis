@@ -1,4 +1,4 @@
-package com.tereslogica.acanashare;
+package com.tereslogica.arcanashare;
 
 import java.util.Random;
 

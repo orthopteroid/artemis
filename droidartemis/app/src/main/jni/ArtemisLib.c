@@ -20,30 +20,30 @@ static int rc = 0;
 
 //////////////////////////////
 
-JNIEXPORT void JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeInit(JNIEnv * env, jobject obj)
+JNIEXPORT void JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeInit(JNIEnv * env, jobject obj)
 {
     library_init();
     rc = 0;
 }
 
-JNIEXPORT void JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeCleanup(JNIEnv * env, jobject obj)
+JNIEXPORT void JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeCleanup(JNIEnv * env, jobject obj)
 {
     library_cleanup();
 }
 
-JNIEXPORT jboolean JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeDidFail(JNIEnv * env, jobject obj)
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeDidFail(JNIEnv * env, jobject obj)
 {
     jboolean jok = ( rc != 0 ) ? JNI_TRUE : JNI_FALSE;
     return jok;
 }
 
-JNIEXPORT jboolean JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeWasFailDemo(JNIEnv * env, jobject obj)
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeWasFailDemo(JNIEnv * env, jobject obj)
 {
     jboolean jok = ( rc == RC_DEMO_7K_3L_20C ) ? JNI_TRUE : JNI_FALSE;
     return jok;
 }
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jLoc, jstring jRecordArr)
+JNIEXPORT jstring JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jLoc, jstring jRecordArr)
 {
     byte* cMessage_out = 0;
     jstring jMessage_out;
@@ -74,7 +74,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeDecod
     return jMessage_out;
 }
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeEncode(JNIEnv * env, jobject obj, jint jKeys, jint jLocks, jstring jLoc, jstring jClues, jstring jMess )
+JNIEXPORT jstring JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeEncode(JNIEnv * env, jobject obj, jint jKeys, jint jLocks, jstring jLoc, jstring jClues, jstring jMess )
 {
     byte* cShares_out = 0;
     jstring jShares_out;
@@ -113,7 +113,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeEncod
     return jShares_out;
 }
 
-JNIEXPORT jintArray JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeInfo(JNIEnv * env, jobject obj, jstring jRecord)
+JNIEXPORT jintArray JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeInfo(JNIEnv * env, jobject obj, jstring jRecord)
 {
     const char *cRecord = (*env)->GetStringUTFChars(env, jRecord, 0);
 
@@ -137,7 +137,7 @@ JNIEXPORT jintArray JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeInf
     return shareInfo;
 }
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeTopic(JNIEnv * env, jobject obj, jstring jRecord)
+JNIEXPORT jstring JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeTopic(JNIEnv * env, jobject obj, jstring jRecord)
 {
     byte* cTopic_out = 0;
     jstring jTopic_out;
@@ -155,7 +155,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeTopic
     return jTopic_out;
 }
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeClue(JNIEnv * env, jobject obj, jstring jRecord)
+JNIEXPORT jstring JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeClue(JNIEnv * env, jobject obj, jstring jRecord)
 {
     byte* cClue_out = 0;
     jstring jClue_out;
@@ -176,7 +176,7 @@ JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeClue(
     return jClue_out;
 }
 
-JNIEXPORT jstring JNICALL Java_com_tereslogica_acanashare_ArtemisLib_nativeLocation(JNIEnv * env, jobject obj, jstring jRecord)
+JNIEXPORT jstring JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeLocation(JNIEnv * env, jobject obj, jstring jRecord)
 {
     byte* cLocation_out = 0;
     jstring jLocation_out;

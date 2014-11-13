@@ -1,4 +1,4 @@
-package com.tereslogica.acanashare;
+package com.tereslogica.arcanashare;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

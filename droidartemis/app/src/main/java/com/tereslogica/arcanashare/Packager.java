@@ -1,4 +1,4 @@
-package com.tereslogica.acanashare;
+package com.tereslogica.arcanashare;
 
 import android.app.ProgressDialog;
 import android.content.Context;

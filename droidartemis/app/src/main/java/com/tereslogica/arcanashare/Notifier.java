@@ -1,4 +1,4 @@
-package com.tereslogica.acanashare;
+package com.tereslogica.arcanashare;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -32,12 +32,21 @@ public class Notifier {
                 .show();
     }
 
-    public static void ShowOptions(Context cxt,int listid, DialogInterface.OnClickListener ocl ) {
+    public static void ShowOptions(Context cxt, int listid, DialogInterface.OnClickListener ocl ) {
         String title = cxt.getResources().getString(R.string.app_name);
         new AlertDialog.Builder(cxt)
                 .setIcon(R.drawable.app_icon)
                 .setTitle(title)
                 .setItems(listid, ocl)
+                .show();
+    }
+
+    public static void ShowOptionsWhich(Context cxt, int listid, int selectedid, DialogInterface.OnClickListener ocl ) {
+        String title = cxt.getResources().getString(R.string.app_name);
+        new AlertDialog.Builder(cxt)
+                .setIcon(R.drawable.app_icon)
+                .setTitle(title)
+                .setSingleChoiceItems(listid, selectedid, ocl)
                 .show();
     }
 }

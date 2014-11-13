@@ -1,4 +1,4 @@
-package com.tereslogica.acanashare;
+package com.tereslogica.arcanashare;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -261,6 +261,7 @@ public class ActivityTopics extends FragmentActivity {
     public void onClickSort(View v) {
         DialogInterface.OnClickListener ocl = new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int _which) {
+
                 ArtemisSQL.SortOrder orderings[] = {
                         ArtemisSQL.SortOrder.MOSTRECENT,
                         ArtemisSQL.SortOrder.LEASTRECENT,
@@ -271,7 +272,20 @@ public class ActivityTopics extends FragmentActivity {
                 refreshListView();
             }
         };
-        Notifier.ShowOptions( this, R.array.dialog_sorttopics, ocl);
+
+        int selectedid = 0;
+        switch( sortOrder ) {
+            case UNNATURAL: selectedid=0; break;
+            case NATURAL: selectedid=0; break;
+            case MOSTRECENT: selectedid=0; break;
+            case LEASTRECENT: selectedid=1; break;
+            case MOSTCOMPLETE: selectedid=2; break;
+            case LEASTCOMPLETE: selectedid=3; break;
+            default: selectedid=0; break;
+        }
+
+        Notifier.ShowOptionsWhich( this, R.array.dialog_sorttopics, selectedid, ocl);
+
     }
 
     public void onClickTest(View v) {
