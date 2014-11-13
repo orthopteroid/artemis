@@ -148,11 +148,6 @@
 	//#define DLLDECL __declspec(dllimport)
 	//#endif // WINDLL_EXPORTS
 
-	// TODO: remove?
-	#if defined(_DEBUG)
-		DLLDECL char* RC_LOOKUP( int rc );
-	#endif
-
 	#if !defined(strdup)
 		#define strdup _strdup
 	#endif

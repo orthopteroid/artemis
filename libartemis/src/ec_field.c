@@ -118,7 +118,7 @@ void gfCopy (gfPoint p, const gfPoint q)
 	memcpy( p, q, (q[0] + 1) * sizeof(lunit) );
 } /* gfCopy */
 
-// TODO: optimize
+
 void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 	/* sets p := q + r */
 {
