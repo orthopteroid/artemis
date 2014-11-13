@@ -3,8 +3,6 @@ package com.tereslogica.acanashare;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
 
 // http://developer.android.com/guide/topics/ui/dialogs.html
 // http://code.tutsplus.com/tutorials/android-sdk-using-alerts-toasts-and-notifications--mobile-1949

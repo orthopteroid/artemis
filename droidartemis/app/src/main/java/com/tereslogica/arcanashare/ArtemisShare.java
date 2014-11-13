@@ -1,12 +1,7 @@
 package com.tereslogica.acanashare;
 
 import android.database.Cursor;
-import android.graphics.Paint;
-import android.location.Location;
 import android.view.View;
-import android.widget.TextView;
-
-import java.sql.Date;
 
 public class ArtemisShare {
 
