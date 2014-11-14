@@ -3,7 +3,10 @@
 
     <string name="app_name">ArcanaShare</string>
     <string name="app_uri">tereslogica.com</string>
-    <string name="action_settings">Settings</string>
+    <string name="menu_sort">Sorting</string>
+    <string name="menu_license">License</string>
+    <string name="menu_acknowledgments">Acknowledgments</string>
+    <string name="dialog_selectsorting">Change Sorting</string>
     <string name="dialog_noscanner">Scanner app not found.</string>
     <string name="dialog_nonativelib">Installation error: native library not found.</string>
     <string name="dialog_demofail">Free version restricted to 7 keys, 3 locks and 20 character messages and clues.</string>
@@ -27,6 +30,35 @@
     <string name="button_more">More</string>
     <string name="button_less">Less</string>
 
-    <string name="eula">By using this software you agree to the following condition:\n\nThis software is provided as is WITHOUT WARRANTY of any kind express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the author or copyright holder be liable for any claim damages or other liability, whether in an action of court, tort or otherwise, arising from or out of, or in connection with, the software or the use or other dealings in the software.</string>
+    <string name="text_eula">
+By using this software you accept the following:\n
+\n
+THIS SOFTWARE IS PROVIDED BY THE AUTHORS \"AS IS\" AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    </string>
+    <string name="text_license">
+    </string>
+    <string name="text_acknowledgments">
+"Elliptic Curves and Algebraic Operations over GF(2^m)" (public domain pegwit library)
+ George Barwood  &lt;george.barwood@dial.pipex.com&gt;,
+ Paulo S.L.M. Barreto &lt;pbarreto@uninet.com.br&gt;,
+ Mr. Tines &lt;tines@windsong.demon.co.uk&gt;\n
+\n
+"SHA-1" (public domain implementation)
+ Steve Reid &lt;steve@edmweb.com&gt;
+
+ELLIPTIC CURVE CRYPTOGRAPHY:THE SERPENTINE COURSE OF A PARADIGM SHIFT\n
+        ANN HIBNER KOBLITZ, NEAL KOBLITZ, AND ALFRED MENEZES\n
+
+    </string>
 
 </resources>

@@ -178,7 +178,7 @@ public class ActivityNew extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.generic_scrollview);
+        setContentView(R.layout.creator_page);
         LinearLayout layout = (LinearLayout) findViewById(R.id.generic_linear);
         LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         thisActivity = this;

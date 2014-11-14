@@ -12,6 +12,9 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -48,7 +51,7 @@ public class ActivityTopics extends FragmentActivity {
     private BroadcastReceiver shareIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            //Notifier.ShowMessage(thisActivity, "sharing!" );
+            //Notifier.ShowMessageOk(thisActivity, "sharing!" );
             new Packager( thisActivity, intent.getStringExtra( EXTRA_TOPICSTRING ) );
         }
     };
@@ -57,7 +60,7 @@ public class ActivityTopics extends FragmentActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Uri uri = Uri.parse( intent.getStringExtra( EXTRA_URISTRING ) );
-            //Notifier.ShowMessage(thisActivity, "packaged uri: " + uri.toString() );
+            //Notifier.ShowMessageOk(thisActivity, "packaged uri: " + uri.toString() );
             Intent intent2 = new Intent( android.content.Intent.ACTION_SEND, uri );
             intent2.setType("application/zip");
             intent2.addFlags( Intent.FLAG_GRANT_READ_URI_PERMISSION );
@@ -228,7 +231,7 @@ public class ActivityTopics extends FragmentActivity {
                         refreshListView();
                     }
                 };
-                Notifier.ShowOptions( thisActivity, R.array.dialog_topicactions, ocl );
+                Notifier.ShowMenu(thisActivity, R.array.dialog_topicactions, ocl);
 
                 return false;
             }
@@ -248,7 +251,7 @@ public class ActivityTopics extends FragmentActivity {
                         message = getResources().getString( R.string.sharelist_needmorekeys );
                     }
 
-                    Notifier.ShowMessage(thisActivity, message);
+                    Notifier.ShowMessageOk(thisActivity, message);
                 }
             }
         );
@@ -256,7 +259,7 @@ public class ActivityTopics extends FragmentActivity {
         //////////
 
         if( false == Prefs.GetBool( Prefs.EULA_VERSION, false ) ) {
-            Notifier.ShowOk(thisActivity, R.string.eula, new DialogInterface.OnClickListener() {
+            Notifier.ShowOk(thisActivity, R.string.text_eula, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int _which) {
                     Prefs.SetBool(Prefs.EULA_VERSION, true);
                 }
@@ -276,7 +279,6 @@ public class ActivityTopics extends FragmentActivity {
     public void onClickSort(View v) {
         DialogInterface.OnClickListener ocl = new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int _which) {
-
                 ArtemisSQL.SortOrder orderings[] = {
                         ArtemisSQL.SortOrder.MOSTRECENT,
                         ArtemisSQL.SortOrder.LEASTRECENT,
@@ -300,7 +302,7 @@ public class ActivityTopics extends FragmentActivity {
             default: selectedid=0; break;
         }
 
-        Notifier.ShowOptions_Which(this, R.array.dialog_sorttopics, selectedid, ocl);
+        Notifier.ShowOptions(this, R.string.dialog_selectsorting, R.array.dialog_sorttopics, selectedid, ocl);
     }
 
     public void onClickTest(View v) {
@@ -323,6 +325,34 @@ public class ActivityTopics extends FragmentActivity {
             startActivityForResult( intent, ACTIVITY_COMPLETE);
         } catch (Exception e1) {
             Notifier.ShowOk( this, R.string.dialog_noscanner, null );
+        }
+    }
+
+    ////////////////
+    // menu creation & handling
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.menu_sort:
+                onClickSort(null);
+                return true;
+            case R.id.menu_license:
+                Notifier.ShowText(thisActivity, R.string.text_license);
+                return true;
+            case R.id.menu_acknowledgments:
+                Notifier.ShowText(thisActivity, R.string.text_acknowledgments);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 

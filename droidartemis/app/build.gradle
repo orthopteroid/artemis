@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 // http://blog.gaku.net/ndk/    <----- ndk/gradle hacks
 
 android {
-    compileSdkVersion 20
+    compileSdkVersion 15
     buildToolsVersion '20.0.0'
 
     ////////////////
@@ -95,7 +95,7 @@ android {
     // http://tools.android.com/tech-docs/new-build-system/tips
     // http://www.tuicool.com/articles/b6VrUz
     // http://ph0b.com/improving-x86-support-of-android-apps-libs-engines/#ArchDependentAPKs
-/*
+
     // 2 dimensions of flavors. API & ABI
     flavorDimensions "abi"
 
@@ -131,7 +131,7 @@ android {
         def abiVersion = variant.productFlavors.get(0).versionCode
         variant.mergedFlavor.versionCode = abiVersion * 100000 + defaultConfig.versionCode
     }
-*/
+
     /////////////////
     // http://stackoverflow.com/questions/19242442/how-to-build-only-single-buildtype-with-android-studio-and-or-gradle
 /*

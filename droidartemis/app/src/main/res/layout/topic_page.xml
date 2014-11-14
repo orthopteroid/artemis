@@ -63,6 +63,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/sep"
         android:layout_centerInParent="true"
+        android:layout_marginTop="10dp"
         android:clickable="true"
         android:longClickable="true">
     </ListView>
