@@ -318,33 +318,14 @@ EOS:
 
 int ar_util_txt2vl( vlPoint v, char* buf, size_t bufsize )
 {
-#if 1
 	int rc = 0;
 	vlClear( v );
 	size_t deltalen = 0;
 	char tmp[ VL_UNITS * sizeof(word16) +1 ] = {0}; // +1 for spare
-DEBUGPRINT("%lu %s\n", bufsize, buf);
-	if( rc = ar_util_u8_b64decode( &deltalen, tmp, sizeof(tmp), buf, bufsize ) ) { LOGFAIL( rc ); 
-DEBUGPRINT("deltalen out %lu\n", deltalen);
-		goto EXIT; }
-	size_t deltalen1 = deltalen;
-	if( rc = ar_util_u16_packet2host( &deltalen, &v[1], VL_UNITS, tmp, deltalen ) ) { LOGFAIL( rc ); 
-DEBUGPRINT("VL_UNITS %lu\n", VL_UNITS);
-DEBUGPRINT("deltalen in %lu deltalen out %lu\n", deltalen1, deltalen);
-		goto EXIT; }
+	if( rc = ar_util_u8_b64decode( &deltalen, tmp, sizeof(tmp), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u16_packet2host( &deltalen, &v[1], VL_UNITS, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 	v[0] = (word16)deltalen;
 	if( !vlIsValid( v ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); vlClear( v ); goto EXIT; }
-#else
-	int rc = 0;
-	word16 words = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
-	vlClear( v );
-	size_t deltalen = 0;
-	char tmp[ sizeof(vlPoint) + 2 ] = {0};
-	if( rc = ar_util_u8_b64decode( &deltalen, tmp, sizeof(vlPoint), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_u16_packet2host( &deltalen, &v[1], words, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
-	v[0] = (word16)deltalen;
-	if( !vlIsValid( v ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); vlClear( v ); goto EXIT; }
-#endif
 EXIT:
 	return rc;
 }
@@ -358,6 +339,7 @@ int ar_util_vl2txt( char* buf, size_t bufsize, vlPoint v )
 	size_t buflen = strlen(buf);
 	char tmp[ VL_UNITS * sizeof(word16) +1 ] = {0}; // +1 for spare
 	if( rc = ar_util_u16_host2packet( &deltalen, tmp, VL_UNITS * sizeof(word16), v+1, v[0] ) ) { LOGFAIL( rc ); goto EXIT; }
+	deltalen /= sizeof(word16); // convert to a byte count
 	if( rc = ar_util_u8_b64encode( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 	buf[ buflen + deltalen ] = 0;
 EXIT:
