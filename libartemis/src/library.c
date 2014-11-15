@@ -384,8 +384,8 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 		}
 		if( rc < 0 ) { LOGFAIL( rc ); goto EXIT; }
 
-		if( arecordCount != 1 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
-		if( srecordCount < 2 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+		if( arecordCount != 1 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
+		if( srecordCount < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 
 		// create share-objects
 
