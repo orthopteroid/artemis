@@ -63,6 +63,18 @@ android {
     }
 
     ////////////////
+    // http://toastdroid.com/2014/03/28/customizing-your-build-with-gradle/
+
+    buildTypes {
+        release {
+            buildConfigField "boolean", "SOMEFLAG", "false"
+        }
+        debug {
+            buildConfigField "boolean", "SOMEFLAG", "true"
+        }
+    }
+
+    ////////////////
     // https://github.com/ex3ndr/telegram/blob/master/app/build.gradle
 
     if (project.hasProperty("signStorage")) {
