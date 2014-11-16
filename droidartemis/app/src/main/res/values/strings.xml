@@ -3,13 +3,14 @@
 
     <string name="app_name">ArcanaShare</string>
     <string name="app_uri">tereslogica.com</string>
+    <string name="app_weblink">http://tereslogica.com</string>
+    <string name="menu_testtoken">Debug Scan Test</string>
     <string name="menu_sort">Sorting</string>
-    <string name="menu_license">License</string>
-    <string name="menu_acknowledgments">Acknowledgments</string>
+    <string name="menu_licenses">Licenses</string>
+    <string name="menu_website">Website</string>
     <string name="dialog_selectsorting">Change Sorting</string>
     <string name="dialog_noscanner">Scanner app not found.</string>
     <string name="dialog_nonativelib">Installation error: native library not found.</string>
-    <string name="dialog_demofail">Free version restricted to 7 keys, 3 locks and 20 character messages and clues.</string>
     <string name="dialog_nomultiline">Multiline text not allowed.</string>
     <string name="dialog_info_decode">New message decoded!</string>
     <string name="dialog_err_encode">There was an encoding failure.</string>
@@ -30,42 +31,35 @@
     <string name="button_more">More</string>
     <string name="button_less">Less</string>
 
+    <string name="text_features_freeversion">
+This free version of ArcanaShare is restricted to 7 keys, 3 locks and 20 character
+ messages and clues.</string>
+
     <string name="text_eula">
 By using this software you accept the following:\n
-\n
-THIS SOFTWARE IS PROVIDED &quot;AS IS&quot; AND ANY EXPRESS
+\nTHIS SOFTWARE IS PROVIDED \"AS IS\" AND ANY EXPRESS
  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE
  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA, OR PROFITS; OR
  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </string>
-    <string name="text_license">
-This software contains proprietary materials developed by tereslogica &lt;tereslogica@gmail.com&gt; and
- uses the following licensed materials:\n
-\n
-Public domain pegwit library: &quot;Elliptic Curves and Algebraic Operations over GF(2^m)&quot; by
+    <string name="text_licenses">
+This software contains proprietary components developed by tereslogica &lt;tereslogica@gmail.com&gt;
+ as well as the following licensed components:\n
+\nPublic domain pegwit library: \"Elliptic Curves and Algebraic Operations over GF(2^m)\" by
  George Barwood  &lt;george.barwood@dial.pipex.com&gt;,
  Paulo S.L.M. Barreto &lt;pbarreto@uninet.com.br&gt;,
  Mr. Tines &lt;tines@windsong.demon.co.uk&gt;\n
-\n
-Public domain implementation &quot;SHA-1 cryptographic hash function&quot; by
+\nPublic domain implementation \"SHA-1 cryptographic hash function\" by
  Steve Reid &lt;steve@edmweb.com&gt;\n
-\n
-Freely reusable 8-bit CRC Tables &quot;Application Note 27: Understanding and Using Cyclic
- Redundancy Checks with Maxim 1-Wire and iButton Products&quot;
+\nFreely reusable 8-bit CRC Tables \"Application Note 27: Understanding and Using Cyclic
+ Redundancy Checks with Maxim 1-Wire and iButton Products\"
  Copyright (C) 2000 Dallas Semiconductor Corporation\n
-    </string>
-    <string name="text_acknowledgments">
-&quot;Elliptic Curve Cryptography: The Serpentine Course Of A Paradigm Shift&quot; By
- Ann Hibner Koblitz, Neal Koblitz, And Alfred Menezes, (Center for Applied
- Cryptographic Research (CACR) at the University of Waterloo, 2008)\n
-
     </string>
 
 </resources>

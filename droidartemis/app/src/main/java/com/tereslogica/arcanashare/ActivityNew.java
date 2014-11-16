@@ -144,7 +144,7 @@ public class ActivityNew extends Activity {
                     new TextWatcher() {
                         public void afterTextChanged(Editable s) {
                             if (s.length() > 20) {
-                                Notifier.ShowOk( thisActivity, R.string.dialog_demofail, null );
+                                Notifier.ShowOk( thisActivity, R.string.text_features_freeversion, null );
                                 setValue(s.toString().substring(0, 19));
                             }
                             for (int i = 0; i < s.length(); i++) {
@@ -259,7 +259,7 @@ public class ActivityNew extends Activity {
 
         if( ArtemisLib.Get().nativeDidFail() ) {
             if( ArtemisLib.Get().nativeWasFailDemo() ) {
-                Notifier.ShowOk( this, R.string.dialog_demofail, null );
+                Notifier.ShowOk( this, R.string.text_features_freeversion, null );
                 return;
             }
             Notifier.ShowOk( this, R.string.dialog_err_encode, null );
