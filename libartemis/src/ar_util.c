@@ -339,7 +339,6 @@ int ar_util_vl2txt( char* buf, size_t bufsize, vlPoint v )
 	size_t buflen = strlen(buf);
 	char tmp[ VL_UNITS * sizeof(word16) +1 ] = {0}; // +1 for spare
 	if( rc = ar_util_u16_host2packet( &deltalen, tmp, VL_UNITS * sizeof(word16), v+1, v[0] ) ) { LOGFAIL( rc ); goto EXIT; }
-	deltalen /= sizeof(word16); // convert to a byte count
 	if( rc = ar_util_u8_b64encode( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 	buf[ buflen + deltalen ] = 0;
 EXIT:
