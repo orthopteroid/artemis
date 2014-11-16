@@ -90,15 +90,32 @@ android {
         }
     }
 
+/*
+    ///////////
+    // http://ruenzuo.github.io/continuous-delivery-on-android-part-ii/
+
+    productFlavors {
+        free {
+            packageName "com.ruenzuo.weatherapp.free"
+            buildConfig "public final static boolean IS_FREE = true;"
+        }
+        paid {
+            packageName "com.ruenzuo.weatherapp.paid"
+            buildConfig "public final static boolean IS_FREE = false;"
+        }
+    }
+*/
+
+/*
     ///////////////
     // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
     // http://tools.android.com/tech-docs/new-build-system/tips
     // http://www.tuicool.com/articles/b6VrUz
     // http://ph0b.com/improving-x86-support-of-android-apps-libs-engines/#ArchDependentAPKs
 
-    // 2 dimensions of flavors. API & ABI
     flavorDimensions "abi"
 
+    // if arch flavors is disabled, then toolchain builds a fat redist
     productFlavors {
         x86 {
             flavorDimensions "abi"
@@ -112,7 +129,7 @@ android {
         }
         armv7 {
             flavorDimensions "abi"
-            ndk { abiFilter "armeabi-v7a" }
+            ndk { abiFilter "armeabi armeabi-v7a" }
             versionCode = 2
         }
         mips {
@@ -131,7 +148,7 @@ android {
         def abiVersion = variant.productFlavors.get(0).versionCode
         variant.mergedFlavor.versionCode = abiVersion * 100000 + defaultConfig.versionCode
     }
-
+*/
     /////////////////
     // http://stackoverflow.com/questions/19242442/how-to-build-only-single-buildtype-with-android-studio-and-or-gradle
 /*
