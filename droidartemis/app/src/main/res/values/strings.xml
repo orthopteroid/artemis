@@ -9,10 +9,11 @@
     <string name="menu_licenses">Licenses</string>
     <string name="menu_website">Website</string>
     <string name="dialog_selectsorting">Change Sorting</string>
-    <string name="dialog_noscanner">Scanner app not found.</string>
+    <string name="dialog_noscanner">Scanner app (zxing) not found.</string>
     <string name="dialog_nonativelib">Installation error: native library not found.</string>
     <string name="dialog_nomultiline">Multiline text not allowed.</string>
     <string name="dialog_info_decode">New message decoded!</string>
+    <string name="dialog_newtopic">New topic created</string>
     <string name="dialog_err_encode">There was an encoding failure.</string>
     <string name="dialog_err_decode">There was a decoding failure.</string>
     <string name="sharelist_messagedecodeerror">Unable to decode message.</string>

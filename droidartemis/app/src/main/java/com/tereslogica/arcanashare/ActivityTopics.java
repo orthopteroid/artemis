@@ -156,8 +156,23 @@ public class ActivityTopics extends FragmentActivity {
 
     public void addScannedItem( String share ) {
         AppLogic.Get().addToken(share);
-        if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_decode, null ); }
-        if( AppLogic.Get().detectedDecode ) { Notifier.ShowOk( this, R.string.dialog_info_decode, null ); }
+        if( AppLogic.Get().detectedError ) {
+
+            Notifier.ShowOk( this, R.string.dialog_err_decode, null );
+
+        } else if( AppLogic.Get().detectedDecode ) {
+            final String topic = ArtemisLib.Get().nativeTopic( share );
+
+            Notifier.ShowOk( this, R.string.dialog_info_decode, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int _which) {
+                    ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
+
+                    Notifier.ShowMessageOk(thisActivity, topic, oTopic.cleartext, null);
+
+                }
+            });
+
+        }
 
         refreshListView();
     }
@@ -251,7 +266,7 @@ public class ActivityTopics extends FragmentActivity {
                         message = getResources().getString( R.string.sharelist_needmorekeys );
                     }
 
-                    Notifier.ShowMessageOk(thisActivity, message);
+                    Notifier.ShowMessageOk(thisActivity, topic, message, null);
                 }
             }
         );
@@ -333,7 +348,7 @@ public class ActivityTopics extends FragmentActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
-        if( BuildConfig.DEBUG == true ) {
+        if( BuildConfig.DEBUG == false ) {
             menu.removeItem( R.id.menu_testtoken );
         }
         return true;
