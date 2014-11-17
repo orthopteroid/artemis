@@ -1,3 +1,5 @@
+// Implementation Copyright 2014 John Howard (orthopteroid@gmail.com)
+
 #include "rc4.h"
 
 // Key Scheduling Algorithm 
