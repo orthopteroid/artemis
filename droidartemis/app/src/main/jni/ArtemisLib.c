@@ -37,12 +37,6 @@ JNIEXPORT jboolean JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeDid
     return jok;
 }
 
-JNIEXPORT jboolean JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeWasFailDemo(JNIEnv * env, jobject obj)
-{
-    jboolean jok = ( rc == RC_DEMO_7K_3L_20C ) ? JNI_TRUE : JNI_FALSE;
-    return jok;
-}
-
 JNIEXPORT jstring JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jLoc, jstring jRecordArr)
 {
     byte* cMessage_out = 0;

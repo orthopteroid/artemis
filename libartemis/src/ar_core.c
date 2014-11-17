@@ -146,15 +146,15 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
         if( clueCount != (numShares +1) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
     }
 
-    size_t makeoffbyonebug = 0;
-
 #if defined(AR_DEMO)
 
-    // when length is odd and ( shares > 7 or threshold > 3 ) make bug
-    makeoffbyonebug =
-        ( ((size_t)inbuflen) >> 1 )
-        &
-        ( ( (numShares >> 3) | (numThres >> 2) ) == 0 ? 0 : 1 );
+#define BIT_EQUAL(a,b) ( ~( (a) ^ (b) ) & (b) )
+#define BIT_MASK(a,b)  ( ~( (a) & (b) ) ^ (b) )
+
+	// raise bug when we're called outside demo limits and address has bits 5 & 2 (ie, we've been cracked)
+    size_t bug = ( ((numShares >> 3) | (numThres >> 2)) & BIT_MASK( (size_t)inbuf, 0x22) ) ? 1 : 0;
+
+DEBUGPRINT("bug %lu\n",bug);
 
 #endif
 
@@ -165,7 +165,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	if( loclen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t acluelen = strlen( clueTbl[ 0 ] ); // 0 for message clue
-	size_t msgoffset = loclen + acluelen + makeoffbyonebug; // msg comes after clue + location
+	size_t msgoffset = loclen + acluelen +bug; // msg comes after clue + location, +bug to conditionally prefix message with \0
 
 	///////////
 	// alloc tmp storage
@@ -189,7 +189,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	for( int i=0; i<numShares; i++ )
 	{
-		size_t scluelen = strlen( clueTbl[ i + 1 ] ); // +1 to skip mesage clue
+		size_t scluelen = strlen( clueTbl[ i +1 ] ); // +1 to skip mesage clue
 		size_t sbufused = loclen + scluelen;
 		size_t sstructsize = sizeof(arShare) + sbufused;
 
@@ -197,22 +197,6 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		memset( (*srecordtbl_out)[i], 0, sstructsize );
 		(*srecordtbl_out)[i]->bufmax = sbufused;
 	}
-
-	///////////
-	// create verification hash of cleartext
-
-	vlPoint verify;
-	{
-		sha1Digest digest;
-		sha1_context c[1];
-		sha1_initial( c );
-		sha1_process( c, inbuf, (unsigned)(inbuflen) );
-		sha1_final( c, digest );
-		vlSetWord32Ptr( verify, AR_VERIFYUNITS, digest );
-	}
-
-	///////////
-	// create cryptcoefs (and cryptkey), cipher the cleartext and split the shares
 
 	arecord_out[0]->loclen = loclen;
 	arecord_out[0]->cluelen = acluelen;
@@ -223,6 +207,18 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	memcpy_s( arecord_out[0]->buf + loclen, arecord_out[0]->bufmax - loclen, clueTbl[0], acluelen );
 	memcpy_s( arecord_out[0]->buf + msgoffset, arecord_out[0]->bufmax - msgoffset, inbuf, inbuflen );
 
+	// create verification hash of cleartext
+	vlPoint verify;
+	{
+		sha1Digest digest;
+		sha1_context c[1];
+		sha1_initial( c );
+		sha1_process( c, arecord_out[0]->buf + msgoffset -bug, (unsigned)(inbuflen) ); // -bug to conditionally deprefix message with \0
+		sha1_final( c, digest );
+		vlSetWord32Ptr( verify, AR_VERIFYUNITS, digest );
+	}
+
+	// create cryptcoefs (and cryptkey)
 	for( word16 t = 0; t < numThres; t++ )
 	{
 		vlPoint vlTmp;
@@ -231,6 +227,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		gfReduce( gfCryptCoefArr[t] );
 	}
 
+	// cipher the cleartext
 	{
 		vlPoint vlCryptkey;
 		gfPack( gfCryptCoefArr[0], vlCryptkey );
@@ -245,6 +242,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		vlClear( vlCryptkey );
 	}
 
+	// split the shares
 	ar_shamir_splitsecret( shareArr, shareIDArr, numShares, gfCryptCoefArr, numThres );
 
 	// cleanup secret coefs

@@ -144,7 +144,7 @@ public class ActivityNew extends Activity {
             textView.addTextChangedListener(
                     new TextWatcher() {
                         public void afterTextChanged(Editable s) {
-                            if (s.length() > 20) {
+                            if( s.length() > BuildConfig.MAX_CHARS ) {
                                 Notifier.ShowOk( thisActivity, R.string.text_features_freeversion, null );
                                 setValue(s.toString().substring(0, 19));
                             }
@@ -236,6 +236,14 @@ public class ActivityNew extends Activity {
     ////////
 
     public void onClickAccept(View view) {
+        int keys = Integer.parseInt(settings.get(0).getValue());
+        int locks = Integer.parseInt(settings.get(1).getValue());
+
+        if( keys > BuildConfig.MAX_KEYS || locks > BuildConfig.MAX_LOCKS ) {
+            Notifier.ShowOk(this, R.string.text_features_freeversion, null);
+            return;
+        }
+
         for (int i = 2; i < settings.size(); i++) { // 2 >= are user text
             if (settings.get(i).getValue().indexOf('\n') >= 0) {
                 Notifier.ShowOk(this, R.string.dialog_nomultiline, null);
@@ -253,16 +261,10 @@ public class ActivityNew extends Activity {
                 clues.append(settings.get(i).getValue());
             }
         }
-        int keys = Integer.parseInt(settings.get(0).getValue());
-        int locks = Integer.parseInt(settings.get(1).getValue());
         String uri = thisActivity.getApplicationContext().getResources().getString(R.string.app_uri);
         String shares = ArtemisLib.Get().nativeEncode(keys, locks, uri, clues.toString(), settings.get(2).getValue());
 
         if (ArtemisLib.Get().nativeDidFail()) {
-            if (ArtemisLib.Get().nativeWasFailDemo()) {
-                Notifier.ShowOk(this, R.string.text_features_freeversion, null);
-                return;
-            }
             Notifier.ShowOk(this, R.string.dialog_err_encode, null);
             return;
         }
@@ -284,6 +286,8 @@ public class ActivityNew extends Activity {
                     newActivity.finish();
                 }
             });
+        } else {
+            this.finish(); // an odd codepath, but required to close activity when the app has been hacked...
         }
     }
 
