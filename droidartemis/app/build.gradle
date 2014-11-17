@@ -19,8 +19,8 @@ android {
         minSdkVersion 8
         targetSdkVersion 8
         // see productFlavors section for versionCode/Name magic
-        versionCode 1
-        versionName '1.0'
+        versionCode 2
+        versionName '1.1'
         // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
         ndk {
             moduleName "ArtemisLib"
