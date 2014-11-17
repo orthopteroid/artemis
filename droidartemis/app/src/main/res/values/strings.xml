@@ -32,8 +32,8 @@
     <string name="button_more">More</string>
     <string name="button_less">Less</string>
 
-    <string name="text_features_freeversion">
-This free version of ArcanaShare is restricted to 7 keys, 3 locks and 20 character
+    <string name="text_features_limitedversion">
+This version of ArcanaShare is restricted to 7 keys, 3 locks and 20 character
  messages and clues.</string>
 
     <string name="text_eula">

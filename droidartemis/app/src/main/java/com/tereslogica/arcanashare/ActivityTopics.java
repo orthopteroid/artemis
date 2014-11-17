@@ -280,7 +280,7 @@ public class ActivityTopics extends FragmentActivity {
                     Prefs.SetBool(Prefs.EULA_VERSION, true);
 
                     // then show freeware warning
-                    Notifier.ShowOk( thisActivity, R.string.text_features_freeversion, null );
+                    Notifier.ShowOk( thisActivity, R.string.text_features_limitedversion, null );
                 }
             });
         }
