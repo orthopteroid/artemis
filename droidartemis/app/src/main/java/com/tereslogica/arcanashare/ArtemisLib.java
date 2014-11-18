@@ -15,7 +15,6 @@ public class ArtemisLib {
     public native void nativeCleanup();
 
     public native boolean nativeDidFail();
-    public native boolean nativeWasFailDemo();
 
     public native String nativeDecode( String location, String recordArr ); // recordArr is \n delimited
 

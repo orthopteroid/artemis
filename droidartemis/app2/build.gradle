@@ -1,9 +1,16 @@
 apply plugin: 'com.android.library'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'alias1'
+            keyPassword 'spring1key'
+            storeFile file('/media/sf_Shared_Ubuntu14/android-studio-keystore.jks')
+            storePassword 'spring1store'
+        }
+    }
     compileSdkVersion 15
     buildToolsVersion '20.0.0'
-
     defaultConfig {
         applicationId "com.google.zxing"
         minSdkVersion 8
@@ -15,6 +22,7 @@ android {
         release {
             runProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
         }
     }
     compileOptions {

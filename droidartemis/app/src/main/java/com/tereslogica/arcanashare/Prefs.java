@@ -8,7 +8,7 @@ import android.content.SharedPreferences;
  * Created by john on 13/11/14.
  */
 public class Prefs {
-    public final static String TOPIC_SORTORDER = "topic-sort-order";
+    public static final String TOPIC_SORTORDER = "topic-sort-order";
     public static final String EULA_VERSION = "eula-version-1";
 
     private static SharedPreferences preferences;

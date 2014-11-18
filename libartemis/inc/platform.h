@@ -160,7 +160,7 @@
 
 	#include <stddef.h>
 
-	#define DLLDECL
+	#define DLLDECL __attribute__ ((visibility ("default")))
 
 	#define max(a,b) ((a)>(b)?(a):(b))
 	#define memcpy_s(a,b,c,d) memcpy(a,c,d)

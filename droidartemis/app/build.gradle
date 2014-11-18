@@ -3,56 +3,64 @@ apply plugin: 'com.android.application'
 // http://blog.gaku.net/ndk/    <----- ndk/gradle hacks
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'alias1'
+            keyPassword 'spring1key'
+            storeFile file('/media/sf_Shared_Ubuntu14/android-studio-keystore.jks')
+            storePassword 'spring1store'
+        }
+    }
     compileSdkVersion 15
     buildToolsVersion '20.0.0'
-
     ////////////////
-
     defaultConfig {
         applicationId 'com.tereslogica.arcanashare'
         minSdkVersion 8
         targetSdkVersion 8
-
         // see productFlavors section for versionCode/Name magic
         versionCode 1
         versionName '1.0'
-
         // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
         ndk {
             moduleName "ArtemisLib"
             cFlags "-std=c99 -Wno-multichar -I${project.buildDir}/../src/main/jni/libartemis-inc"
         }
+        signingConfig signingConfigs.config
     }
-
     // http://stackoverflow.com/questions/17637179/how-to-set-source-1-7-in-android-studio-and-gradle
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
-
     /////////////////
-
     buildTypes {
         release {
             debuggable false
             jniDebugBuild false
             runProguard true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            //signingConfig signingConfigs.release
-
-            // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
-            ndk {
-                moduleName "ArtemisLib"
-            }
         }
         debug {
             // http://stackoverflow.com/questions/8674434/debugging-native-libraries-for-android-os
             // https://vilimpoc.org/blog/2010/09/23/hello-gdbserver-a-debuggable-jni-example-for-android/
-
             debuggable true
             jniDebugBuild true
+        }
+    }
+    /////////////////
+    buildTypes {
+        release {
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //signingConfig signingConfigs.release
+            // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
+            ndk {
+                moduleName "ArtemisLib"
+                cFlags "-O3 -finline-limit=300 -fomit-frame-pointer -fpic -fvisibility=hidden"
+            }
+            signingConfig signingConfigs.config
+        }
+        debug {
             //signingConfig signingConfigs.debug
-
             // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
             ndk {
                 moduleName "ArtemisLib"
@@ -61,10 +69,24 @@ android {
             }
         }
     }
-
+    ////////////////
+    // http://toastdroid.com/2014/03/28/customizing-your-build-with-gradle/
+    buildTypes {
+        release {
+            buildConfigField "int", "MAX_KEYS", "7"
+            buildConfigField "int", "MAX_LOCKS", "3"
+            buildConfigField "int", "MAX_CHARS", "20"
+            buildConfigField "boolean", "SOMEFLAG", "false"
+        }
+        debug {
+            buildConfigField "int", "MAX_KEYS", "7"
+            buildConfigField "int", "MAX_LOCKS", "3"
+            buildConfigField "int", "MAX_CHARS", "20"
+            buildConfigField "boolean", "SOMEFLAG", "true"
+        }
+    }
     ////////////////
     // https://github.com/ex3ndr/telegram/blob/master/app/build.gradle
-
     if (project.hasProperty("signStorage")) {
         signingConfigs {
             release {
@@ -89,16 +111,31 @@ android {
             }
         }
     }
+/*
+    ///////////
+    // http://ruenzuo.github.io/continuous-delivery-on-android-part-ii/
 
+    productFlavors {
+        free {
+            packageName "com.ruenzuo.weatherapp.free"
+            buildConfig "public final static boolean IS_FREE = true;"
+        }
+        paid {
+            packageName "com.ruenzuo.weatherapp.paid"
+            buildConfig "public final static boolean IS_FREE = false;"
+        }
+    }
+*/
+/*
     ///////////////
     // https://software.intel.com/en-us/videos/using-the-ndk-with-android-studio
     // http://tools.android.com/tech-docs/new-build-system/tips
     // http://www.tuicool.com/articles/b6VrUz
     // http://ph0b.com/improving-x86-support-of-android-apps-libs-engines/#ArchDependentAPKs
 
-    // 2 dimensions of flavors. API & ABI
     flavorDimensions "abi"
 
+    // if arch flavors is disabled, then toolchain builds a fat redist
     productFlavors {
         x86 {
             flavorDimensions "abi"
@@ -112,7 +149,7 @@ android {
         }
         armv7 {
             flavorDimensions "abi"
-            ndk { abiFilter "armeabi-v7a" }
+            ndk { abiFilter "armeabi armeabi-v7a" }
             versionCode = 2
         }
         mips {
@@ -131,7 +168,7 @@ android {
         def abiVersion = variant.productFlavors.get(0).versionCode
         variant.mergedFlavor.versionCode = abiVersion * 100000 + defaultConfig.versionCode
     }
-
+*/
     /////////////////
     // http://stackoverflow.com/questions/19242442/how-to-build-only-single-buildtype-with-android-studio-and-or-gradle
 /*
@@ -150,6 +187,8 @@ android {
         }
     }
 */
+    productFlavors {
+    }
 }
 
 dependencies {

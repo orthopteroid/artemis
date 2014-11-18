@@ -15,6 +15,9 @@ typedef word16 vlPoint [VL_UNITS +1 ]; // +1 for length
 
 #define vlIsZero(p) (p[0] == 0)
 
+#define DEBUGPRINT_V(v) \
+	do { for( int j=0; j< (v)[0]; j++ ) { DEBUGPRINT("%s %d/%d: %04X\n", #v, j, (v)[0], (v)[j+1]); } } while(0)
+
 void vlClear (vlPoint p);
 
 word16 vlGetWord16(vlPoint p, word16 i);

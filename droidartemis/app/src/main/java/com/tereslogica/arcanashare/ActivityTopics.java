@@ -156,8 +156,23 @@ public class ActivityTopics extends FragmentActivity {
 
     public void addScannedItem( String share ) {
         AppLogic.Get().addToken(share);
-        if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_decode, null ); }
-        if( AppLogic.Get().detectedDecode ) { Notifier.ShowOk( this, R.string.dialog_info_decode, null ); }
+        if( AppLogic.Get().detectedError ) {
+
+            Notifier.ShowOk( this, R.string.dialog_err_decode, null );
+
+        } else if( AppLogic.Get().detectedDecode ) {
+            final String topic = ArtemisLib.Get().nativeTopic( share );
+
+            Notifier.ShowOk( this, R.string.dialog_info_decode, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int _which) {
+                    ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
+
+                    Notifier.ShowMessageOk(thisActivity, topic, oTopic.cleartext, null);
+
+                }
+            });
+
+        }
 
         refreshListView();
     }
@@ -251,20 +266,25 @@ public class ActivityTopics extends FragmentActivity {
                         message = getResources().getString( R.string.sharelist_needmorekeys );
                     }
 
-                    Notifier.ShowMessageOk(thisActivity, message);
+                    Notifier.ShowMessageOk(thisActivity, topic, message, null);
                 }
             }
         );
 
-        //////////
+        //////////////////
+        // show startup dialogs
 
         if( false == Prefs.GetBool( Prefs.EULA_VERSION, false ) ) {
-            Notifier.ShowOk(thisActivity, R.string.text_eula, new DialogInterface.OnClickListener() {
+            Notifier.ShowOk_AppVersionTitle(thisActivity, R.string.text_eula, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int _which) {
                     Prefs.SetBool(Prefs.EULA_VERSION, true);
+
+                    // then show freeware warning
+                    Notifier.ShowOk( thisActivity, R.string.text_features_freeversion, null );
                 }
             });
         }
+
     }
 
     @Override
@@ -305,13 +325,6 @@ public class ActivityTopics extends FragmentActivity {
         Notifier.ShowOptions(this, R.string.dialog_selectsorting, R.array.dialog_sorttopics, selectedid, ocl);
     }
 
-    public void onClickTest(View v) {
-        if( fs == null) {
-            fs = new FakeScanner();
-        }
-        addScannedItem( fs.nextItem() );
-    }
-
     public void onClickNew(View view) {
         startActivity( new Intent(getApplicationContext(), ActivityNew.class) );
     }
@@ -335,6 +348,9 @@ public class ActivityTopics extends FragmentActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
+        if( BuildConfig.DEBUG == false ) {
+            menu.removeItem( R.id.menu_testtoken );
+        }
         return true;
     }
 
@@ -342,14 +358,20 @@ public class ActivityTopics extends FragmentActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
+            case R.id.menu_testtoken:
+                if( fs == null) {
+                    fs = new FakeScanner();
+                }
+                addScannedItem( fs.nextItem() );
+                return true;
             case R.id.menu_sort:
                 onClickSort(null);
                 return true;
-            case R.id.menu_license:
-                Notifier.ShowText(thisActivity, R.string.text_license);
+            case R.id.menu_licenses:
+                Notifier.ShowText(thisActivity, R.string.text_licenses);
                 return true;
-            case R.id.menu_acknowledgments:
-                Notifier.ShowText(thisActivity, R.string.text_acknowledgments);
+            case R.id.menu_website:
+                startActivity( new Intent(Intent.ACTION_VIEW).setData(Uri.parse(this.getResources().getString(R.string.app_weblink))) );
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

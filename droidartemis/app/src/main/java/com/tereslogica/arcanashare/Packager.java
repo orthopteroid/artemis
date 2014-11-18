@@ -93,7 +93,13 @@ public class Packager {
         // return true if file was added, false if not
         private boolean addMessage() throws Exception {
             if( sARecord.length() > 0 ) {
-                addPNG( zout, "message.png", sARecord, width, height );
+                String fullclue = ArtemisLib.Get().nativeClue( sARecord );
+                String shortclue = fullclue;
+                if( shortclue.length() > 10 ) {
+                    shortclue = fullclue.substring(0, 5) + "..." + fullclue.substring(fullclue.length()-5, fullclue.length());
+                }
+                if( shortclue.length() > 0 ) { shortclue = "-" + shortclue; }
+                addPNG( zout, "message" + shortclue + ".png", sARecord, width, height );
                 return true;
             }
             return false;
@@ -104,7 +110,13 @@ public class Packager {
             if( key == oSRecords.size() ) { return false; }
             ArtemisShare sRecord = oSRecords.get( key );
             String istr = String.format("%05d", key); // 16 bits serialized = 4095 = 5 decimal digits, 0 padding
-            addPNG( zout, "key" + istr + ".png", sRecord.share, width, height );
+            String fullclue = ArtemisLib.Get().nativeClue(sRecord.share);
+            String shortclue = fullclue;
+            if( shortclue.length() > 10 ) {
+                shortclue = fullclue.substring(0, 5) + "..." + fullclue.substring(fullclue.length()-5, fullclue.length());
+            }
+            if( shortclue.length() > 0 ) { shortclue = "-" + shortclue; }
+            addPNG( zout, "key" + istr + shortclue + ".png", sRecord.share, width, height );
             key++;
             return true;
         }

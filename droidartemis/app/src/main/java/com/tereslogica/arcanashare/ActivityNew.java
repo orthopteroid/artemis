@@ -2,6 +2,7 @@ package com.tereslogica.arcanashare;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -143,8 +144,8 @@ public class ActivityNew extends Activity {
             textView.addTextChangedListener(
                     new TextWatcher() {
                         public void afterTextChanged(Editable s) {
-                            if (s.length() > 20) {
-                                Notifier.ShowOk( thisActivity, R.string.dialog_demofail, null );
+                            if( s.length() > BuildConfig.MAX_CHARS ) {
+                                Notifier.ShowOk( thisActivity, R.string.text_features_freeversion, null );
                                 setValue(s.toString().substring(0, 19));
                             }
                             for (int i = 0; i < s.length(); i++) {
@@ -235,43 +236,59 @@ public class ActivityNew extends Activity {
     ////////
 
     public void onClickAccept(View view) {
-        for( int i = 2; i < settings.size(); i++) { // 2 >= are user text
-            if( settings.get(i).getValue().indexOf('\n') >= 0) {
-                Notifier.ShowOk( this, R.string.dialog_nomultiline, null );
+        int keys = Integer.parseInt(settings.get(0).getValue());
+        int locks = Integer.parseInt(settings.get(1).getValue());
+
+        if( keys > BuildConfig.MAX_KEYS || locks > BuildConfig.MAX_LOCKS ) {
+            Notifier.ShowOk(this, R.string.text_features_freeversion, null);
+            return;
+        }
+
+        for (int i = 2; i < settings.size(); i++) { // 2 >= are user text
+            if (settings.get(i).getValue().indexOf('\n') >= 0) {
+                Notifier.ShowOk(this, R.string.dialog_nomultiline, null);
                 return;
             }
         }
 
         ////////////////////////
 
-        StringBuilder clues = new StringBuilder( 1024 );
-        clues.append( settings.get(3).getValue() ); // message clue
+        StringBuilder clues = new StringBuilder(1024);
+        clues.append(settings.get(3).getValue()); // message clue
         {
-            for( int i = 4; i < settings.size(); i++) { // 4 >= are the key clues
-                clues.append( '\n' );
-                clues.append( settings.get(i).getValue() );
+            for (int i = 4; i < settings.size(); i++) { // 4 >= are the key clues
+                clues.append('\n');
+                clues.append(settings.get(i).getValue());
             }
         }
-        int keys = Integer.parseInt( settings.get(0).getValue() );
-        int locks = Integer.parseInt( settings.get(1).getValue() );
         String uri = thisActivity.getApplicationContext().getResources().getString(R.string.app_uri);
-        String shares = ArtemisLib.Get().nativeEncode( keys, locks, uri, clues.toString(), settings.get(2).getValue() );
+        String shares = ArtemisLib.Get().nativeEncode(keys, locks, uri, clues.toString(), settings.get(2).getValue());
 
-        if( ArtemisLib.Get().nativeDidFail() ) {
-            if( ArtemisLib.Get().nativeWasFailDemo() ) {
-                Notifier.ShowOk( this, R.string.dialog_demofail, null );
-                return;
-            }
-            Notifier.ShowOk( this, R.string.dialog_err_encode, null );
+        if (ArtemisLib.Get().nativeDidFail()) {
+            Notifier.ShowOk(this, R.string.dialog_err_encode, null);
             return;
         }
 
         ////////////////////////
 
-        AppLogic.Get().addTokenArray(shares.split("\n"));
+        String[] tokenArr = shares.split("\n");
+        AppLogic.Get().addTokenArray( tokenArr );
 
-        if( AppLogic.Get().detectedError ) { Notifier.ShowOk( this, R.string.dialog_err_decode, null ); }
-        if( AppLogic.Get().detectedDecode ) { this.finish(); }
+        if (AppLogic.Get().detectedError) {
+            Notifier.ShowOk(this, R.string.dialog_err_decode, null);
+        }
+        else if( AppLogic.Get().detectedDecode ) {
+            final Activity newActivity = this;
+            final String topic = ArtemisLib.Get().nativeTopic( tokenArr[0] );
+
+            Notifier.ShowMessageOk(thisActivity, R.string.dialog_newtopic, topic, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int _which) {
+                    newActivity.finish();
+                }
+            });
+        } else {
+            this.finish(); // an odd codepath, but required to close activity when the app has been hacked...
+        }
     }
 
 }

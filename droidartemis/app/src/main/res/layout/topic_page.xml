@@ -20,7 +20,7 @@
         android:onClick="onClickScan"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <Button
+    Button
         android:id="@+id/sort_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -30,7 +30,7 @@
         android:onClick="onClickSort"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <Button
+    Button
         android:id="@+id/test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

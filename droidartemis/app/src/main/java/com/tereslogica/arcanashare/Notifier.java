@@ -9,14 +9,24 @@ import android.content.DialogInterface;
 
 public class Notifier {
 
-    public static void ShowMessageOk(Context cxt, String message) {
-        String title = cxt.getResources().getString(R.string.app_name);
+    public static void ShowMessageOk(Context cxt, String title, String message, DialogInterface.OnClickListener ocl) {
         String response = cxt.getResources().getString(R.string.button_ok);
         new AlertDialog.Builder(cxt)
                 .setIcon(R.drawable.app_icon)
                 .setTitle(title)
                 .setMessage(message)
-                .setNeutralButton(response, null)
+                .setNeutralButton(response, ocl)
+                .show();
+    }
+
+    public static void ShowMessageOk(Context cxt, int stringid, String message, DialogInterface.OnClickListener ocl) {
+        String response = cxt.getResources().getString(R.string.button_ok);
+        String title = cxt.getResources().getString(stringid);
+        new AlertDialog.Builder(cxt)
+                .setIcon(R.drawable.app_icon)
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton(response, ocl)
                 .show();
     }
 
@@ -31,6 +41,18 @@ public class Notifier {
     public static void ShowOk(Context cxt, int stringid, DialogInterface.OnClickListener ocl) {
         String message = cxt.getResources().getString( stringid );
         String title = cxt.getResources().getString(R.string.app_name);
+        String response = cxt.getResources().getString(R.string.button_ok);
+        new AlertDialog.Builder(cxt)
+                .setIcon(R.drawable.app_icon)
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton(response, ocl)
+                .show();
+    }
+
+    public static void ShowOk_AppVersionTitle(Context cxt, int stringid, DialogInterface.OnClickListener ocl) {
+        String message = cxt.getResources().getString( stringid );
+        String title = cxt.getResources().getString(R.string.app_name) +" v"+ BuildConfig.VERSION_NAME;
         String response = cxt.getResources().getString(R.string.button_ok);
         new AlertDialog.Builder(cxt)
                 .setIcon(R.drawable.app_icon)
