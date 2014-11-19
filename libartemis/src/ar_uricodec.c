@@ -963,8 +963,10 @@ void ar_uri_test()
 		}
 
 		{
+			int stretch = ar_util_rnd32() % 5 +1;
+
 			// test failure from uri streching
-			byteptr bufa_stretch=(byteptr)malloc( strlen( bufa ) +1 +1 ); // +1 for extra char, +1 for /0
+			byteptr bufa_stretch=(byteptr)malloc( strlen( bufa ) +stretch +1 ); // +stretch for stretch, +1 for /0
 
 			for( int j=0; j<400; j++)
 			{
@@ -972,11 +974,13 @@ void ar_uri_test()
 				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); srecordtbl_[i] = 0; }
 
 				size_t ii = ar_util_rnd32() % strlen( bufa );
-				{
-					strncpy_s( bufa_stretch, strlen( bufa ) + 1, bufa, ii );
-					bufa_stretch[ii] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
-					strncpy_s( bufa_stretch +ii +1, strlen( bufa ) -ii, bufa +ii, strlen( bufa ) -1 -ii );
+				strncpy_s( bufa_stretch, 0-1, bufa, ii );
+				for( int k=0; k<stretch; k++) {
+					bufa_stretch[ii +k] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
+				}
+				strncpy_s( bufa_stretch +ii +stretch, 0-1, bufa +ii, strlen( bufa ) -1 -ii );
 
+				{
 					rc = ar_uri_parse_a( &arecord_, bufa_stretch );
 					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[0], bufs0 ); }
 					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 ); }

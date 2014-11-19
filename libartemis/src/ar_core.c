@@ -176,6 +176,8 @@ DEBUGPRINT("bug %lu\n",bug);
 	// alloc return values
 
 	size_t abufused = loclen + inbuflen + acluelen;
+	if( abufused > 0xFFFF ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+
 	size_t astructsize = sizeof(arAuth) + abufused;
 	if( !(arecord_out[0] = malloc( astructsize + AR_HIDDEN_BYTE )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	memset( arecord_out[0], 0, astructsize + AR_HIDDEN_BYTE );
@@ -328,6 +330,7 @@ DEBUGPRINT("bug %lu\n",bug);
 
 		size_t scluelen = ( clueTbl && clueTbl[i+1] ) ? strlen( clueTbl[i+1] ) : 0;
 		size_t sbufused = loclen + scluelen;
+		if( sbufused > 0xFFFF ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
 		(*srecordtbl_out)[i]->loclen = (word16)loclen;
 		(*srecordtbl_out)[i]->cluelen = (word16)scluelen;
@@ -507,7 +510,8 @@ int ar_core_check_signatures( byteptr buf_opt, arAuthptr arecord, arSharetbl sre
 				sha1_final( c, digest );
 				vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 			}
-			int fail = !cpVerify( arecord->pubkey, mac, &pSRecord->sharesig );
+			int fail = !cpVerify( pSRecord->pubkey, mac, &pSRecord->sharesig );
+			fail |= !vlEqual( arecord->pubkey, pSRecord->pubkey );
 
 			// return nz rc if there is any failure
 			if( fail ) { rc = RC_SIGNATURE; LOGFAIL( rc ); if( !buf_opt ) { goto EXIT; } }
