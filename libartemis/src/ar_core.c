@@ -30,26 +30,24 @@ STATICASSERT( AR_PRIVKEYUNITS < VL_UNITS );
 
 ////////////////////////////
 
-// Artemis A uri is http://<location>?tp=<topic>&ai=<info>&vf=<verify>&pk=<pubkey>&as=<authsig>&mt=<messagetext>&mc=<messageclue>
+// Artemis A uri is http://<location>?tp=<auth.pubkey>&ai=<info>&as=<authsig.r>|<authsig.r>&mt=<messagetext>&mc=<messageclue>
 //
-// Artemis S uri is http://<location>?tp=<topic>&si=<info>&sh=<shareid>|<share>&ss=<sharesig>&sc=<shareclue>
+// Artemis S uri is http://<location>?tp=<auth.pubkey>&si=<info>&ss=<sharesig.r>|<sharesig.s>&sh=<shareid>|<share>&sc=<shareclue>
 //
 // where:
 // <info> == <version>|<shares>|<threshold>
 
 // artemis
 //  0 url location L is specified as an identifying tag and as a url path
-//  1 numshares, threshold and fieldsize are combined into splitinfo I
-//  2 plaintext message M is hashed to produce N-bit verification V
-//  3 random cipher key C is used on message M to crypt message (producing M')
-//  4 split C into shares {C'1...C'n}
-//  5 crypted message M' is hashed to produce topic T
-//  6 random private key Kpri is used to create a matching public key Kpub
-//  7 private key Kpri is applied to hash of L | T | V | I | Kpub to produce authsignature Sa
-//  8 private key Kpri is applied to hash of L | T | { 1, ... i, ... n } | { C'1, ... C'i, ... C'n } to produce sharesignatures {S1...Sn}
-//  9 private key Kpri and cipher key C are thrown away
-// 10 authentication is distributed in the concatenated form L | T | V | I | Kpub | Sa | M' | Mc
-// 11 shares are distributed in the concatenated form { L | T | i | C'i | Si | Sc }
+//  1 version, numshares, threshold are combined into info I
+//  2 random cipher key C is used on message M to crypt message (producing M')
+//  3 split C into shares {C'1...C'n} as C'i
+//  4 random private key Kpri is used to create a matching public key Kpub
+//  5 private key Kpri is applied to hash of Kpub | T | I to produce authsignature Sa
+//  6 private key Kpri is applied to hash of Kpub | T | I | { 1, ... i, ... n } | { C'1, ... C'i, ... C'n } to produce sharesignatures {S1...Sn}
+//  7 private key Kpri and cipher key C are thrown away
+//  8 authentication is distributed in the concatenated form L | Kpub | I | Sa | M' | Mc
+//  9 shares are distributed in the concatenated form      { L | Kpub | I | Si | i | C'i | Sc }
 
 // rc4 is cranked between 256 and 511 times before being used on stream
 // 256 + (LS 8 bits of cipher key)
@@ -80,18 +78,16 @@ static void sha1_process_blob16( sha1_context* c, word16 blob16 )
 
 static void ar_core_mac_arecord( sha1_context* c, arAuthptr pa, byte version, size_t buflen )
 {
-	sha1_process_vlpoint( c, pa->topic );
-	sha1_process_vlpoint( c, pa->verify );
+	sha1_process_vlpoint( c, pa->pubkey );
 	sha1_process_blob16( c, pa->shares );
 	sha1_process_blob16( c, pa->threshold );
 	sha1_process_blob16( c, version );
-	sha1_process_vlpoint( c, pa->pubkey );
 	sha1_process( c, pa->buf, (unsigned)(buflen) );
 }
 
 static void ar_core_mac_srecord( sha1_context* c, arShareptr ps, byte version, size_t buflen )
 {
-	sha1_process_vlpoint( c, ps->topic );
+	sha1_process_vlpoint( c, ps->pubkey );
 	sha1_process_blob16( c, ps->shares );
 	sha1_process_blob16( c, ps->threshold );
 	sha1_process_blob16( c, version );
@@ -207,17 +203,6 @@ DEBUGPRINT("bug %lu\n",bug);
 	memcpy_s( arecord_out[0]->buf + loclen, arecord_out[0]->bufmax - loclen, clueTbl[0], acluelen );
 	memcpy_s( arecord_out[0]->buf + msgoffset, arecord_out[0]->bufmax - msgoffset, inbuf, inbuflen );
 
-	// create verification hash of cleartext
-	vlPoint verify;
-	{
-		sha1Digest digest;
-		sha1_context c[1];
-		sha1_initial( c );
-		sha1_process( c, arecord_out[0]->buf + msgoffset -bug, (unsigned)(inbuflen) ); // -bug to conditionally deprefix message with \0
-		sha1_final( c, digest );
-		vlSetWord32Ptr( verify, AR_VERIFYUNITS, digest );
-	}
-
 	// create cryptcoefs (and cryptkey)
 	for( word16 t = 0; t < numThres; t++ )
 	{
@@ -296,8 +281,6 @@ DEBUGPRINT("bug %lu\n",bug);
 	arecord_out[0]->threshold = numThres;
 
 	vlCopy( arecord_out[0]->pubkey, pubSigningkey );
-	vlCopy( arecord_out[0]->topic, topic );
-	vlCopy( arecord_out[0]->verify, verify );
 
 	cpPair authsig;
 	{
@@ -326,8 +309,7 @@ DEBUGPRINT("bug %lu\n",bug);
 
 	for( int i=0; i<numShares; i++ )
 	{
-		vlClear( (*srecordtbl_out)[i]->topic );
-		vlCopy( (*srecordtbl_out)[i]->topic, topic );
+		vlCopy( (*srecordtbl_out)[i]->pubkey, pubSigningkey );
 
 		(*srecordtbl_out)[i]->shares = numShares;
 		(*srecordtbl_out)[i]->threshold = numThres;
@@ -462,22 +444,6 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 		rc4( cryptkeyBArr, vlCryptkey[0] *2, rc4cranks, *buf_out, arecord->msglen ); // *2 for characters
 
 		gfClear( gfCryptkey );
-	}
-
-	///////////
-	// check if shares decoded properly
-
-	{
-		vlPoint verify;
-		{
-			sha1Digest digest;
-			sha1_context c[1];
-			sha1_initial( c );
-			sha1_process( c, *buf_out, (unsigned)(arecord->msglen) );
-			sha1_final( c, digest );
-			vlSetWord32Ptr( verify, AR_VERIFYUNITS, digest );
-		}
-		if( !vlEqual( verify, arecord->verify ) ) { rc = RC_MESSAGE; LOGFAIL( rc ); goto EXIT; }
 	}
 
 EXIT:

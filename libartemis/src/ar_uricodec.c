@@ -371,7 +371,7 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 	char sz[3] = {0,0,0};
 
 	size_t tokenlen = 0;
-	word32 stateArr[] = {'tp=\0', 'ai=\0', 'vf=\0', 'pk=\0', 'as=\0', 'mt=\0', 'mc=\0', 0 };
+	word32 stateArr[] = {'tp=\0', 'ai=\0', 'as=\0', 'mt=\0', 'mc=\0', 0 };
 
 #if defined(ENABLE_FUZZING)
 
@@ -403,16 +403,10 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 		{
 		default: rc = RC_ARG; LOGFAIL( rc ); break;
 		case 'tp=\0':
-			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->pubkey ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ai=\0':
 			if( rc = ar_uri_info_cat( buf, bufsize, pARecord->shares, pARecord->threshold, AR_VERSION ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'vf=\0':
-			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->verify ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'pk=\0':
-			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->pubkey ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'as=\0':
 			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->authsig.r ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -479,7 +473,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 		{
 		default: rc = RC_ARG; LOGFAIL( rc ); break;
 		case 'tp=\0':
-			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->pubkey ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'si=\0':
 			if( rc = ar_uri_info_cat( buf, bufsize, pSRecord->shares, pSRecord->threshold, AR_VERSION ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -565,18 +559,12 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 			pLocation = pss->data_first + 7; // 7 to remove 'http://'
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
-		case 'tp=0': // topic
-			if( rc = ar_util_txt2vl( (*arecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+		case 'tp=0': // topic / pubkey
+			if( rc = ar_util_txt2vl( (*arecord_out)->pubkey, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ai=0': // arecord info - version | shares | threshold
 			if( rc = ar_uri_info_parse( &(*arecord_out)->shares, &(*arecord_out)->threshold, &vers, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
 			if( vers != AR_VERSION ) { rc = RC_VERSION; LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'vf=0': // <verify>
-			if( rc = ar_util_txt2vl( (*arecord_out)->verify, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'pk=0': // <pubkey>
-			if( rc = ar_util_txt2vl( (*arecord_out)->pubkey, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'as=0': // <authsig> - r
 			if( rc = ar_util_txt2vl( (*arecord_out)->authsig.r, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -680,8 +668,8 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 			pLocation = pss->data_first + 7; // 7 to remove 'http://'
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
-		case 'tp=0': // topic
-			if( rc = ar_util_txt2vl( (*srecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+		case 'tp=0': // topic / pubkey
+			if( rc = ar_util_txt2vl( (*srecord_out)->pubkey, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'si=0': // srecord info - version | shares | threshold
 			if( rc = ar_uri_info_parse( &(*srecord_out)->shares, &(*srecord_out)->threshold, &vers, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
