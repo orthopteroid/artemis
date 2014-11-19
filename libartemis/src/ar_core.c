@@ -379,8 +379,7 @@ DEBUGPRINT("bug %lu\n",bug);
 
 	// double-check
 
-	if( rc = ar_core_check_topic( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_core_check_signature( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_core_check_signatures( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 
@@ -423,15 +422,10 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 
 	if( numSRecords < arecord->threshold ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 	
-	///////////
-	// check topic consistiency: internally to ARecord, then compared to all SRecords
-
-	if( rc = ar_core_check_topic( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
-
 	////////////
-	// check authsignature to ensure location, clue, topic and pubkey have consistient pairing
+	// check signatures to ensure location, clue, topic / pubkey have consistient pairing
 
-	if( rc = ar_core_check_signature( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_core_check_signatures( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	///
 
@@ -496,46 +490,7 @@ EXIT:
 	return rc;
 }
 
-int ar_core_check_topic( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordtbl_opt, word16 numSRecords )
-{
-	int rc = 0;
-
-	// add marking for 'fail' to all
-	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
-
-	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
-
-	// check internal topic consistiency for ARecord
-
-	vlPoint topic;
-	{
-		sha1Digest digest;
-		sha1_digest( digest, arecord->buf, arecord->msglen + arecord->loclen + arecord->cluelen );
-		vlSetWord32Ptr( topic, AR_TOPICUNITS, digest );
-	}
-	if( !vlEqual( arecord->topic, topic ) ) { rc = RC_TOPIC; LOGFAIL( rc ); goto EXIT; }
-
-	if( srecordtbl_opt && numSRecords > 0 )
-	{
-		// compare ARecord topic to all specified SRecords
-
-		for( int i=0; i<numSRecords; i++ )
-		{
-			int fail = !vlEqual( topic, srecordtbl_opt[i]->topic );
-
-			// return nz rc if there is any failure
-			if( fail ) { rc = RC_TOPIC; LOGFAIL( rc ); if( !buf_opt ) { goto EXIT; } }
-			else {
-				if( buf_opt ) { buf_opt[i] = 0; } // clear individual fail markings
-			}
-		}
-	}
-
-EXIT:
-	return rc;
-}
-
-int ar_core_check_signature( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordtbl_opt, word16 numSRecords )
+int ar_core_check_signatures( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordtbl_opt, word16 numSRecords )
 {
 	int rc = 0;
 
@@ -621,7 +576,7 @@ void ar_core_test()
 	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, AR_LOCSTR ); // +1 to include \0
 	TESTASSERT( rc == 0 );
 
-	rc = ar_core_check_topic( checkarr, arecord, srecordtbl, 2 );
+	rc = ar_core_check_signatures( checkarr, arecord, srecordtbl, 2 );
 	TESTASSERT( rc == 0 );
 	TESTASSERT( checkarr[0] == 0 );
 	TESTASSERT( checkarr[1] == 0 );
@@ -636,26 +591,16 @@ void ar_core_test()
 	///////////////////
 	// now start breaking things....
 
-	srecordtbl[1]->topic[0] = 0; // break topic of share 2
+	srecordtbl[1]->pubkey[0] = 0; // break topic of share 2
 
-	rc = ar_core_check_topic( checkarr, arecord, srecordtbl, 2 );
+	rc = ar_core_check_signatures( checkarr, arecord, srecordtbl, 2 );
 	TESTASSERT( rc != 0 );
 	TESTASSERT( !checkarr[0] );
 	TESTASSERT( checkarr[1] );
 
-	rc = ar_core_check_signature( checkarr, arecord, srecordtbl, 2 );
-	TESTASSERT( rc != 0 );
-	TESTASSERT( !checkarr[0] );
-	TESTASSERT( checkarr[1] );
+	arecord->pubkey[0] = 0; // break auth record topic
 
-	arecord->topic[0] = 0; // break auth record topic
-
-	rc = ar_core_check_topic( checkarr, arecord, srecordtbl, 2 );
-	TESTASSERT( rc != 0 );
-	TESTASSERT( checkarr[0] ); // all fail
-	TESTASSERT( checkarr[1] );
-
-	rc = ar_core_check_signature( checkarr, arecord, srecordtbl, 2 );
+	rc = ar_core_check_signatures( checkarr, arecord, srecordtbl, 2 );
 	TESTASSERT( rc != 0 );
 	TESTASSERT( checkarr[0] ); // all fail
 	TESTASSERT( checkarr[1] );
