@@ -185,7 +185,7 @@ DEBUGPRINT("bug %lu\n",bug);
 
 	size_t stblsize = sizeof(arShareptr) * numShares;
 	if( !((*srecordtbl_out) = malloc( stblsize ) )) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	memset( (*arecord_out), 0, stblsize );
+	memset( (*srecordtbl_out), 0, stblsize );
 
 	for( int i=0; i<numShares; i++ )
 	{
