@@ -531,7 +531,7 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 	if( !((*arecord_out) = malloc( structsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	memset( (*arecord_out), 0, structsize );
 
-	(*arecord_out)->bufmax = bufsize;
+	(*arecord_out)->bufmax = (word16)bufsize;
 
 	// cached, as order is important when bundling
 	size_t uLocation = 0, uClue = 0, uMessage = 0;
@@ -646,7 +646,7 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 	if( !((*srecord_out) = malloc( structsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	memset( (*srecord_out), 0, structsize );
 
-	(*srecord_out)->bufmax = bufsize;
+	(*srecord_out)->bufmax = (word16)bufsize;
 
 	// cached, as order is important when bundling
 	size_t uLocation = 0, uClue = 0;

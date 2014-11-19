@@ -181,7 +181,7 @@ DEBUGPRINT("bug %lu\n",bug);
 	size_t astructsize = sizeof(arAuth) + abufused;
 	if( !(arecord_out[0] = malloc( astructsize + AR_HIDDEN_BYTE )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	memset( arecord_out[0], 0, astructsize + AR_HIDDEN_BYTE );
-	arecord_out[0]->bufmax = abufused;
+	arecord_out[0]->bufmax = (word16)abufused;
 
 	size_t stblsize = sizeof(arShareptr) * numShares;
 	if( !((*srecordtbl_out) = malloc( stblsize ) )) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
@@ -195,11 +195,11 @@ DEBUGPRINT("bug %lu\n",bug);
 
 		if( !((*srecordtbl_out)[i] = malloc( sstructsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 		memset( (*srecordtbl_out)[i], 0, sstructsize );
-		(*srecordtbl_out)[i]->bufmax = sbufused;
+		(*srecordtbl_out)[i]->bufmax = (word16)sbufused;
 	}
 
-	arecord_out[0]->loclen = loclen;
-	arecord_out[0]->cluelen = acluelen;
+	arecord_out[0]->loclen = (word16)loclen;
+	arecord_out[0]->cluelen = (word16)acluelen;
 	arecord_out[0]->msglen = inbuflen;
 
 	// fill buf with location, clue (if applic) then message
@@ -345,8 +345,8 @@ DEBUGPRINT("bug %lu\n",bug);
 		size_t scluelen = ( clueTbl && clueTbl[i+1] ) ? strlen( clueTbl[i+1] ) : 0;
 		size_t sbufused = loclen + scluelen;
 
-		(*srecordtbl_out)[i]->loclen = loclen;
-		(*srecordtbl_out)[i]->cluelen = scluelen;
+		(*srecordtbl_out)[i]->loclen = (word16)loclen;
+		(*srecordtbl_out)[i]->cluelen = (word16)scluelen;
 			
 		memcpy_s( (*srecordtbl_out)[i]->buf,			(*srecordtbl_out)[i]->bufmax,				location,		loclen );
 		memcpy_s( (*srecordtbl_out)[i]->buf + loclen,	(*srecordtbl_out)[i]->bufmax - loclen,		clueTbl[i+1],	scluelen );
