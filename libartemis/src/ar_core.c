@@ -142,13 +142,15 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
         if( clueCount != (numShares +1) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
     }
 
+	size_t bug = 0;
+
 #if defined(AR_DEMO)
 
 #define BIT_EQUAL(a,b) ( ~( (a) ^ (b) ) & (b) )
 #define BIT_MASK(a,b)  ( ~( (a) & (b) ) ^ (b) )
 
 	// raise bug when we're called outside demo limits and address has bits 5 & 2 (ie, we've been cracked)
-    size_t bug = ( ((numShares >> 3) | (numThres >> 2)) & BIT_MASK( (size_t)inbuf, 0x22) ) ? 1 : 0;
+    bug = ( ((numShares >> 3) | (numThres >> 2)) & BIT_MASK( (size_t)inbuf, 0x22) ) ? 1 : 0;
 
 DEBUGPRINT("bug %lu\n",bug);
 
