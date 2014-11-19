@@ -399,6 +399,13 @@ byte ar_util_strcrc( byteptr sz )
 	return crc8;
 }
 
+byte ar_util_u8_crc( byteptr s, size_t l )
+{
+	byte crc8 = 0x8C;
+	for( size_t i=0; i<l; i++ ) { crc8 ^= b8crc[ s[i] ]; }
+	return crc8;
+}
+
 ///////////////////////////////////////
 
 const char* ar_util_rclookup( int rc )
