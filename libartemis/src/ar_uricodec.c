@@ -319,8 +319,16 @@ void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf )
 	word32 token;
 	while( token = ps2_token( pss ) )
 	{
-		if( token == 'ht=0' || token == 'mc=0' || token == 'sc=0' )		{ *pLen += ss.data_len; } // raw text
-		else if( token == 'mt=0' || token == 'st=0' )					{ *pLen += ss.data_len; } // overest the b64 text
+		switch( token )
+		{
+		case 'ht=0': // url location
+		case 'mt=0': // message text
+		case 'mc=0': // message clue
+		case 'sc=0': // share clue
+			*pLen += ss.data_len; // will overest the b64 text, but thats ok
+			break;
+		default: break;
+		}
 	}
 }
 
@@ -441,7 +449,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 
 	size_t buflen = 0;
 	size_t tokenlen = 0;
-	word32 stateArr[] = {'tp=\0', 'si=\0', 'sh=\0', 'ss=\0', 'sc=\0', 0 };
+	word32 stateArr[] = {'tp=\0', 'si=\0', 'ss=\0', 'sh=\0', 'sc=\0', 0 };
 
 #if defined(ENABLE_FUZZING)
 
