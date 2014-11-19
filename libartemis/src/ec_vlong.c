@@ -239,6 +239,7 @@ int vlShortMultiply (vlPoint p, const vlPoint q, word16 d)
 		}
 		if (t) {
 			p[0] = q[0] + 1;
+			if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return -1; } // bail before stack-clobber
 			p[p[0]] = (word16) (t & 0xFFFFUL);
 		} else {
 			p[0] = q[0];
@@ -248,8 +249,6 @@ int vlShortMultiply (vlPoint p, const vlPoint q, word16 d)
 	} else { /* d == 0 */
 		p[0] = 0;
 	}
-
-	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return -1; }
 
 	return 0;
 } /* vlShortMultiply */
