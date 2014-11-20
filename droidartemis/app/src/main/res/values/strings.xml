@@ -50,17 +50,16 @@ By using this software you accept the following:\n
  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </string>
     <string name="text_licenses">
-This software contains proprietary components developed by tereslogica &lt;tereslogica@gmail.com&gt;
- as well as the following licensed components:\n
-\nPublic domain pegwit library: \"Elliptic Curves and Algebraic Operations over GF(2^m)\" by
+This software contains components developed by tereslogica &lt;tereslogica@gmail.com&gt;
+ as well as the following licensed components:
+\n\npegwit, Public Domain, License granted by
  George Barwood  &lt;george.barwood@dial.pipex.com&gt;,
- Paulo S.L.M. Barreto &lt;pbarreto@uninet.com.br&gt;,
- Mr. Tines &lt;tines@windsong.demon.co.uk&gt;\n
-\nPublic domain implementation \"SHA-1 cryptographic hash function\" by
- Steve Reid &lt;steve@edmweb.com&gt;\n
-\nFreely reusable 8-bit CRC Tables \"Application Note 27: Understanding and Using Cyclic
- Redundancy Checks with Maxim 1-Wire and iButton Products\"
- Copyright (C) 2000 Dallas Semiconductor Corporation\n
+ Paulo S.L.M. Barreto &lt;pbarreto@uninet.com.br&gt; and
+ Mr. Tines &lt;tines@windsong.demon.co.uk&gt;
+\n\nzxing, Copyright 2007 ZXing Authors, Apache 2.0 License, http://www.apache.org/licenses/LICENSE-2.0.html
+\n\nsha1, Public Domain, License granted by
+ Steve Reid &lt;steve@edmweb.com&gt;
+\n\n1-wire, Copyright 2000 Dallas Semiconductor Corporation, Public Use License
     </string>
 
 </resources>
