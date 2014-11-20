@@ -28,17 +28,6 @@ import java.util.ArrayList;
 // http://www.androidhive.info/2011/10/android-listview-tutorial/
 public class ActivityTopics extends FragmentActivity {
 
-    public static final int ACTIVITY_COMPLETE = 0;
-
-    public final static String INTENT_SHARE = "intent-share";
-    public final static String INTENT_DELETEONE = "intent-deleteone";
-    public final static String INTENT_DELETEALL = "intent-deleteall";
-    public final static String INTENT_PACKAGE = "intent-package";
-    public final static String EXTRA_TOPICSTRING = "intent-topic";
-    public final static String EXTRA_URISTRING = "intent-uristring";
-
-    ////////////////
-
     private FragmentActivity thisActivity;
     private FakeScanner fs;
     private LocalBroadcastManager lbm;
@@ -52,14 +41,14 @@ public class ActivityTopics extends FragmentActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             //Notifier.ShowMessageOk(thisActivity, "sharing!" );
-            new Packager( thisActivity, intent.getStringExtra( EXTRA_TOPICSTRING ) );
+            new Packager( thisActivity, intent.getStringExtra( Const.EXTRA_TOPICSTRING ) );
         }
     };
 
     private BroadcastReceiver packageIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Uri uri = Uri.parse( intent.getStringExtra( EXTRA_URISTRING ) );
+            Uri uri = Uri.parse( intent.getStringExtra( Const.EXTRA_URISTRING ) );
             //Notifier.ShowMessageOk(thisActivity, "packaged uri: " + uri.toString() );
             Intent intent2 = new Intent( android.content.Intent.ACTION_SEND, uri );
             intent2.setType("application/zip");
@@ -72,7 +61,7 @@ public class ActivityTopics extends FragmentActivity {
     private BroadcastReceiver deleteoneIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            ArtemisSQL.Get().delTopic(intent.getStringExtra(EXTRA_TOPICSTRING));
+            ArtemisSQL.Get().delTopic(intent.getStringExtra(Const.EXTRA_TOPICSTRING));
             refreshListView();
         }
     };
@@ -198,10 +187,10 @@ public class ActivityTopics extends FragmentActivity {
 
         lbm = LocalBroadcastManager.getInstance( thisActivity );
 
-        lbm.registerReceiver(shareIntentReceiver, new IntentFilter( INTENT_SHARE ));
-        lbm.registerReceiver(packageIntentReceiver, new IntentFilter( INTENT_PACKAGE ));
-        lbm.registerReceiver(deleteoneIntentReceiver, new IntentFilter( INTENT_DELETEONE ));
-        lbm.registerReceiver(deleteallIntentReceiver, new IntentFilter( INTENT_DELETEALL ));
+        lbm.registerReceiver(shareIntentReceiver, new IntentFilter( Const.INTENT_SHARE ));
+        lbm.registerReceiver(packageIntentReceiver, new IntentFilter( Const.INTENT_PACKAGE ));
+        lbm.registerReceiver(deleteoneIntentReceiver, new IntentFilter( Const.INTENT_DELETEONE ));
+        lbm.registerReceiver(deleteallIntentReceiver, new IntentFilter( Const.INTENT_DELETEALL ));
 
         Prefs.Init( this );
         ArtemisSQL.Init( this );
@@ -211,6 +200,9 @@ public class ActivityTopics extends FragmentActivity {
         ////////////
 
         sortOrder = ArtemisSQL.SortOrder.values()[ Prefs.GetInt( Prefs.TOPIC_SORTORDER, ArtemisSQL.SortOrder.NATURAL.ordinal() ) ];
+
+        Prefs.GetInt( Prefs.QR_WIDTH, 300 );
+        Prefs.GetInt( Prefs.QR_HEIGHT, 300 );
 
         ////////////////
 
@@ -227,23 +219,23 @@ public class ActivityTopics extends FragmentActivity {
                         Intent intent = null;
                         switch( _which ) {
                             case 0:
-                                intent = new Intent( INTENT_SHARE );
-                                intent.putExtra( EXTRA_TOPICSTRING, topic );
+                                intent = new Intent( Const.INTENT_SHARE );
+                                intent.putExtra( Const.EXTRA_TOPICSTRING, topic );
                                 break;
                             case 1:
                                 // blank!
                                 break;
                             case 2:
-                                intent = new Intent( INTENT_DELETEONE );
-                                intent.putExtra( EXTRA_TOPICSTRING, topic );
+                                intent = new Intent( Const.INTENT_DELETEONE );
+                                intent.putExtra( Const.EXTRA_TOPICSTRING, topic );
                                 break;
                             case 3:
-                                intent = new Intent( INTENT_DELETEALL );
+                                intent = new Intent( Const.INTENT_DELETEALL );
                                 break;
                             default:
                         }
                         if( intent != null ) { lbm.sendBroadcast( intent ); }
-                        refreshListView();
+                        //refreshListView(); // needed?
                     }
                 };
                 Notifier.ShowMenu(thisActivity, R.array.dialog_topicactions, ocl);
@@ -335,7 +327,7 @@ public class ActivityTopics extends FragmentActivity {
         try {
             Intent intent = new Intent("com.google.zxing.client.android.SCAN");
             intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-            startActivityForResult( intent, ACTIVITY_COMPLETE);
+            startActivityForResult( intent, Const.ACTIVITY_COMPLETE);
         } catch (Exception e1) {
             Notifier.ShowOk( this, R.string.dialog_noscanner, null );
         }
@@ -385,7 +377,7 @@ public class ActivityTopics extends FragmentActivity {
         // http://stackoverflow.com/questions/8831050/android-how-to-read-qr-code-in-my-application
         super.onActivityResult(requestCode, resultCode, data);
         switch( requestCode ) {
-            case ACTIVITY_COMPLETE:
+            case Const.ACTIVITY_COMPLETE:
                 if (resultCode == RESULT_OK) {
                     addScannedItem( data.getStringExtra("SCAN_RESULT") );
                 } else if (resultCode == RESULT_CANCELED) {

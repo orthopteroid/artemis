@@ -45,7 +45,6 @@ public class Packager {
         private FileOutputStream fouts;
         private ZipOutputStream zout;
         //
-        private int width = 300, height = 300;
         private int key = 0;
         //
         public int filesToConvert;
@@ -93,6 +92,10 @@ public class Packager {
         // return true if file was added, false if not
         private boolean addMessage() throws Exception {
             if( sARecord.length() > 0 ) {
+
+                int width = Prefs.GetInt( Prefs.QR_WIDTH, Prefs.DEFAULT_WIDTH );
+                int height = Prefs.GetInt( Prefs.QR_HEIGHT, Prefs.DEFAULT_HEIGHT );
+
                 String fullclue = ArtemisLib.Get().nativeClue( sARecord );
                 String shortclue = fullclue;
                 if( shortclue.length() > 10 ) {
@@ -107,6 +110,10 @@ public class Packager {
 
         // return true if file was added, false if not (and there are no more files to add)
         private boolean addKey() throws Exception {
+
+            int width = Prefs.GetInt( Prefs.QR_WIDTH, Prefs.DEFAULT_WIDTH );
+            int height = Prefs.GetInt( Prefs.QR_HEIGHT, Prefs.DEFAULT_HEIGHT );
+
             if( key == oSRecords.size() ) { return false; }
             ArtemisShare sRecord = oSRecords.get( key );
             String istr = String.format("%05d", key); // 16 bits serialized = 4095 = 5 decimal digits, 0 padding
@@ -208,7 +215,7 @@ public class Packager {
             if( this.isCancelled() ) { return; }
             if( uri == null ) { return; }
 
-            LocalBroadcastManager.getInstance(cxt).sendBroadcast( (new Intent( ActivityTopics.INTENT_PACKAGE )).putExtra( ActivityTopics.EXTRA_URISTRING, uri.toString() ) );
+            LocalBroadcastManager.getInstance(cxt).sendBroadcast( (new Intent( Const.INTENT_PACKAGE )).putExtra( Const.EXTRA_URISTRING, uri.toString() ) );
         }
     }
 

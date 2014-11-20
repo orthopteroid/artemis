@@ -10,6 +10,11 @@ import android.content.SharedPreferences;
 public class Prefs {
     public static final String TOPIC_SORTORDER = "topic-sort-order";
     public static final String EULA_VERSION = "eula-version-1";
+    public static final String QR_WIDTH = "qr-width";
+    public static final String QR_HEIGHT = "qr-height";
+
+    public static int DEFAULT_WIDTH = 300;
+    public static int DEFAULT_HEIGHT = 300;
 
     private static SharedPreferences preferences;
 
