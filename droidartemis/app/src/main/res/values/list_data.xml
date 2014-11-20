@@ -7,7 +7,8 @@
         <item>Least Complete</item>
     </string-array>
     <string-array name="dialog_topicactions">
-        <item>Zip and Share</item>
+        <item>View</item>
+        <item>Share</item>
         <item></item>
         <item>Delete</item>
         <item>Delete All</item>

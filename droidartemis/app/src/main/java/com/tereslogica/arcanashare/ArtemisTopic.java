@@ -20,6 +20,8 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
 
     public String sc_str, ss_str, ts_str, m_str;
 
+    public String strDetails;
+
     public ArtemisTopic( String _topic, int _ssize, int _tsize, String _clue, String _location, int _mindicator ) {
         topic = _topic;
         scount = 0; // might be zero, if this share is an arecord
@@ -58,9 +60,20 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
     public void setIndicateURIA() { indicateURIA = 1; }
     public boolean isURIAPresent() { return indicateURIA == 1; }
 
+    public ArtemisTopic buildDetails() {
+        StringBuilder sb = new StringBuilder(80);
+        if( cleartext.length() > 0 ) { sb.append('*'); sb.append(' '); }
+        sb.append(m_str); sb.append(' ');
+        sb.append(sc_str); sb.append('K'); sb.append(' ');
+        sb.append(ts_str); sb.append('L'); sb.append(' ');
+        sb.append(ss_str); sb.append('T');
+        strDetails = sb.toString();
+        return this;
+    }
+
     ///////////
 
-    public static void configureTags( View rowView ) {
+    public static void ConfigureTags(View rowView) {
         rowView.setTag( R.id.topic, ((TextView) rowView.findViewById( R.id.topic )) );
         rowView.setTag( R.id.details, ((TextView) rowView.findViewById( R.id.details )) );
         rowView.setTag( R.id.clues, ((TextView) rowView.findViewById( R.id.clues )) );
@@ -69,13 +82,14 @@ public class ArtemisTopic implements Comparable<ArtemisTopic> {
     public void configureView( View rowView ) {
         ((TextView) rowView.getTag( R.id.topic )).setText( topic );
 
-        StringBuilder sb = new StringBuilder(80);
-        if( cleartext.length() > 0 ) { sb.append('*'); sb.append(' '); }
-        sb.append(m_str); sb.append(' ');
-        sb.append(sc_str); sb.append('K'); sb.append(' ');
-        sb.append(ts_str); sb.append('L'); sb.append(' ');
-        sb.append(ss_str); sb.append('T');
-        ((TextView) rowView.getTag( R.id.details )).setText( sb.toString() );
+        //StringBuilder sb = new StringBuilder(80);
+        //if( cleartext.length() > 0 ) { sb.append('*'); sb.append(' '); }
+        //sb.append(m_str); sb.append(' ');
+        //sb.append(sc_str); sb.append('K'); sb.append(' ');
+        //sb.append(ts_str); sb.append('L'); sb.append(' ');
+        //sb.append(ss_str); sb.append('T');
+        //((TextView) rowView.getTag( R.id.details )).setText( sb.toString() );
+        ((TextView) rowView.getTag( R.id.details )).setText( strDetails );
 
         // http://fupeg.blogspot.ca/2010/01/strikethrough-android.html
         //TextView mindicatorView = ((TextView) rowView.getTag( R.id.indicateURIA ));

@@ -5,18 +5,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
@@ -53,27 +46,6 @@ public class Packager {
             filesToConvert = ( sARecord.length() > 0 ? 1 : 0 ) + oSRecords.size();
         }
 
-        private void addPNG(ZipOutputStream zout, String fname, String code, int width, int height) throws Exception {
-            ZipEntry ze = new ZipEntry( fname );
-            zout.putNextEntry( ze );
-
-            QRCodeWriter qrcw = new QRCodeWriter();
-            BitMatrix bm = qrcw.encode( code, BarcodeFormat.QR_CODE, width, height );
-
-            Bitmap bitmap = Bitmap.createBitmap( width, height, Bitmap.Config.RGB_565 );
-            for (int i = 0; i < width; i++) {
-                for (int j = 0; j < height; j++) {
-                    bitmap.setPixel(i, j, bm.get(i, j) ? Color.BLACK: Color.WHITE);
-                }
-            }
-
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-
-            zout.write( bos.toByteArray() );
-            zout.closeEntry();
-        }
-
         private void open() throws Exception {
             dir = new File( cxt.getCacheDir(), "");
             dir.mkdirs();
@@ -102,7 +74,11 @@ public class Packager {
                     shortclue = fullclue.substring(0, 5) + "..." + fullclue.substring(fullclue.length()-5, fullclue.length());
                 }
                 if( shortclue.length() > 0 ) { shortclue = "-" + shortclue; }
-                addPNG( zout, "message" + shortclue + ".png", sARecord, width, height );
+                String fname = "message" + shortclue + ".png";
+                ZipEntry ze = new ZipEntry( fname );
+                zout.putNextEntry( ze );
+                zout.write( Util.StringToQRByteStream(sARecord, width, height).toByteArray() );
+                zout.closeEntry();
                 return true;
             }
             return false;
@@ -123,7 +99,12 @@ public class Packager {
                 shortclue = fullclue.substring(0, 5) + "..." + fullclue.substring(fullclue.length()-5, fullclue.length());
             }
             if( shortclue.length() > 0 ) { shortclue = "-" + shortclue; }
-            addPNG( zout, "key" + istr + shortclue + ".png", sRecord.share, width, height );
+            String fname = "key" + istr + shortclue + ".png";
+            ZipEntry ze = new ZipEntry( fname );
+            zout.putNextEntry( ze );
+            zout.write( Util.StringToQRByteStream(sRecord.share, width, height).toByteArray() );
+            zout.closeEntry();
+
             key++;
             return true;
         }

@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
@@ -24,6 +25,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 // http://www.androidhive.info/2011/10/android-listview-tutorial/
 public class ActivityTopics extends FragmentActivity {
@@ -70,6 +72,7 @@ public class ActivityTopics extends FragmentActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             ArtemisSQL.Get().delAll();
+            ((TopicArrayAdapter) listView.getAdapter()).clear();
             refreshListView();
         }
     };
@@ -77,12 +80,40 @@ public class ActivityTopics extends FragmentActivity {
     ////////////////////////////////////
 
     private class TopicArrayLoader extends AsyncTask<Cursor, Void, Long> {
+        Handler uiThreadPoller;
 
-        private ArrayList<ArtemisTopic> al = new ArrayList<ArtemisTopic>();
+        // http://developer.android.com/reference/java/util/concurrent/package-summary.html
+        private CopyOnWriteArrayList<ArtemisTopic> workingArray = new CopyOnWriteArrayList<ArtemisTopic>();
+
+        private void pump() {
+            if( workingArray.size() > 0 ) {
+                while (workingArray.size() > 0) {
+                    topicArrayList.add(workingArray.remove(0));
+                }
+                ((TopicArrayAdapter) listView.getAdapter()).notifyDataSetChanged();
+                listView.smoothScrollToPosition(listView.getCount());
+            }
+        }
 
         @Override
         protected void onPreExecute() {
-            al.clear();
+            ((TopicArrayAdapter) listView.getAdapter()).clear();
+            topicArrayList.clear();
+            workingArray.clear();
+
+            // http://stackoverflow.com/questions/1921514/how-to-run-a-runnable-thread-in-android
+            uiThreadPoller = new Handler();
+            final Runnable r = new Runnable() // synchronous to ui thread
+            {
+                public void run()
+                {
+                    if( uiThreadPoller != null ) {
+                        pump();
+                        uiThreadPoller.postDelayed(this, 200);
+                    }
+                }
+            };
+            uiThreadPoller.postDelayed(r, 200);
         }
 
         @Override
@@ -93,9 +124,13 @@ public class ActivityTopics extends FragmentActivity {
 
             Cursor cursor = cursors[0];
             if (cursor.moveToFirst()) {
-                do {
-                    al.add(new ArtemisTopic(cursor));
-                } while (cursor.moveToNext());
+                try {
+                    do {
+                        workingArray.add( (new ArtemisTopic( cursor )).buildDetails() );
+                    } while (cursor.moveToNext());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             cursor.close();
             return null;
@@ -103,9 +138,8 @@ public class ActivityTopics extends FragmentActivity {
 
         @Override
         protected void onPostExecute(Long result) {
-            topicArrayList.clear();
-            for (ArtemisTopic item : al) topicArrayList.add(item); // addAll
-            ((TopicArrayAdapter)listView.getAdapter()).notifyDataSetChanged();
+            uiThreadPoller = null; // stop polling
+            pump();
         }
     }
 
@@ -125,7 +159,7 @@ public class ActivityTopics extends FragmentActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) { // view recycling and view holder pattern
                 convertView = inflater.inflate(R.layout.topic_item, parent, false);
-                ArtemisTopic.configureTags( convertView );
+                ArtemisTopic.ConfigureTags(convertView);
             }
             topicArrayList.get(position).configureView(convertView);
             return convertView;
@@ -219,17 +253,23 @@ public class ActivityTopics extends FragmentActivity {
                         Intent intent = null;
                         switch( _which ) {
                             case 0:
+                                intent = new Intent(getApplicationContext(), ActivityQRViewer.class);
+                                intent.putExtra( Const.EXTRA_TOPICSTRING, topic );
+                                startActivity( intent );
+                                intent = null;
+                                break;
+                            case 1:
                                 intent = new Intent( Const.INTENT_SHARE );
                                 intent.putExtra( Const.EXTRA_TOPICSTRING, topic );
                                 break;
-                            case 1:
+                            case 2:
                                 // blank!
                                 break;
-                            case 2:
+                            case 3:
                                 intent = new Intent( Const.INTENT_DELETEONE );
                                 intent.putExtra( Const.EXTRA_TOPICSTRING, topic );
                                 break;
-                            case 3:
+                            case 4:
                                 intent = new Intent( Const.INTENT_DELETEALL );
                                 break;
                             default:
