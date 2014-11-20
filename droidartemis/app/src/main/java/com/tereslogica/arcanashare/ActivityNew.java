@@ -261,7 +261,7 @@ public class ActivityNew extends Activity {
                 clues.append(settings.get(i).getValue());
             }
         }
-        String uri = thisActivity.getApplicationContext().getResources().getString(R.string.app_uri);
+        String uri = thisActivity.getApplicationContext().getResources().getString(R.string.app_loc);
         String shares = ArtemisLib.Get().nativeEncode(keys, locks, uri, clues.toString(), settings.get(2).getValue());
 
         if (ArtemisLib.Get().nativeDidFail()) {

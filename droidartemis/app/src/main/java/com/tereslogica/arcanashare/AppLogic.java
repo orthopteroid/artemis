@@ -83,7 +83,7 @@ public class AppLogic {
         }
         cursor.close();
 
-        String uri = cxt.getResources().getString(R.string.app_uri);
+        String uri = cxt.getResources().getString(R.string.app_loc);
         String oldMess = ArtemisSQL.Get().getTopicInfo( topic ).cleartext;
         String newMess = ArtemisLib.Get().nativeDecode( uri, sb.toString() );
         boolean decodeOK = ArtemisLib.Get().nativeDidFail() == false;

@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">ArcanaShare</string>
-    <string name="app_uri">tereslogica.com</string>
+    <string name="app_loc">as.tereslogica.com</string>
     <string name="app_weblink">http://tereslogica.com</string>
     <string name="menu_testtoken">Debug Scan Test</string>
     <string name="menu_sort">Sorting</string>
