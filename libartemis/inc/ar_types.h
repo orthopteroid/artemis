@@ -10,13 +10,11 @@
 
 typedef struct arAuth_
 {
-	vlPoint		topic;			// digest of cryptext
-	word16		shares;			// 16 bits
-	byte		threshold;		// 8 bits
-	//
 	vlPoint		pubkey;
 	cpPair		authsig;
-	vlPoint		verify;			// digest of message cleartext
+	//
+	word16		shares;			// 16 bits
+	byte		threshold;		// 8 bits
 	//
 	word16		bufmax;
 	word16		loclen;			// location part of http url: domain/path/object
@@ -29,13 +27,14 @@ typedef arAuth*		arAuthptr;
 
 typedef struct arShare_
 {
-	vlPoint		topic;			// digest of cryptext
+	vlPoint		pubkey;
+	cpPair		sharesig;
+	//
 	word16		shares;			// 16 bits
 	byte		threshold;		// 8 bits
 	//
 	word16		shareid;		// 16 bits
 	vlPoint		share;
-	cpPair		sharesig;
 	//
 	word16		bufmax;
 	word16		loclen;			// location part of http url: domain/path/object

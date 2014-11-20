@@ -319,8 +319,16 @@ void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf )
 	word32 token;
 	while( token = ps2_token( pss ) )
 	{
-		if( token == 'ht=0' || token == 'mc=0' || token == 'sc=0' )		{ *pLen += ss.data_len; } // raw text
-		else if( token == 'mt=0' || token == 'st=0' )					{ *pLen += ss.data_len; } // overest the b64 text
+		switch( token )
+		{
+		case 'ht=0': // url location
+		case 'mt=0': // message text
+		case 'mc=0': // message clue
+		case 'sc=0': // share clue
+			*pLen += ss.data_len; // will overest the b64 text, but thats ok
+			break;
+		default: break;
+		}
 	}
 }
 
@@ -371,7 +379,7 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 	char sz[3] = {0,0,0};
 
 	size_t tokenlen = 0;
-	word32 stateArr[] = {'tp=\0', 'ai=\0', 'vf=\0', 'pk=\0', 'as=\0', 'mt=\0', 'mc=\0', 0 };
+	word32 stateArr[] = {'tp=\0', 'ai=\0', 'as=\0', 'mt=\0', 'mc=\0', 0 };
 
 #if defined(ENABLE_FUZZING)
 
@@ -403,16 +411,10 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 		{
 		default: rc = RC_ARG; LOGFAIL( rc ); break;
 		case 'tp=\0':
-			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->pubkey ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ai=\0':
 			if( rc = ar_uri_info_cat( buf, bufsize, pARecord->shares, pARecord->threshold, AR_VERSION ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'vf=\0':
-			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->verify ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'pk=\0':
-			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->pubkey ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'as=\0':
 			if( rc = ar_util_vl2txt( buf, bufsize, pARecord->authsig.r ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -447,7 +449,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 
 	size_t buflen = 0;
 	size_t tokenlen = 0;
-	word32 stateArr[] = {'tp=\0', 'si=\0', 'sh=\0', 'ss=\0', 'sc=\0', 0 };
+	word32 stateArr[] = {'tp=\0', 'si=\0', 'ss=\0', 'sh=\0', 'sc=\0', 0 };
 
 #if defined(ENABLE_FUZZING)
 
@@ -479,7 +481,7 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 		{
 		default: rc = RC_ARG; LOGFAIL( rc ); break;
 		case 'tp=\0':
-			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->topic ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->pubkey ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'si=\0':
 			if( rc = ar_uri_info_cat( buf, bufsize, pSRecord->shares, pSRecord->threshold, AR_VERSION ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -531,7 +533,7 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 	if( !((*arecord_out) = malloc( structsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	memset( (*arecord_out), 0, structsize );
 
-	(*arecord_out)->bufmax = bufsize;
+	(*arecord_out)->bufmax = (word16)bufsize;
 
 	// cached, as order is important when bundling
 	size_t uLocation = 0, uClue = 0, uMessage = 0;
@@ -565,18 +567,12 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 			pLocation = pss->data_first + 7; // 7 to remove 'http://'
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
-		case 'tp=0': // topic
-			if( rc = ar_util_txt2vl( (*arecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+		case 'tp=0': // topic / pubkey
+			if( rc = ar_util_txt2vl( (*arecord_out)->pubkey, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'ai=0': // arecord info - version | shares | threshold
 			if( rc = ar_uri_info_parse( &(*arecord_out)->shares, &(*arecord_out)->threshold, &vers, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
 			if( vers != AR_VERSION ) { rc = RC_VERSION; LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'vf=0': // <verify>
-			if( rc = ar_util_txt2vl( (*arecord_out)->verify, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
-			break;
-		case 'pk=0': // <pubkey>
-			if( rc = ar_util_txt2vl( (*arecord_out)->pubkey, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'as=0': // <authsig> - r
 			if( rc = ar_util_txt2vl( (*arecord_out)->authsig.r, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -642,11 +638,11 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 
 	size_t bufsize = 0;
 	ar_uri_parse_vardatalen( &bufsize, szRecord );
-	size_t structsize = sizeof(arAuth) + bufsize;
+	size_t structsize = sizeof(arShare) + bufsize;
 	if( !((*srecord_out) = malloc( structsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	memset( (*srecord_out), 0, structsize );
 
-	(*srecord_out)->bufmax = bufsize;
+	(*srecord_out)->bufmax = (word16)bufsize;
 
 	// cached, as order is important when bundling
 	size_t uLocation = 0, uClue = 0;
@@ -680,8 +676,8 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 			pLocation = pss->data_first + 7; // 7 to remove 'http://'
 			uLocation = pss->data_len - 7; // 7 to remove 'http://'
 			break;
-		case 'tp=0': // topic
-			if( rc = ar_util_txt2vl( (*srecord_out)->topic, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+		case 'tp=0': // topic / pubkey
+			if( rc = ar_util_txt2vl( (*srecord_out)->pubkey, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
 		case 'si=0': // srecord info - version | shares | threshold
 			if( rc = ar_uri_info_parse( &(*srecord_out)->shares, &(*srecord_out)->threshold, &vers, pss->data_first ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -975,8 +971,10 @@ void ar_uri_test()
 		}
 
 		{
+			int stretch = ar_util_rnd32() % 5 +1;
+
 			// test failure from uri streching
-			byteptr bufa_stretch=(byteptr)malloc( strlen( bufa ) +1 +1 ); // +1 for extra char, +1 for /0
+			byteptr bufa_stretch=(byteptr)malloc( strlen( bufa ) +stretch +1 ); // +stretch for stretch, +1 for /0
 
 			for( int j=0; j<400; j++)
 			{
@@ -984,11 +982,13 @@ void ar_uri_test()
 				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); srecordtbl_[i] = 0; }
 
 				size_t ii = ar_util_rnd32() % strlen( bufa );
-				{
-					strncpy_s( bufa_stretch, strlen( bufa ) + 1, bufa, ii );
-					bufa_stretch[ii] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
-					strncpy_s( bufa_stretch +ii +1, strlen( bufa ) -ii, bufa +ii, strlen( bufa ) -1 -ii );
+				strncpy_s( bufa_stretch, 0-1, bufa, ii );
+				for( int k=0; k<stretch; k++) {
+					bufa_stretch[ii +k] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
+				}
+				strncpy_s( bufa_stretch +ii +stretch, 0-1, bufa +ii, strlen( bufa ) -1 -ii );
 
+				{
 					rc = ar_uri_parse_a( &arecord_, bufa_stretch );
 					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[0], bufs0 ); }
 					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 ); }

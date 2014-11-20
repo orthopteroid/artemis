@@ -499,10 +499,6 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 
 	if( strcmp( arecordLoc, szLocation ) != 0 ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
 
-	if( rc = ar_core_check_topic( 0, pARecord, 0, 0 ) ) { LOGFAIL( rc ); goto EXIT; } // conv failure code
-
-	if( rc = ar_core_check_signature( 0, pARecord, 0, 0 ) ) { LOGFAIL( rc ); goto EXIT; } // conv failure code
-
 	{
 		byteptr pBoolArr = 0;
 		
@@ -512,9 +508,7 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 			*invalidBoolArr_out_opt = pBoolArr; // reassign before possible failures below
 		}
 		
-		if( rc = ar_core_check_topic( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL( rc ); goto EXIT; } // conv failure code
-		
-		if( rc = ar_core_check_signature( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL( rc ); goto EXIT; } // conv failure code
+		if( rc = ar_core_check_signatures( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL( rc ); goto EXIT; } // conv failure code
 	}
 
 EXIT:
