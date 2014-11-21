@@ -112,6 +112,52 @@ EXIT:
 	return rc;
 }
 
+//////////////
+
+int ar_core_check_arecord( byteptr szLocation, arAuthptr arecord )
+{
+	int rc = 0;
+
+	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	vlPoint mac;
+	sha1Digest digest;
+	sha1_context c[1];
+	sha1_initial( c );
+
+	ar_core_mac_arecord( c, arecord, AR_VERSION, arecord->msglen + arecord->loclen + arecord->cluelen );
+
+	sha1_final( c, digest );
+	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+
+	if( !cpVerify( arecord->pubkey, mac, &arecord->authsig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
+	if( !memcmp( szLocation, arecord->buf, arecord->loclen ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
+
+EXIT:
+	return rc;
+}
+
+int ar_core_check_srecord( byteptr szLocation, arShareptr srecord )
+{
+	int rc = 0;
+
+	vlPoint mac;
+	sha1Digest digest;
+	sha1_context c[1];
+	sha1_initial( c );
+
+	ar_core_mac_srecord( c, srecord, AR_VERSION, srecord->loclen + srecord->cluelen );
+
+	sha1_final( c, digest );
+	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+	
+	if( !cpVerify( srecord->pubkey, mac, &srecord->sharesig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
+	if( !memcmp( szLocation, srecord->buf, srecord->loclen ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
+
+EXIT:
+	return rc;
+}
+
 //////////////////////////
 
 int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, byte numThres, byteptr inbuf, word16 inbuflen, bytetbl clueTbl, byteptr location )
@@ -364,7 +410,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	// double-check
 
-	if( rc = ar_core_check_signatures( 0, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_core_check_signatures( 0, location, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 
@@ -387,7 +433,7 @@ EXIT:
 	return rc;
 }
 
-int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl, word16 numSRecords )
+int ar_core_decrypt( byteptr* buf_out, byteptr szLocation, arAuthptr arecord, arSharetbl srecordtbl, word16 numSRecords )
 {
 	int rc = 0;
 
@@ -410,7 +456,7 @@ int ar_core_decrypt( byteptr* buf_out, arAuthptr arecord, arSharetbl srecordtbl,
 	////////////
 	// check signatures to ensure location, clue, topic / pubkey have consistient pairing
 
-	if( rc = ar_core_check_signatures( 0, arecord, srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_core_check_signatures( 0, szLocation, arecord, srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	///
 
@@ -459,7 +505,7 @@ EXIT:
 	return rc;
 }
 
-int ar_core_check_signatures( byteptr buf_opt, arAuthptr arecord, arSharetbl srecordtbl_opt, word16 numSRecords )
+int ar_core_check_signatures( byteptr buf_opt, byteptr szLocation, arAuthptr arecord, arSharetbl srecordtbl_opt, word16 numSRecords )
 {
 	int rc = 0;
 
@@ -468,48 +514,20 @@ int ar_core_check_signatures( byteptr buf_opt, arAuthptr arecord, arSharetbl sre
 
 	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
-	// check authsignature to ensure data integreity
-
-	size_t abufused = arecord->msglen + arecord->loclen + arecord->cluelen;
-
-	{
-		vlPoint mac;
-		{
-			sha1Digest digest;
-			sha1_context c[1];
-			sha1_initial( c );
-
-			ar_core_mac_arecord( c, arecord, AR_VERSION, abufused );
-
-			sha1_final( c, digest );
-			vlSetWord32Ptr( mac, AR_MACUNITS, digest );
-		}
-
-		if( !cpVerify( arecord->pubkey, mac, &arecord->authsig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
-	}
+	// check authsignature to ensure data integrity
+	
+	if( rc = ar_core_check_arecord( szLocation, arecord ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	// check sharesignatures to ensure data integreity
 
 	if( srecordtbl_opt && numSRecords > 0 )
 	{
+		int ack = 0;
+		
 		for( int i=0; i<numSRecords; i++ )
 		{
-			arShareptr pSRecord = srecordtbl_opt[i];
-			size_t sbufused = pSRecord->loclen + pSRecord->cluelen;
-
-			vlPoint mac;
-			{
-				sha1Digest digest;
-				sha1_context c[1];
-				sha1_initial( c );
-
-				ar_core_mac_srecord( c, srecordtbl_opt[i], AR_VERSION, sbufused );
-
-				sha1_final( c, digest );
-				vlSetWord32Ptr( mac, AR_MACUNITS, digest );
-			}
-			int fail = !cpVerify( pSRecord->pubkey, mac, &pSRecord->sharesig );
-			fail |= !vlEqual( arecord->pubkey, pSRecord->pubkey );
+			int fail = ar_core_check_srecord( szLocation, srecordtbl_opt[i] );
+			fail |= !vlEqual( arecord->pubkey, srecordtbl_opt[i]->pubkey );
 
 			// return nz rc if there is any failure
 			if( fail ) { rc = RC_SIGNATURE; LOGFAIL( rc ); if( !buf_opt ) { goto EXIT; } }

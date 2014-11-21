@@ -37,6 +37,26 @@ JNIEXPORT jboolean JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeDid
     return jok;
 }
 
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeValidate(JNIEnv * env, jobject obj, jstring jLoc, jstring jRecordArr)
+{
+    byte* cMessage_out = 0;
+    jstring jMessage_out;
+
+    const char *cLoc = (*env)->GetStringUTFChars(env, jLoc, 0);
+    const char *cRecordArr = (*env)->GetStringUTFChars(env, jRecordArr, 0);
+
+    DEBUGPRINT( "cLoc %s", cLoc );
+    DEBUGPRINT( "cRecordArr %s", cRecordArr );
+
+    rc = library_uri_validate( (byte*)cLoc, (byte*)cRecordArr );
+
+    (*env)->ReleaseStringUTFChars( env, jRecordArr, cRecordArr );
+    (*env)->ReleaseStringUTFChars( env, jLoc, cLoc );
+
+    jboolean jok = ( rc != 0 ) ? JNI_TRUE : JNI_FALSE;
+    return jok;
+}
+
 JNIEXPORT jstring JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jLoc, jstring jRecordArr)
 {
     byte* cMessage_out = 0;

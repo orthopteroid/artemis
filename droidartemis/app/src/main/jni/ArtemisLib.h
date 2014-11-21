@@ -49,7 +49,9 @@ JNIEXPORT void JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeCleanup
 
 JNIEXPORT jboolean JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeDidFail(JNIEnv * env, jobject obj);
 
+JNIEXPORT jboolean JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeValidate(JNIEnv * env, jobject obj, jstring jLoc, jstring jRecordArr);
 JNIEXPORT jstring JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeDecode(JNIEnv * env, jobject obj, jstring jLoc, jstring jRecordArr);
+
 JNIEXPORT jstring JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeEncode(JNIEnv * env, jobject obj, jint jKeys, jint jLocks, jstring jLoc, jstring jClues, jstring jMess );
 
 JNIEXPORT jintArray JNICALL Java_com_tereslogica_arcanashare_ArtemisLib_nativeInfo(JNIEnv * env, jobject obj, jstring jRecord);

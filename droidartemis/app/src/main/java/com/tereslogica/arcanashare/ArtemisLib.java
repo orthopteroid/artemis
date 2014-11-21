@@ -16,14 +16,15 @@ public class ArtemisLib {
 
     public native boolean nativeDidFail();
 
+    public native boolean nativeValidate( String location, String recordArr );
     public native String nativeDecode( String location, String recordArr ); // recordArr is \n delimited
+
+    public native String nativeEncode( int keys, int locks, String location, String clues, String message );
 
     public native int[] nativeInfo( String record ); // type, shares, threshold
     public native String nativeTopic( String record );
     public native String nativeClue( String record );
     public native String nativeLocation( String record );
-
-    public native String nativeEncode( int keys, int locks, String location, String clues, String message );
 
     ///////////////////
 

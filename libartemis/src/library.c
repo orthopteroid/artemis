@@ -413,7 +413,7 @@ int library_uri_decoder( byteptr* message_out, byteptr location, byteptr recordA
 
 	// decrypt
 
-	if( rc = ar_core_decrypt( message_out, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_core_decrypt( message_out, location, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 
@@ -431,22 +431,19 @@ EXIT:
 	return rc;
 }
 
-int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, byteptr szRecordArr )
+int library_uri_validate( byteptr szLocation, byteptr szRecordArr )
 {
 	int rc = 0;
 	scanstate ss;
 
 	arAuth* pARecord = 0;
 	arShareptr* srecordtbl = 0;
-	byteptr arecordLoc = 0;
 	byteptr recordArr_rw = 0;
 
 	word16 arecordCount = 0;
 	word16 srecordCount = 0;
 	word16 srecordInit = 0;
 
-	if( invalidBoolArr_out_opt ) { *invalidBoolArr_out_opt = 0; }
-	
 	if( !szLocation ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !szRecordArr ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
@@ -470,11 +467,11 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 		}
 		if( rc < 0 ) { LOGFAIL( rc ); goto EXIT; }
 
-		if( arecordCount != 1 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
-		if( srecordCount < 2 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
+		if( arecordCount > 1 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 		// create share-objects
 
+		if( srecordCount > 0 )
 		{
 			size_t tblsize = sizeof(arShareptr) * srecordCount;
 			if( !(srecordtbl = malloc( tblsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
@@ -486,7 +483,6 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 		{
 			if( ss.type == 1 ) {
 				if( rc = ar_uri_parse_a( &pARecord, ss.s_record ) ) { LOGFAIL( rc ); goto EXIT; }
-				if( rc = library_uri_location( &arecordLoc, ss.s_record ) ) { LOGFAIL( rc ); goto EXIT; }
 			} else {
 				if( rc = ar_uri_parse_s( &(srecordtbl[ srecordInit++ ]), ss.s_record ) ) { LOGFAIL( rc ); goto EXIT; }
 			}
@@ -497,23 +493,18 @@ int library_uri_validate( byteptr* invalidBoolArr_out_opt, byteptr szLocation, b
 
 	// validate
 
-	if( strcmp( arecordLoc, szLocation ) != 0 ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
-
+	if( pARecord )
 	{
-		byteptr pBoolArr = 0;
-		
-		if( invalidBoolArr_out_opt )
-		{
-			if( !(pBoolArr = malloc( srecordCount )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-			*invalidBoolArr_out_opt = pBoolArr; // reassign before possible failures below
-		}
-		
-		if( rc = ar_core_check_signatures( pBoolArr, pARecord, srecordtbl, srecordCount ) ) { LOGFAIL( rc ); goto EXIT; } // conv failure code
+		if( rc = ar_core_check_arecord( szLocation, pARecord ) ) { LOGFAIL( rc ); goto EXIT; }
+	}
+	
+	for( size_t i=0; i<srecordCount; i++ )
+	{
+		if( rc = ar_core_check_arecord( szLocation, srecordtbl[i] ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 EXIT:
 
-	if( arecordLoc ) free( arecordLoc );
 	if( pARecord ) free( pARecord );
 	if( srecordtbl )
 	{
@@ -521,8 +512,6 @@ EXIT:
 		free( srecordtbl );
 	}
 	if( recordArr_rw ) free( recordArr_rw );
-
-	if( rc && invalidBoolArr_out_opt && *invalidBoolArr_out_opt ) { free( *invalidBoolArr_out_opt ); *invalidBoolArr_out_opt = 0; }
 
 	return rc;
 }

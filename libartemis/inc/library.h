@@ -15,7 +15,7 @@ DLLDECL void library_cleanup();
 
 DLLDECL int library_uri_info( word16ptr pType, word16ptr pShares, byteptr pThreshold, byteptr szShare );
 
-DLLDECL int library_uri_validate( byteptr* invalidBoolArr_out, byteptr szLocation, byteptr szRecordArr );
+DLLDECL int library_uri_validate( byteptr szLocation, byteptr szRecordArr );
 
 DLLDECL int library_uri_topic( byteptr* topic_out, byteptr szShare );
 DLLDECL int library_uri_clue( byteptr* clue_out, byteptr szShare );

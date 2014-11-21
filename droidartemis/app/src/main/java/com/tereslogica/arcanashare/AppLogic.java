@@ -32,6 +32,9 @@ public class AppLogic {
     ///////////////////
 
     private void addToken_helper(String sToken) throws Exception {
+        String uri = cxt.getResources().getString(R.string.app_loc);
+        if( ArtemisLib.Get().nativeValidate( uri, sToken ) ) { detectedError = true; throw new Exception(); }
+
         ArtemisShare oShare = ArtemisSQL.Get().getShareInfo( sToken );
         if( oShare != null ) return; // got it already
 
