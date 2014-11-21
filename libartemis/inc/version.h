@@ -14,8 +14,8 @@
 #define AR_SESSKEYUNITS		AR_UNITS-1 // 8 units @ 136 gf_m
 #define AR_PRIVKEYUNITS		AR_UNITS-1 // 8 units @ 136 gf_m
 
-#define AR_LOCSTR	"tereslogica.com"
-#define AR_LOCHASH	0x0D
+#define AR_LOCSTR	"as.tereslogica.com"
+#define AR_LOCHASH	0x10
 
 #define AR_VERSION 1
 #define AR_DEMO
