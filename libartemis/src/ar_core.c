@@ -15,7 +15,6 @@
 #include "version.h" // for version related defines
 
 // some sanity checks
-STATICASSERT( AR_TOPICUNITS < VL_UNITS );
 STATICASSERT( AR_MACUNITS < VL_UNITS );
 STATICASSERT( AR_VERIFYUNITS < VL_UNITS );
 STATICASSERT( AR_CRYPTKEYUNITS < VL_UNITS );
@@ -74,19 +73,28 @@ static void sha1_process_blob16( sha1_context* c, word16 blob16 )
 	memset( composebuf, 0, sizeof(composebuf) );
 }
 
-//////
-
-static void ar_core_mac_arecord( sha1_context* c, arAuthptr pa, byte version, size_t buflen )
+static void ar_core_mac_arecord( vlPoint mac, arAuthptr pa, byte version, size_t buflen )
 {
+	sha1Digest digest;
+	sha1_context c[1];
+	sha1_initial( c );
+
 	sha1_process_vlpoint( c, pa->pubkey );
 	sha1_process_blob16( c, pa->shares );
 	sha1_process_blob16( c, pa->threshold );
 	sha1_process_blob16( c, version );
 	sha1_process( c, pa->buf, (unsigned)(buflen) );
+
+	sha1_final( c, digest );
+	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
 }
 
-static void ar_core_mac_srecord( sha1_context* c, arShareptr ps, byte version, size_t buflen )
+static void ar_core_mac_srecord( vlPoint mac, arShareptr ps, byte version, size_t buflen )
 {
+	sha1Digest digest;
+	sha1_context c[1];
+	sha1_initial( c );
+
 	sha1_process_vlpoint( c, ps->pubkey );
 	sha1_process_blob16( c, ps->shares );
 	sha1_process_blob16( c, ps->threshold );
@@ -94,9 +102,10 @@ static void ar_core_mac_srecord( sha1_context* c, arShareptr ps, byte version, s
 	sha1_process_blob16( c, ps->shareid );
 	sha1_process_vlpoint( c, ps->share );
 	sha1_process( c, ps->buf, (unsigned)(buflen) );
-}
 
-//////////////////////////
+	sha1_final( c, digest );
+	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+}
 
 static int ar_core_sign( cpPair* sig, const vlPoint session, const vlPoint vlPublicKey, const vlPoint vlPrivateKey, const vlPoint mac )
 {
@@ -112,26 +121,63 @@ EXIT:
 	return rc;
 }
 
+static int ar_core_makekeypair( vlPoint pub, vlPoint pri )
+{
+	int rc = 0;
+
+	// use placeholder vars to test the signature
+	cpPair sig;
+	vlPoint mac;
+	vlPoint session;
+	vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
+	vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
+
+	size_t i = 0;
+	for( rc = RC_PRIVATEKEY; rc == RC_PRIVATEKEY; )
+	{
+		if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
+
+		vlSetRandom( pri, AR_PRIVKEYUNITS, &ar_util_rnd16 );
+
+		cpMakePublicKey( pub, pri );
+
+		rc = ar_core_sign( &sig, session, pub, pri, mac );
+	}
+	if( rc ) { LOGFAIL( rc ); goto EXIT; }
+EXIT:
+	return rc;
+}
+
+static void ar_core_rc4( byteptr buf, size_t buflen, gfPoint gfKey )
+{
+	vlPoint vlKey;
+	gfPack( gfKey, vlKey );
+
+	word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlKey, 0 ));
+
+	size_t deltalen = 0;
+	byte packetEndianBArr[ sizeof(vlPoint) +2 ]; // +2 for spare
+	ar_util_u16_host2packet( &deltalen, packetEndianBArr, sizeof(vlPoint), vlKey + 1, vlKey[0] );
+	rc4( packetEndianBArr, vlKey[0] *sizeof(vlunit), rc4cranks, buf, (word32)buflen );
+
+	vlClear( vlKey );
+}
+
 //////////////
 
 int ar_core_check_arecord( byteptr szLocation, arAuthptr arecord )
 {
 	int rc = 0;
 
+	if( !szLocation ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
+	if( memcmp( szLocation, arecord->buf, arecord->loclen ) ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
+
 	vlPoint mac;
-	sha1Digest digest;
-	sha1_context c[1];
-	sha1_initial( c );
-
-	ar_core_mac_arecord( c, arecord, AR_VERSION, arecord->msglen + arecord->loclen + arecord->cluelen );
-
-	sha1_final( c, digest );
-	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+	ar_core_mac_arecord( mac, arecord, AR_VERSION, arecord->msglen + arecord->loclen + arecord->cluelen );
 
 	if( !cpVerify( arecord->pubkey, mac, &arecord->authsig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
-	if( !memcmp( szLocation, arecord->buf, arecord->loclen ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 	return rc;
@@ -141,18 +187,15 @@ int ar_core_check_srecord( byteptr szLocation, arShareptr srecord )
 {
 	int rc = 0;
 
+	if( !szLocation ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !srecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	if( memcmp( szLocation, srecord->buf, srecord->loclen ) ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
+
 	vlPoint mac;
-	sha1Digest digest;
-	sha1_context c[1];
-	sha1_initial( c );
+	ar_core_mac_srecord( mac, srecord, AR_VERSION, srecord->loclen + srecord->cluelen );
 
-	ar_core_mac_srecord( c, srecord, AR_VERSION, srecord->loclen + srecord->cluelen );
-
-	sha1_final( c, digest );
-	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
-	
 	if( !cpVerify( srecord->pubkey, mac, &srecord->sharesig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
-	if( !memcmp( szLocation, srecord->buf, srecord->loclen ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 	return rc;
@@ -160,7 +203,7 @@ EXIT:
 
 //////////////////////////
 
-int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, byte numThres, byteptr inbuf, word16 inbuflen, bytetbl clueTbl, byteptr location )
+int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, byte numThres, byteptr inbuf, word16 inbuflen, bytetbl clueTbl, byteptr szLocation )
 {
 	int rc = 0;
 	
@@ -182,11 +225,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	if( numShares < 2 ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 	if( numShares < numThres ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
 
-    {
-        int clueCount = 0;
-        for( byteptr* ppClue = clueTbl; *ppClue; ppClue++ ) { clueCount++; }
-        if( clueCount != (numShares +1) ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; } // +1 for message clue
-    }
+	if( rc = ar_util_checkTbl( (void**)clueTbl, (numShares +1) ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	size_t bug = 0;
 
@@ -195,7 +234,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 #define BIT_EQUAL(a,b) ( ~( (a) ^ (b) ) & (b) )
 #define BIT_MASK(a,b)  ( ~( (a) & (b) ) ^ (b) )
 
-	// raise bug when we're called outside demo limits and address has bits 5 & 2 (ie, we've been cracked)
+	// anti-crack: raise bug when we're called outside demo limits and address has bits 5 & 2
     bug = ( ((numShares >> 3) | (numThres >> 2)) & BIT_MASK( (size_t)inbuf, 0x22) ) ? 1 : 0;
 
 #endif
@@ -203,7 +242,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	///////////
 	// general vars
 
-	size_t loclen = location ? strlen( location ) : 0;
+	size_t loclen = szLocation ? strlen( szLocation ) : 0;
 	if( loclen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t acluelen = strlen( clueTbl[ 0 ] ); // 0 for message clue
@@ -212,9 +251,23 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	///////////
 	// alloc tmp storage
 
-	if( !(shareArr = malloc( sizeof(gfPoint) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	if( !(shareIDArr = malloc( sizeof(word16) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+	{
+		word32 ordering[3] = {0,1,2};
+
+#if !defined(_DEBUG) || defined(ENABLE_FUZZING)
+		ar_util_rnd32_reorder( ordering, sizeof(ordering)/sizeof(word32) );
+#endif
+
+		for( size_t i=0; i<sizeof(ordering)/sizeof(word32); i++ )
+		{
+			switch( ordering[i] )
+			{
+			case 0: if( !(shareArr = malloc( sizeof(gfPoint) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } break;
+			case 1: if( !(shareIDArr = malloc( sizeof(word16) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } break;
+			case 2: if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } break;
+			}
+		}
+	}
 
 	///////////
 	// alloc return values
@@ -247,7 +300,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	arecord_out[0]->msglen = inbuflen;
 
 	// fill buf with location, clue (if applic) then message
-	memcpy_s( arecord_out[0]->buf, arecord_out[0]->bufmax, location, loclen );
+	memcpy_s( arecord_out[0]->buf, arecord_out[0]->bufmax, szLocation, loclen );
 	memcpy_s( arecord_out[0]->buf + loclen, arecord_out[0]->bufmax - loclen, clueTbl[0], acluelen );
 	memcpy_s( arecord_out[0]->buf + msgoffset, arecord_out[0]->bufmax - msgoffset, inbuf, inbuflen );
 
@@ -261,19 +314,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	}
 
 	// cipher the cleartext
-	{
-		vlPoint vlCryptkey;
-		gfPack( gfCryptCoefArr[0], vlCryptkey );
-
-		word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlCryptkey, 0 ));
-
-		size_t deltalen = 0;
-		byte cryptkeyBArr[ sizeof(vlPoint) +2 ]; // +2 for spare
-		ar_util_u16_host2packet( &deltalen, cryptkeyBArr, sizeof(vlPoint), vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, vlCryptkey[0] *2, rc4cranks, arecord_out[0]->buf + msgoffset, inbuflen ); // *2 for characters
-
-		vlClear( vlCryptkey );
-	}
+	ar_core_rc4( arecord_out[0]->buf + msgoffset, inbuflen, gfCryptCoefArr[0] );
 
 	// split the shares
 	ar_shamir_splitsecret( shareArr, shareIDArr, numShares, gfCryptCoefArr, numThres );
@@ -282,45 +323,11 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	memset( gfCryptCoefArr, 0, sizeof(gfPoint) * numThres );
 
 	/////////
-	// construct topic from location, cryptext and mclue
-
-	vlPoint topic;
-	{
-		sha1Digest digest;
-		sha1_context c[1];
-		sha1_initial( c );
-
-		sha1_process( c, arecord_out[0]->buf, (unsigned)(abufused) );
-		sha1_final( c, digest );
-		vlSetWord32Ptr( topic, AR_TOPICUNITS, digest );
-	}
-
-	/////////
 	// construct a valid keypair
 
 	vlPoint pubSigningkey, priSigningkey;
 
-	{
-		// use placeholder vars to test the signature
-		cpPair sig;
-		vlPoint mac;
-		vlPoint session;
-		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
-		vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
-
-		size_t i = 0;
-		for( rc = RC_PRIVATEKEY; rc == RC_PRIVATEKEY; )
-		{
-			if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
-
-			vlSetRandom( priSigningkey, AR_PRIVKEYUNITS, &ar_util_rnd16 );
-
-			cpMakePublicKey( pubSigningkey, priSigningkey );
-
-			rc = ar_core_sign( &sig, session, pubSigningkey, priSigningkey, mac );
-		}
-		if( rc ) { LOGFAIL( rc ); goto EXIT; }
-	}
+	if( rc = ar_core_makekeypair( pubSigningkey, priSigningkey ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	//////////
 	// sign the auth record
@@ -330,27 +337,15 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	vlCopy( arecord_out[0]->pubkey, pubSigningkey );
 
-	cpPair authsig;
 	{
 		vlPoint mac;
-		{
-			sha1Digest digest;
-			sha1_context c[1];
-			sha1_initial( c );
-
-			ar_core_mac_arecord( c, arecord_out[0], AR_VERSION, abufused );
-
-			sha1_final( c, digest );
-			vlSetWord32Ptr( mac, AR_MACUNITS, digest );
-		}
+		ar_core_mac_arecord( mac, arecord_out[0], AR_VERSION, abufused );
 
 		vlPoint session;
 		vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
-		if( rc = ar_core_sign( &authsig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_core_sign( &arecord_out[0]->authsig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
-
-	cpCopy( &arecord_out[0]->authsig, &authsig );
 
 	/////////////
 	// sign the produced share records
@@ -363,12 +358,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		(*srecordtbl_out)[i]->threshold = numThres;
 		(*srecordtbl_out)[i]->shareid = shareIDArr[i];
 
-		vlPoint vlShare;
-		{
-			vlClear( vlShare );
-			gfPack( shareArr[i], vlShare );
-		}
-		vlCopy( (*srecordtbl_out)[i]->share, vlShare );
+		gfPack( shareArr[i], (*srecordtbl_out)[i]->share );
 
 		////////////
 
@@ -379,38 +369,26 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		(*srecordtbl_out)[i]->loclen = (word16)loclen;
 		(*srecordtbl_out)[i]->cluelen = (word16)scluelen;
 			
-		memcpy_s( (*srecordtbl_out)[i]->buf,			(*srecordtbl_out)[i]->bufmax,				location,		loclen );
+		memcpy_s( (*srecordtbl_out)[i]->buf,			(*srecordtbl_out)[i]->bufmax,				szLocation,		loclen );
 		memcpy_s( (*srecordtbl_out)[i]->buf + loclen,	(*srecordtbl_out)[i]->bufmax - loclen,		clueTbl[i+1],	scluelen );
 
 		//////////
 		// construct sharesignature to ensure consistiency between topic, shareid, share and clue
 
-		cpPair sharesig;
 		{
 			vlPoint mac;
-			{
-				sha1Digest digest;
-				sha1_context c[1];
-				sha1_initial( c );
-
-				ar_core_mac_srecord( c, (*srecordtbl_out)[i], AR_VERSION, sbufused );
-
-				sha1_final( c, digest );
-				vlSetWord32Ptr( mac, AR_MACUNITS, digest );
-			}
+			ar_core_mac_srecord( mac, (*srecordtbl_out)[i], AR_VERSION, sbufused );
 
 			vlPoint session;
 			vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
-			if( rc = ar_core_sign( &sharesig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_core_sign( &(*srecordtbl_out)[i]->sharesig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 		}
-
-		cpCopy( &(*srecordtbl_out)[i]->sharesig, &sharesig );
 	}
 
-	// double-check
+	// double-check signatures
 
-	if( rc = ar_core_check_signatures( 0, location, *arecord_out, (*srecordtbl_out), numShares ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_core_check_recordset( szLocation, *arecord_out, *srecordtbl_out, numShares ) ) { LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 
@@ -424,10 +402,10 @@ EXIT:
 		free( *srecordtbl_out );
 	}
 	
-	// check baked-location and cause a signature-fail when loc hashes wrong
+	// anti-crack: check baked-location and cause a signature-fail when loc hashes wrong
 	if( arecord_out && *arecord_out )
 	{
-		(*arecord_out)->authsig.r[1] += ( ar_util_strcrc( location ) ^ AR_LOCHASH ) ? 1 : 0;
+		(*arecord_out)->authsig.r[1] += ( ar_util_strcrc( szLocation ) ^ AR_LOCHASH );
 	}
 
 	return rc;
@@ -446,19 +424,14 @@ int ar_core_decrypt( byteptr* buf_out, byteptr szLocation, arAuthptr arecord, ar
 
 	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !srecordtbl ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
-	for( int i = 0; i < numSRecords; i++ )
-	{
-		if( !srecordtbl[i] ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
-	}
 
 	if( numSRecords < arecord->threshold ) { rc = RC_INSUFFICIENT; LOGFAIL( rc ); goto EXIT; }
-	
-	////////////
+
+	if( rc = ar_util_checkTbl( (void**)srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
+
 	// check signatures to ensure location, clue, topic / pubkey have consistient pairing
 
-	if( rc = ar_core_check_signatures( 0, szLocation, arecord, srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
-
-	///
+	if( rc = ar_core_check_recordset( szLocation, arecord, srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
 
 	if( !(shareArr = malloc( sizeof(gfPoint) * numSRecords )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	if( !(shareIDArr = malloc( sizeof(word16) * numSRecords )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
@@ -469,28 +442,18 @@ int ar_core_decrypt( byteptr* buf_out, byteptr szLocation, arAuthptr arecord, ar
 		shareIDArr[i] = srecordtbl[i]->shareid;
 	}
 
-	///
+	// alloc buffer, copy and decipher
 
 	if( !(*buf_out = malloc( arecord->msglen )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
 	{	
 		byteptr cryptext = arecord->buf + arecord->loclen + arecord->cluelen;
 		memcpy_s( *buf_out, arecord->msglen, cryptext, arecord->msglen );
-	}
 
-	{
 		gfPoint gfCryptkey;
 		ar_shamir_recoversecret( gfCryptkey, shareIDArr, shareArr, numSRecords );
 
-		vlPoint vlCryptkey;
-		gfPack( gfCryptkey, vlCryptkey );
-
-		word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlCryptkey, 0 ));
-
-		size_t deltalen = 0;
-		byte cryptkeyBArr[ sizeof(vlPoint) +2 ]; // +2 for spare
-		ar_util_u16_host2packet( &deltalen, cryptkeyBArr, sizeof(vlPoint), vlCryptkey + 1, vlCryptkey[0] );
-		rc4( cryptkeyBArr, vlCryptkey[0] *2, rc4cranks, *buf_out, arecord->msglen ); // *2 for characters
+		ar_core_rc4( *buf_out, arecord->msglen, gfCryptkey );
 
 		gfClear( gfCryptkey );
 	}
@@ -505,36 +468,26 @@ EXIT:
 	return rc;
 }
 
-int ar_core_check_signatures( byteptr buf_opt, byteptr szLocation, arAuthptr arecord, arSharetbl srecordtbl_opt, word16 numSRecords )
+int ar_core_check_recordset( byteptr szLocation, arAuthptr arecord, arSharetbl srecordtbl, word16 numSRecords )
 {
 	int rc = 0;
 
-	// set 'fail' markings
-	if( buf_opt ) { for( int i=0; i<numSRecords; i++ ) { buf_opt[i] = 0xFF; } }
-
+	if( !szLocation ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !arecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !srecordtbl ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 
-	// check authsignature to ensure data integrity
-	
+	if( rc = ar_util_checkTbl( (void**)srecordtbl, numSRecords ) ) { LOGFAIL( rc ); goto EXIT; }
+
+	for( int i=0; i<numSRecords; i++ )
+	{
+		if( !vlEqual( arecord->pubkey, srecordtbl[i]->pubkey ) ) { rc = RC_TOPIC; LOGFAIL( rc ); goto EXIT; }
+	}
+
 	if( rc = ar_core_check_arecord( szLocation, arecord ) ) { LOGFAIL( rc ); goto EXIT; }
 
-	// check sharesignatures to ensure data integreity
-
-	if( srecordtbl_opt && numSRecords > 0 )
+	for( int i=0; i<numSRecords; i++ )
 	{
-		int ack = 0;
-		
-		for( int i=0; i<numSRecords; i++ )
-		{
-			int fail = ar_core_check_srecord( szLocation, srecordtbl_opt[i] );
-			fail |= !vlEqual( arecord->pubkey, srecordtbl_opt[i]->pubkey );
-
-			// return nz rc if there is any failure
-			if( fail ) { rc = RC_SIGNATURE; LOGFAIL( rc ); if( !buf_opt ) { goto EXIT; } }
-			else {
-				if( buf_opt ) { buf_opt[i] = 0; } // remove individual fail markings
-			}
-		}
+		if( rc = ar_core_check_srecord( szLocation, srecordtbl[i] ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 EXIT:
@@ -556,20 +509,16 @@ void ar_core_test()
 	char* cluetbl[4] = {"topiclue", "clue1", "clue2", 0}; // is a table, must end with 0
 	int rc = 0;
 
-	byte checkarr[2] = {0,0};
-
 	if( !(cleartextin = malloc( strlen(reftextin)+1 )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 	strcpy_s( cleartextin, strlen(reftextin)+1, reftextin );
 
 	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, AR_LOCSTR ); // +1 to include \0
 	TESTASSERT( rc == 0 );
 
-	rc = ar_core_check_signatures( checkarr, arecord, srecordtbl, 2 );
+	rc = ar_core_check_recordset( AR_LOCSTR, arecord, srecordtbl, 2 );
 	TESTASSERT( rc == 0 );
-	TESTASSERT( checkarr[0] == 0 );
-	TESTASSERT( checkarr[1] == 0 );
 
-	rc = ar_core_decrypt( &cleartext_out, arecord, srecordtbl, 2 );
+	rc = ar_core_decrypt( &cleartext_out, AR_LOCSTR, arecord, srecordtbl, 2 );
 	TESTASSERT( rc == 0 );
 
 	TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
@@ -581,17 +530,13 @@ void ar_core_test()
 
 	srecordtbl[1]->pubkey[0] = 0; // break topic of share 2
 
-	rc = ar_core_check_signatures( checkarr, arecord, srecordtbl, 2 );
+	rc = ar_core_check_recordset( AR_LOCSTR, arecord, srecordtbl, 2 );
 	TESTASSERT( rc != 0 );
-	TESTASSERT( !checkarr[0] );
-	TESTASSERT( checkarr[1] );
 
 	arecord->pubkey[0] = 0; // break auth record topic
 
-	rc = ar_core_check_signatures( checkarr, arecord, srecordtbl, 2 );
+	rc = ar_core_check_recordset( AR_LOCSTR, arecord, srecordtbl, 2 );
 	TESTASSERT( rc != 0 );
-	TESTASSERT( checkarr[0] ); // all fail
-	TESTASSERT( checkarr[1] );
 
 #endif // ENABLE_FUZZING
 
