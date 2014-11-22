@@ -67,10 +67,6 @@ PRAGMA_OPTIMIZE
 
 ////////////////////
 
-INLINE byte ar_util_strcrc( byteptr s ) { byte x = 0x41; while( *s ) { x += (x << 1) ^ *(s++); } return x; }
-
-////////////////////
-
 int ar_util_istest()
 {
 #if defined(ENABLE_TESTS)

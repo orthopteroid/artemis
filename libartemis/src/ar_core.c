@@ -55,6 +55,8 @@ STATICASSERT( AR_PRIVKEYUNITS < VL_UNITS );
 
 //////////////////////////
 
+static INLINE byte strcrc( byteptr s ) { byte x = 0x41; while( *s ) { x += (x << 1) ^ *(s++); } return x; }
+
 static void sha1_process_vlpoint( sha1_context* c, vlPoint v )
 {
 	size_t deltalen = 0;
@@ -405,7 +407,7 @@ EXIT:
 	// anti-crack: check baked-location and cause a signature-fail when loc hashes wrong
 	if( arecord_out && *arecord_out )
 	{
-		(*arecord_out)->authsig.r[1] += ( ar_util_strcrc( szLocation ) ^ AR_LOCHASH );
+		(*arecord_out)->authsig.r[1] += ( strcrc( szLocation ) ^ AR_LOCHASH );
 	}
 
 	return rc;

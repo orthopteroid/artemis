@@ -16,11 +16,13 @@
 
 #include <stdio.h>
 
+static INLINE byte strcrc( byteptr s ) { byte x = 0x41; while( *s ) { x += (x << 1) ^ *(s++); } return x; }
+
 void test_all()
 {
 
-	DEBUGPRINT( "*************\nAR_LOCSTR %s\nAR_LOCHASH 0x%X\n*************\n", AR_LOCSTR, ar_util_strcrc( AR_LOCSTR ) );
-	ASSERT( ar_util_strcrc( AR_LOCSTR ) == AR_LOCHASH );
+	DEBUGPRINT( "*************\nAR_LOCSTR %s\nAR_LOCHASH 0x%X\n*************\n", AR_LOCSTR, strcrc( AR_LOCSTR ) );
+	ASSERT( strcrc( AR_LOCSTR ) == AR_LOCHASH );
 
 #if defined(ENABLE_TESTS)
 
