@@ -202,7 +202,7 @@ void ar_shamir_test()
 			TESTASSERT( rc == 0 );
 
 			if(1) {
-				DEBUGPRINT( "%d ", i);
+				if( i > 1 ) { DEBUGPRINT( "%d ", i); }
 			}
 
 			if(0) {
