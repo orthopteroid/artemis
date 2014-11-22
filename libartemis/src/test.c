@@ -36,11 +36,29 @@ void test_all()
 	printf("# tests complete\n");
 
 	byteptr shares;
-	
-	library_uri_encoder( &shares, 5, 5, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", "message five" );  printf( "%s\n", shares ); library_free( &shares );
-	library_uri_encoder( &shares, 5, 4, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", "message four" );  printf( "%s\n", shares ); library_free( &shares );
-	library_uri_encoder( &shares, 5, 3, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", "message three" ); printf( "%s\n", shares ); library_free( &shares );
-	library_uri_encoder( &shares, 5, 2, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", "message two" );   printf( "%s\n", shares ); library_free( &shares );
+
+	struct {
+		int locks; char* message;
+	} testdata[4] = { {5, "message five"}, {4, "message four"}, {3, "message three"}, {2, "message two"} };
+
+	for( int i = 0; i < 4 ; i++ ) {
+		library_uri_encoder( &shares, 5, testdata[i].locks, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", testdata[i].message );
+		{
+			putch('"');
+			for( byteptr s=shares; *s; s++)
+			{
+				if( *s == '\n') {
+					putch('"'); putch(',');
+					putch( *s );
+					putch('"');
+				} else {
+					putch( *s );
+				}
+			}
+			putch('"'); putch(','); putch('\n');
+		}
+		library_free( &shares );
+	}
 
 #else
 
