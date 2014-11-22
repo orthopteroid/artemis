@@ -7,6 +7,7 @@
 #include "ec_vlong.h"
 
 int ar_util_buildByteTbl( bytetbl* table_out, byteptr arr, size_t len );
+int ar_util_checkTbl( void** tbl, size_t len );
 
 // text conversion/copy routines that write to memy in big endian for printing or hashing
 // cant use these for the sha1 digest as it is already big endian
@@ -41,6 +42,8 @@ const char* ar_util_rclookup( int rc );
 
 word32 ar_util_rnd32();
 word16 ar_util_rnd16();
+
+void ar_util_rnd32_reorder( word32ptr buf, size_t len );
 
 ////////
 

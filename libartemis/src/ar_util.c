@@ -117,6 +117,17 @@ EXIT:
 	return rc;
 }
 
+int ar_util_checkTbl( void** tbl, size_t len )
+{
+	int rc = 0;
+	for( size_t i = 0; i < len; i++ )
+	{
+		if( !tbl[i] ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	}
+EXIT:
+	return rc;
+}
+
 ////////////////////
 
 int ar_util_30Bto6BA( byteptr out, word32 in )
@@ -404,6 +415,16 @@ word32 ar_util_rnd32()
 word16 ar_util_rnd16()
 {
 	return (word16)ar_util_rnd32();
+}
+
+#define BSWAP(a,b) do { word32 t = a; a=b; b=t; } while(0);
+
+void ar_util_rnd32_reorder( word32ptr buf, size_t len )
+{
+	for( size_t i=0; i<len; i++ ) {
+		size_t j = ar_util_rnd32() % len;
+		BSWAP( buf[i], buf[ j ] ); // shuffle
+	}
 }
 
 int ar_util_isvalid7bit( byteptr szRecord )
