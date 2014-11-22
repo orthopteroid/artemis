@@ -142,11 +142,8 @@
 
 	#include <crtdefs.h>
 
-	//#if defined(WINDLL_EXPORTS)
+	#define INLINE __inline
 	#define DLLDECL __declspec(dllexport)
-	//#else // WINDLL_EXPORTS
-	//#define DLLDECL __declspec(dllimport)
-	//#endif // WINDLL_EXPORTS
 
 	#if !defined(strdup)
 		#define strdup _strdup
@@ -160,7 +157,8 @@
 
 	#include <stddef.h>
 
-	#define DLLDECL __attribute__ ((visibility ("default")))
+	#define INLINE __attribute__((always_inline))
+	#define DLLDECL __attribute__((visibility ("default")))
 
 	#define max(a,b) ((a)>(b)?(a):(b))
 	#define memcpy_s(a,b,c,d) memcpy(a,c,d)
