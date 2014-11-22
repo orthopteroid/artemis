@@ -500,7 +500,7 @@ int library_uri_validate( byteptr szLocation, byteptr szRecordArr )
 	
 	for( size_t i=0; i<srecordCount; i++ )
 	{
-		if( rc = ar_core_check_arecord( szLocation, srecordtbl[i] ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_core_check_srecord( szLocation, srecordtbl[i] ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 EXIT:
@@ -527,7 +527,6 @@ void library_test()
 
 	byteptr recordArr;
 	byteptr message;
-	byteptr validation;
 
 	int shares = 2;
 	int threshold = 2;
@@ -545,20 +544,15 @@ void library_test()
 
 		TESTASSERT( strcmp( message_in, message ) == 0 );
 
-		rc = library_uri_validate( &validation, location, recordArr );
-		TESTASSERT( rc == 0 );
-		free( validation );
-
-		rc = library_uri_validate( 0, location, recordArr );
+		rc = library_uri_validate( location, recordArr );
 		TESTASSERT( rc == 0 );
 
 #if defined(ENABLE_FUZZING)
 
 		// now break something
 		recordArr[ 3 + strlen(recordArr) / 2 ]++;
-		rc = library_uri_validate( &validation, location, recordArr );
+		rc = library_uri_validate( location, recordArr );
 		TESTASSERT( rc != 0 );
-		free( validation );
 
 #endif // ENABLE_FUZZING
 
@@ -577,15 +571,11 @@ void library_test()
 
 		TESTASSERT( strcmp( message_in, message ) == 0 );
 
-		rc = library_uri_validate( &validation, location, recordArr );
-		TESTASSERT( rc == 0 );
-		free( validation );
-
-		rc = library_uri_validate( 0, location, recordArr );
+		rc = library_uri_validate( location, recordArr );
 		TESTASSERT( rc == 0 );
 
 		location[0]++; // break location
-		rc = library_uri_validate( 0, location, recordArr );
+		rc = library_uri_validate( location, recordArr );
 		TESTASSERT( rc == RC_LOCATION );
 		location[0]--; // unbreak location
 
