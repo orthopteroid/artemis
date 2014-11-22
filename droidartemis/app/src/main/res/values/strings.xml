@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">ArcanaShare</string>
-    <string name="app_loc">as.tereslogica.com</string>
+    <string name="app_loc">arcanashare.com</string>
     <string name="app_weblink">http://tereslogica.com</string>
     <string name="menu_testtoken">Debug Scan Test</string>
     <string name="menu_sort">Sorting</string>
@@ -59,7 +59,6 @@ This software contains components developed by tereslogica &lt;tereslogica@gmail
 \n\nzxing, Copyright 2007 ZXing Authors, Apache 2.0 License, http://www.apache.org/licenses/LICENSE-2.0.html
 \n\nsha1, Public Domain, License granted by
  Steve Reid &lt;steve@edmweb.com&gt;
-\n\n1-wire, Copyright 2000 Dallas Semiconductor Corporation, Public Use License
     </string>
 
 </resources>

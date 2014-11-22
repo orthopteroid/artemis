@@ -32,7 +32,7 @@ int ar_util_u16_hexdecode( size_t* deltalen, word16ptr buf, size_t bufsize, byte
 int ar_util_strcat( byteptr dst, size_t dstsize, byteptr src );
 int ar_util_strncat( byteptr dst, size_t dstsize, byteptr src, size_t srcsize );
 
-INLINE byte ar_util_strcrc( byteptr s ) { byte x = 0x41; while( *s ) { x += (x << 1) ^ *(s++); } return x; }
+INLINE byte ar_util_strcrc( byteptr s );
 
 ////////
 
