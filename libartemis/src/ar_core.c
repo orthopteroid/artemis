@@ -61,7 +61,7 @@ static void sha1_process_vlpoint( sha1_context* c, vlPoint v )
 	size_t deltalen = 0;
 	char composebuf[ sizeof(vlPoint) ];
 	ar_util_u16_host2packet( &deltalen, composebuf, sizeof(vlPoint), v+1, v[0] );
-	sha1_process( c, composebuf, (unsigned)(v[0] * sizeof(word16)) );
+	sha1_process( c, composebuf, (unsigned)(v[0] * sizeof(vlunit)) );
 	memset( composebuf, 0, sizeof(composebuf) );
 }
 

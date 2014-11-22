@@ -52,7 +52,7 @@ int vlEqual (const vlPoint p, const vlPoint q)
 	if( p[0] != q[0] )
 		return 0;
 	else
-		return memcmp( p, q, (p[0] + 1) * sizeof(word16) ) ? 0 : 1;
+		return memcmp( p, q, (p[0] + 1) * sizeof(vlunit) ) ? 0 : 1;
 } /* vlEqual */
 
 
@@ -66,7 +66,7 @@ void vlCopy (vlPoint p, const vlPoint q)
 	/* sets p := q */
 {
 	if( !vlIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
-	memcpy( p, q, (q[0] + 1) * sizeof(word16) );
+	memcpy( p, q, (q[0] + 1) * sizeof(vlunit) );
 } /* vlCopy */
 
 
