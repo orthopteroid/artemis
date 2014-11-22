@@ -15,7 +15,7 @@
 	#include "ar_core.h" // for testing
 #endif
 
-#define DELIM_INIT( f, t ) { (f) ? '?' : '&', 0xff & ((t) >> 24), 0xff & ((t) >> 16), 0xff & ((t) >> 8), 0 }
+#define DELIM_INIT( f, t ) { ((f) ? '?' : '&'), 0xff & ((t) >> 24), 0xff & ((t) >> 16), 0xff & ((t) >> 8), 0 }
 
 //////////////////////
 
@@ -379,35 +379,26 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 	char sz[3] = {0,0,0};
 
 	size_t tokenlen = 0;
-	word32 stateArr[] = {'tp=\0', 'ai=\0', 'as=\0', 'mt=\0', 'mc=\0', 0 };
+	word32 ordering[] = {'tp=\0', 'ai=\0', 'as=\0', 'mt=\0', 'mc=\0' };
 
 #if defined(ENABLE_FUZZING)
-
-	// impose some robustness on the order of the tags....
-	int k = sizeof(stateArr) / sizeof(word32) -1 -1; // -1 conv from size to count, -1 to omit EOA marker
-	for( int i = 0; i < k; i++ )
-	{
-		int j = ar_util_rnd32() % k;
-		word32 t = stateArr[j];
-		stateArr[j] = stateArr[i]; stateArr[i] = t;
-	}
-
+	ar_util_rnd32_reorder( ordering, sizeof(ordering)/sizeof(word32) );
 #endif
 
 	if( rc = ar_util_strcat( buf, bufsize, "http://" ) ) { LOGFAIL( rc ); goto EXIT; }
 	if( rc = ar_util_strncat( buf, bufsize, pARecord->buf, pARecord->loclen ) ) { LOGFAIL( rc ); goto EXIT; }
 
-	word32 state = 0;
-	while( stateArr[ state ] )
+	int writtenTagCount = 0;
+	for( size_t i=0; i<sizeof(ordering)/sizeof(word32); i++ )
 	{
-		// no clue, skip
-		if( stateArr[ state ] == 'mc=\0' && pARecord->cluelen == 0 ) { state++; continue; }
+		if( ordering[ i ] == 'mc=\0' && pARecord->cluelen == 0 ) { continue; }
 
-		char delim[5] = DELIM_INIT( state == 0, stateArr[ state ] );
+		char delim[5] = DELIM_INIT( writtenTagCount == 0, ordering[ i ] );
 
 		if( rc = ar_util_strcat( buf, bufsize, delim ) ) { LOGFAIL( rc ); goto EXIT; }
 
-		switch( stateArr[ state ] )
+		writtenTagCount++;
+		switch( ordering[ i ] )
 		{
 		default: rc = RC_ARG; LOGFAIL( rc ); break;
 		case 'tp=\0':
@@ -433,7 +424,6 @@ int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord )
 			if( rc == 0 ) { buf[ tokenlen + buflen ] = 0; } else { LOGFAIL( rc ); goto EXIT; }
 			break;
 		}
-		state++;
 	}
 
 EXIT:
@@ -449,37 +439,28 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 
 	size_t buflen = 0;
 	size_t tokenlen = 0;
-	word32 stateArr[] = {'tp=\0', 'si=\0', 'ss=\0', 'sh=\0', 'sc=\0', 0 };
+	word32 ordering[] = {'tp=\0', 'si=\0', 'ss=\0', 'sh=\0', 'sc=\0' };
 
 #if defined(ENABLE_FUZZING)
-
-	// impose some robustness on the order of the tags....
-	int k = sizeof(stateArr) / sizeof(word32) -1 -1; // -1 conv from size to count, -1 to omit EOA marker
-	for( int i = 0; i < k; i++ )
-	{
-		int j = ar_util_rnd32() % k;
-		word32 t = stateArr[j];
-		stateArr[j] = stateArr[i]; stateArr[i] = t;
-	}
-
+	ar_util_rnd32_reorder( ordering, sizeof(ordering)/sizeof(word32) );
 #endif
 
 	if( rc = ar_util_strcat( buf, bufsize, "http://" ) ) { LOGFAIL( rc ); goto EXIT; }
 	if( rc = ar_util_strncat( buf, bufsize, pSRecord->buf, pSRecord->loclen ) ) { LOGFAIL( rc ); goto EXIT; }
 
-	word32 state = 0;
-	while( stateArr[ state ] )
+	int writtenTagCount = 0;
+	for( size_t i=0; i<sizeof(ordering)/sizeof(word32); i++ )
 	{
-		// no clue, skip
-		if( stateArr[ state ] == 'sc=\0' && pSRecord->cluelen == 0 ) { state++; continue; }
+		if( ordering[ i ] == 'sc=\0' && pSRecord->cluelen == 0 ) { continue; }
 
-		char delim[5] = DELIM_INIT( state == 0, stateArr[ state ] );
+		char delim[5] = DELIM_INIT( writtenTagCount == 0, ordering[ i ] );
 
 		if( rc = ar_util_strcat( buf, bufsize, delim ) ) { LOGFAIL( rc ); goto EXIT; }
 
-		switch( stateArr[ state ] )
+		writtenTagCount++; // notice that some may be optional and not written...
+		switch( ordering[i] )
 		{
-		default: rc = RC_ARG; LOGFAIL( rc ); break;
+		default: rc = RC_INTERNAL; LOGFAIL( rc ); break;
 		case 'tp=\0':
 			if( rc = ar_util_vl2txt( buf, bufsize, pSRecord->pubkey ) ) { LOGFAIL( rc ); goto EXIT; }
 			break;
@@ -503,7 +484,6 @@ int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord )
 			buf[ tokenlen + buflen ] = 0;
 			break;
 		}
-		state++;
 	}
 
 EXIT:
@@ -542,7 +522,7 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 	// vl conversion vars
 	size_t deltalen = 0;
 	char tmp[ sizeof(vlPoint) + 2 ] = {0};
-	const word16 VL_WORD_COUNT = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
+	const word16 VL_WORD_COUNT = (word16)(sizeof(vlPoint)/sizeof(vlunit) - 1);
 
 	byte vers = 0;
 
@@ -653,7 +633,7 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 	// vl conversion vars
 	size_t deltalen = 0;
 	char tmp[ sizeof(vlPoint) + 2 ] = {0};
-	const word16 VL_WORD_COUNT = (word16)(sizeof(vlPoint)/sizeof(word16) - 1);
+	const word16 VL_WORD_COUNT = (word16)(sizeof(vlPoint)/sizeof(vlunit) - 1);
 
 	parsestate2 ss;
 	ps2ptr pss = &ss;
@@ -755,7 +735,6 @@ void ar_uri_test()
 	arSharetbl		srecordtbl_;
 
 	char* clues_r[4] = {"topiclue", "clue1", "clue2", 0}; // is a table, ends with 0
-	char* location = AR_LOCSTR;
 
 	char cleartextin[20];
 	byteptr cleartext_out;
@@ -795,7 +774,7 @@ void ar_uri_test()
 		memset( &bufs0, 0, sizeof(byte2048) );
 		memset( &bufs1, 0, sizeof(byte2048) );
 
-		rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues_rw, location ); // +1 to include \0
+		rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (byteptr*)clues_rw, AR_LOCSTR ); // +1 to include \0
 		TESTASSERT( rc == 0 );
 
 		bufa[0] = 0;
@@ -806,7 +785,7 @@ void ar_uri_test()
 			byteptr s, e;
 			rc = ar_uri_locate_location( &s, &e, bufa );
 			TESTASSERT( rc == 0 );
-			TESTASSERT( strncmp( s, location, e-s+1 ) == 0 );
+			TESTASSERT( strncmp( s, AR_LOCSTR, e-s+1 ) == 0 );
 		}
 
 		{
@@ -833,7 +812,7 @@ void ar_uri_test()
 			byteptr s, e;
 			rc = ar_uri_locate_location( &s, &e, bufs0 );
 			TESTASSERT( rc == 0 );
-			TESTASSERT( strncmp( s, location, e-s+1 ) == 0 );
+			TESTASSERT( strncmp( s, AR_LOCSTR, e-s+1 ) == 0 );
 		}
 
 		{
@@ -860,7 +839,7 @@ void ar_uri_test()
 			byteptr s, e;
 			rc = ar_uri_locate_location( &s, &e, bufs1 );
 			TESTASSERT( rc == 0 );
-			TESTASSERT( strncmp( s, location, e-s+1 ) == 0 );
+			TESTASSERT( strncmp( s, AR_LOCSTR, e-s+1 ) == 0 );
 		}
 
 		{
@@ -915,7 +894,7 @@ void ar_uri_test()
 		TESTASSERT( shares == 2 );
 		TESTASSERT( threshold == 2 );
 
-		rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares );
+		rc = ar_core_decrypt( &cleartext_out, AR_LOCSTR, arecord_, srecordtbl_, shares );
 		TESTASSERT( rc == 0 );
 
 		TESTASSERT( strcmp( cleartextin, cleartext_out ) == 0 );
@@ -930,7 +909,7 @@ void ar_uri_test()
 
 		{
 			// test failure with too few shares
-			rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares -1 );
+			rc = ar_core_decrypt( &cleartext_out, AR_LOCSTR, arecord_, srecordtbl_, shares -1 );
 			TESTASSERT( rc != 0 );
 			if( cleartext_out ) free( cleartext_out );
 		}
@@ -955,7 +934,7 @@ void ar_uri_test()
 					rc = ar_uri_parse_a( &arecord_, buf[0] );
 					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[0], buf[1] ); }
 					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 ); }
-					if( !rc ) { rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares ); }
+					if( !rc ) { rc = ar_core_decrypt( &cleartext_out, AR_LOCSTR, arecord_, srecordtbl_, shares ); }
 					if( !rc )
 					{
 						// sometimes there won't be failures, because a delim may be replaced with another delim for instance
@@ -992,7 +971,7 @@ void ar_uri_test()
 					rc = ar_uri_parse_a( &arecord_, bufa_stretch );
 					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[0], bufs0 ); }
 					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[1], bufs1 ); }
-					if( !rc ) { rc = ar_core_decrypt( &cleartext_out, arecord_, srecordtbl_, shares ); }
+					if( !rc ) { rc = ar_core_decrypt( &cleartext_out, AR_LOCSTR, arecord_, srecordtbl_, shares ); }
 					if( !rc )
 					{
 						// sometimes there won't be failures, because a delim may be replaced with another delim for instance
