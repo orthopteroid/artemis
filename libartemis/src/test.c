@@ -18,6 +18,12 @@
 
 static INLINE byte strcrc( byteptr s ) { byte x = 0x41; while( *s ) { x += (x << 1) ^ *(s++); } return x; }
 
+#if defined(_DEBUG)
+
+#include <conio.h>
+
+#endif
+
 void test_all()
 {
 
@@ -46,18 +52,18 @@ void test_all()
 	for( int i = 0; i < 4 ; i++ ) {
 		library_uri_encoder( &shares, 5, testdata[i].locks, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", testdata[i].message );
 		{
-			putch('"');
+			_putch('"');
 			for( byteptr s=shares; *s; s++)
 			{
 				if( *s == '\n') {
-					putch('"'); putch(',');
-					putch( *s );
-					putch('"');
+					_putch('"'); _putch(',');
+					_putch( *s );
+					_putch('"');
 				} else {
-					putch( *s );
+					_putch( *s );
 				}
 			}
-			putch('"'); putch(','); putch('\n');
+			_putch('"'); _putch(','); _putch('\n');
 		}
 		library_free( &shares );
 	}

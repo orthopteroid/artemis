@@ -90,7 +90,7 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 
 	for( int i=0; i< numShares; i++ )
 	{
-		gfSetLUnit( gfShareIDArr[i], (lunit)shareIDArr[i] );
+		gfSetLUnit( gfShareIDArr[i], (gfunit)shareIDArr[i] );
 	}
 
 	gfSetLUnit( x, 0 ); // calc y at x = 0
@@ -208,9 +208,9 @@ void ar_shamir_test()
 			if(0) {
 				size_t len;
 				static char buf[1024];
-				ar_util_u16_hexencode( &len, buf, 1024, pri+1, pri[0] ); buf[len]=0; DEBUGPRINT( "pri %s\n", buf );
-				ar_util_u16_hexencode( &len, buf, 1024, pub+1, pub[0] ); buf[len]=0; DEBUGPRINT( "pub %s\n", buf );
-				ar_util_u16_hexencode( &len, buf, 1024, session+1, session[0] ); buf[len]=0; DEBUGPRINT( "session %s\n\n", buf );
+				ar_util_u16_hexencode( &len, buf, buf + 1024, pri+1, pri[0] ); buf[len]=0; DEBUGPRINT( "pri %s\n", buf );
+				ar_util_u16_hexencode( &len, buf, buf + 1024, pub+1, pub[0] ); buf[len]=0; DEBUGPRINT( "pub %s\n", buf );
+				ar_util_u16_hexencode( &len, buf, buf + 1024, session+1, session[0] ); buf[len]=0; DEBUGPRINT( "session %s\n\n", buf );
 			}
 
 			TESTASSERT( cpVerify( pub, mac, &sig ) );

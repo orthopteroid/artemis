@@ -5,6 +5,7 @@
 
 #include "platform.h"
 #include "ar_codes.h"
+#include "ar_util.h"
 
 #include "ar_core.h"
 #include "ec_vlong.h"
@@ -60,8 +61,8 @@ static INLINE byte strcrc( byteptr s ) { byte x = 0x41; while( *s ) { x += (x <<
 static void sha1_process_vlpoint( sha1_context* c, vlPoint v )
 {
 	size_t deltalen = 0;
-	char composebuf[ sizeof(vlPoint) ];
-	ar_util_u16_host2packet( &deltalen, composebuf, sizeof(vlPoint), v+1, v[0] );
+	char composebuf[ sizeof(vlPoint) +sizeof(vlunit) ]; // +sizeof(vlunit) for spare
+	ar_util_u16_host2packet( &deltalen, composebuf, composebuf + sizeof(vlPoint), v+1, v[0] );
 	sha1_process( c, composebuf, (unsigned)(v[0] * sizeof(vlunit)) );
 	memset( composebuf, 0, sizeof(composebuf) );
 }
@@ -70,7 +71,7 @@ static void sha1_process_blob16( sha1_context* c, word16 blob16 )
 {
 	size_t deltalen = 0;
 	char composebuf[ sizeof(word16) ];
-	ar_util_u16_host2packet( &deltalen, composebuf, sizeof(word16), &blob16, 1 );
+	ar_util_u16_host2packet( &deltalen, composebuf, composebuf + sizeof(word16), &blob16, 1 );
 	sha1_process( c, composebuf, (unsigned)(1 * sizeof(word16)) );
 	memset( composebuf, 0, sizeof(composebuf) );
 }
@@ -158,8 +159,8 @@ static void ar_core_rc4( byteptr buf, size_t buflen, gfPoint gfKey )
 	word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlKey, 0 ));
 
 	size_t deltalen = 0;
-	byte packetEndianBArr[ sizeof(vlPoint) +2 ]; // +2 for spare
-	ar_util_u16_host2packet( &deltalen, packetEndianBArr, sizeof(vlPoint), vlKey + 1, vlKey[0] );
+	byte packetEndianBArr[ sizeof(vlPoint) +sizeof(vlunit) ]; // +sizeof(vlunit) for spare
+	ar_util_u16_host2packet( &deltalen, packetEndianBArr, packetEndianBArr + sizeof(vlPoint), vlKey + 1, vlKey[0] );
 	rc4( packetEndianBArr, vlKey[0] *sizeof(vlunit), rc4cranks, buf, (word32)buflen );
 
 	vlClear( vlKey );
@@ -302,9 +303,12 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	arecord_out[0]->msglen = inbuflen;
 
 	// fill buf with location, clue (if applic) then message
-	memcpy_s( arecord_out[0]->buf, arecord_out[0]->bufmax, szLocation, loclen );
-	memcpy_s( arecord_out[0]->buf + loclen, arecord_out[0]->bufmax - loclen, clueTbl[0], acluelen );
-	memcpy_s( arecord_out[0]->buf + msgoffset, arecord_out[0]->bufmax - msgoffset, inbuf, inbuflen );
+	{
+		byteptr bufend = arecord_out[0]->buf + arecord_out[0]->bufmax;
+		if( rc = ar_util_memcpy( arecord_out[0]->buf,				bufend, szLocation, loclen ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_util_memcpy( arecord_out[0]->buf + loclen,		bufend, clueTbl[0], acluelen ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_util_memcpy( arecord_out[0]->buf + msgoffset,	bufend, inbuf, inbuflen ) ) { LOGFAIL( rc ); goto EXIT; }
+	}
 
 	// create cryptcoefs (and cryptkey)
 	for( word16 t = 0; t < numThres; t++ )
@@ -370,9 +374,12 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 		(*srecordtbl_out)[i]->loclen = (word16)loclen;
 		(*srecordtbl_out)[i]->cluelen = (word16)scluelen;
-			
-		memcpy_s( (*srecordtbl_out)[i]->buf,			(*srecordtbl_out)[i]->bufmax,				szLocation,		loclen );
-		memcpy_s( (*srecordtbl_out)[i]->buf + loclen,	(*srecordtbl_out)[i]->bufmax - loclen,		clueTbl[i+1],	scluelen );
+
+		{
+			byteptr bufend = (*srecordtbl_out)[i]->buf + (*srecordtbl_out)[i]->bufmax;
+			if( rc = ar_util_memcpy( (*srecordtbl_out)[i]->buf,				bufend,	szLocation,		loclen ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_util_memcpy( (*srecordtbl_out)[i]->buf + loclen,	bufend,	clueTbl[i +1],	scluelen ) ) { LOGFAIL( rc ); goto EXIT; } // +1 skips message clue
+		}
 
 		//////////
 		// construct sharesignature to ensure consistiency between topic, shareid, share and clue
@@ -450,7 +457,9 @@ int ar_core_decrypt( byteptr* buf_out, byteptr szLocation, arAuthptr arecord, ar
 
 	{	
 		byteptr cryptext = arecord->buf + arecord->loclen + arecord->cluelen;
-		memcpy_s( *buf_out, arecord->msglen, cryptext, arecord->msglen );
+		byteptr bufend = *buf_out + arecord->msglen;
+
+		if( rc = ar_util_memcpy( *buf_out, bufend, cryptext, arecord->msglen ) ) { LOGFAIL( rc ); goto EXIT; }
 
 		gfPoint gfCryptkey;
 		ar_shamir_recoversecret( gfCryptkey, shareIDArr, shareArr, numSRecords );
@@ -511,10 +520,12 @@ void ar_core_test()
 	char* cluetbl[4] = {"topiclue", "clue1", "clue2", 0}; // is a table, must end with 0
 	int rc = 0;
 
-	if( !(cleartextin = malloc( strlen(reftextin)+1 )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	strcpy_s( cleartextin, strlen(reftextin)+1, reftextin );
+	size_t buflen = strlen(reftextin) +1; // +1 for \0
+	if( !(cleartextin = malloc( buflen )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
-	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(strlen(cleartextin) + 1), (bytetbl)cluetbl, AR_LOCSTR ); // +1 to include \0
+	if( rc = ar_util_strcpy( cleartextin, cleartextin + buflen, reftextin ) ) { LOGFAIL( rc ); goto EXIT; }
+
+	rc = ar_core_create( &arecord, &srecordtbl, 2, 2, cleartextin, (word16)(buflen), (bytetbl)cluetbl, AR_LOCSTR );
 	TESTASSERT( rc == 0 );
 
 	rc = ar_core_check_recordset( AR_LOCSTR, arecord, srecordtbl, 2 );

@@ -15,22 +15,25 @@ int ar_util_checkTbl( void** tbl, size_t len );
 int ar_util_30Bto6BA( byteptr out, word32 in );
 int ar_util_6BAto30B( word32ptr out, byteptr in );
 
-int ar_util_u8_hexencode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
-int ar_util_u8_hexdecode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
+int ar_util_u8_hexencode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize );
+int ar_util_u8_hexdecode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize );
 
-int ar_util_u8_b64encode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
-int ar_util_u8_b64decode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize );
+int ar_util_u8_b64encode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize );
+int ar_util_u8_b64decode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize );
 
-int ar_util_u16_host2packet( size_t* deltalen, byteptr   buf, size_t bufsize, word16ptr in, size_t insize );
-int ar_util_u16_packet2host( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr   in, size_t insize );
+int ar_util_u16_host2packet( size_t* deltalen, byteptr   buf, byteptr   bufend, word16ptr in, size_t insize );
+int ar_util_u16_packet2host( size_t* deltalen, word16ptr buf, word16ptr bufend, byteptr   in, size_t insize );
 
-int ar_util_u16_hexencode( size_t* deltalen, byteptr   buf, size_t bufsize, word16ptr in, size_t insize );
-int ar_util_u16_hexdecode( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr   in, size_t insize );
+int ar_util_u16_hexencode( size_t* deltalen, byteptr   buf, byteptr bufend, word16ptr   in, size_t insize );
+int ar_util_u16_hexdecode( size_t* deltalen, word16ptr buf, word16ptr bufend, byteptr   in, size_t insize );
 
 ////////
 
-int ar_util_strcat( byteptr dst, size_t dstsize, byteptr src );
-int ar_util_strncat( byteptr dst, size_t dstsize, byteptr src, size_t srcsize );
+int ar_util_memcpy( byteptr buf, byteptr bufend, byteptr src, size_t len );
+int ar_util_strcpy( byteptr buf, byteptr bufend, byteptr src );
+int ar_util_strncpy( byteptr buf, byteptr bufend, byteptr src, size_t len );
+int ar_util_strcat( byteptr buf, byteptr bufend, byteptr src );
+int ar_util_strncat( byteptr buf, byteptr bufend, byteptr src, size_t len );
 
 ////////
 
@@ -45,11 +48,11 @@ void ar_util_rnd32_reorder( word32ptr buf, size_t len );
 
 ////////
 
-int ar_util_txt2vl( vlPoint v, char* buf, size_t bufsize );
-int ar_util_vl2txt( char* buf, size_t bufsize, vlPoint v );
+int ar_util_txt2vl( vlPoint v, byteptr buf, size_t bufsize );
+int ar_util_vl2txt( byteptr buf, byteptr bufend, vlPoint v );
 
-int ar_util_txttow16( word16* pw, char* buf, size_t bufsize );
-int ar_util_w16totxt( char* buf, size_t bufsize, word16* pw );
+int ar_util_txttow16( word16ptr pw, byteptr buf, size_t bufsize );
+int ar_util_w16totxt( byteptr buf, byteptr bufend, word16ptr pw );
 
 ////////
 

@@ -27,9 +27,9 @@ int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord );
 
 int ar_uri_locate_location( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord );
 
-int ar_uri_create_a( byteptr buf, size_t bufsize, arAuth* pARecord );
+int ar_uri_create_a( byteptr buf, byteptr bufend, arAuth* pARecord );
 
-int ar_uri_create_s( byteptr buf, size_t bufsize, arShare* pSRecord );
+int ar_uri_create_s( byteptr buf, byteptr bufend, arShare* pSRecord );
 
 int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord );
 

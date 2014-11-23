@@ -154,13 +154,13 @@ int ar_util_6BAto30B( word32ptr out, byteptr in )
 
 ////////////////////
 
-int ar_util_u8_hexencode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u8_hexencode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
 	while( i != insize )
 	{
-		if( j + 1 >= bufsize ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
+		if( &buf[ j + 1 ] >= bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
 		char c = in[i];
 		buf[j++] = b16charout[ ( c >> 4 ) & 15 ];
 		buf[j++] = b16charout[ ( c ) & 15 ];
@@ -170,13 +170,13 @@ int ar_util_u8_hexencode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr
 	return rc;
 }
 
-int ar_util_u8_hexdecode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u8_hexdecode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
 	while( i != insize )
 	{
-		if( j >= bufsize ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
+		if( &buf[ j ] >= bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
 		char c = 0;
 		c |= ( b16charin[ in[i++] - 0x30 ] & 15 ) << 4;
 		c |= ( b16charin[ in[i++] - 0x30 ] & 15 );
@@ -188,7 +188,7 @@ int ar_util_u8_hexdecode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr
 
 ////////////////////
 
-int ar_util_u8_b64encode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u8_b64encode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize )
 {
 	int p=0, rc=0;
 	size_t j=0, i=0;
@@ -199,7 +199,7 @@ int ar_util_u8_b64encode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr
 		char3 |= (word32)( in[i++] ) <<  8;	if( i == insize ) { p=1; goto PAD; }
 		char3 |= (word32)( in[i++] );
 PAD:
-		if( j + 4 - p >= bufsize ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; } // ? for buf[0,bufsize)
+		if( &buf[ j + 4 - p ] >= bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; } // ? for buf[0,bufsize)
 		buf[j++] = b64charout[ ( char3 >> 18 ) & 63 ];
 		buf[j++] = b64charout[ ( char3 >> 12 ) & 63 ];
 		if( p < 2 ) { buf[j++] = b64charout[ ( char3 >>  6 ) & 63 ]; }
@@ -209,7 +209,7 @@ PAD:
 	return rc;
 }
 
-int ar_util_u8_b64decode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u8_b64decode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize )
 {
 	int p=0, rc=0;
 	size_t j=0, i=0;
@@ -221,7 +221,7 @@ int ar_util_u8_b64decode( size_t* deltalen, byteptr buf, size_t bufsize, byteptr
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) <<  6; if( i == insize ) { p=1; goto PAD; }
 		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 );
 PAD:
-		if( j + 3 - p > bufsize ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; } // '> only' for buf[0,bufsize)
+		if( &buf[ j + 3 - p ] > bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; } // '> only' for buf[0,bufsize)
 		buf[j++] = (byte)( ( char3 >> 16 ) & 255 );
 		if( p < 2 ) { buf[j++] = (byte)( ( char3 >>  8 ) & 255 ); }
 		if( p < 1 ) { buf[j++] = (byte)( ( char3       ) & 255 ); }
@@ -232,13 +232,13 @@ PAD:
 
 ///////////
 
-int ar_util_u16_host2packet( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr in, size_t insize )
+int ar_util_u16_host2packet( size_t* deltalen, byteptr buf, byteptr bufend, word16ptr in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
 	while( i != insize )
 	{
-		if( j == bufsize ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
+		if( &buf[ j ] == bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
 		// note: reading input memory backwards so we output high words to low memy
 		buf[ j++ ] = ( in[insize-i-1] >> 8 ) & 0xFF;
 		buf[ j++ ] = ( in[insize-i-1] ) & 0xFF;
@@ -248,13 +248,13 @@ int ar_util_u16_host2packet( size_t* deltalen, byteptr buf, size_t bufsize, word
 	return rc;
 }
 
-int ar_util_u16_packet2host( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr   in, size_t insize )
+int ar_util_u16_packet2host( size_t* deltalen, word16ptr buf, word16ptr bufend, byteptr in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
 	while( i != insize )
 	{
-		if( j == bufsize ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
+		if( &buf[ j ] == bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
 		word16 w = 0;
 		// note: reading input memory backwards so we output low words to low memy
 		w |= (word16)( in[insize-i-1] );		i++;	if( i == insize ) { goto EOS; }
@@ -268,13 +268,13 @@ EOS:
 
 //////////////////
 
-int ar_util_u16_hexencode( size_t* deltalen, byteptr buf, size_t bufsize, word16ptr in, size_t insize )
+int ar_util_u16_hexencode( size_t* deltalen, byteptr buf, byteptr bufend, word16ptr in, size_t insize )
 {
 	int rc=0;
 	size_t j=0, i=0;
 	while( i != insize )
 	{
-		if( j + 3 >= bufsize ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
+		if( &buf[ j + 3 ] >= bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
 		// note: reading input memory backwards so we output high chars to low memy
 		buf[ j++ ] = b16charout[ ( in[insize-1-i] >> 12 ) & 0x0F ];
 		buf[ j++ ] = b16charout[ ( in[insize-1-i] >>  8 ) & 0x0F ];
@@ -286,12 +286,12 @@ int ar_util_u16_hexencode( size_t* deltalen, byteptr buf, size_t bufsize, word16
 	return rc;
 }
 
-int ar_util_u16_hexdecode( size_t* deltalen, word16ptr buf, size_t bufsize, byteptr in, size_t insize )
+int ar_util_u16_hexdecode( size_t* deltalen, word16ptr buf, word16ptr bufend, byteptr in, size_t insize )
 {
 	int rc=0;
 	size_t i=0, j=0;
 	while( i != insize ) {
-		if( j == bufsize ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
+		if( &buf[ j ] == bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
 		word16 w = 0;
 		// note: reading input memory backwards so we output low words to low memy
 		w |= (word16)( b16charin[ in[insize-i-1] - 0x30 ] & 0x0F );			i++;	if( i == insize ) { goto EOS; }
@@ -307,14 +307,14 @@ EOS:
 
 //////////////////
 
-int ar_util_txt2vl( vlPoint v, char* buf, size_t bufsize )
+int ar_util_txt2vl( vlPoint v, byteptr buf, size_t bufsize )
 {
 	int rc = 0;
 	vlClear( v );
 	size_t deltalen = 0;
-	char tmp[ VL_UNITS * sizeof(vlunit) +1 ] = {0}; // +1 for spare
-	if( rc = ar_util_u8_b64decode( &deltalen, tmp, sizeof(tmp), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_u16_packet2host( &deltalen, &v[1], VL_UNITS, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	char tmp[ VL_BYTES +1 ] = {0}; // +1 for spare
+	if( rc = ar_util_u8_b64decode( &deltalen, tmp, tmp + VL_BYTES, buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u16_packet2host( &deltalen, &v[1], &v[1] + VL_UNITS, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 	v[0] = (word16)deltalen;
 	if( !vlIsValid( v ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); vlClear( v ); goto EXIT; }
 EXIT:
@@ -322,64 +322,153 @@ EXIT:
 }
 
 // concatenates into buf
-int ar_util_vl2txt( char* buf, size_t bufsize, vlPoint v )
+int ar_util_vl2txt( byteptr buf, byteptr bufend, vlPoint v )
 {
 	int rc = 0;
 	if( !vlIsValid( v ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 	size_t deltalen = 0;
 	size_t buflen = strlen(buf);
-	char tmp[ VL_UNITS * sizeof(vlunit) +1 ] = {0}; // +1 for spare
-	if( rc = ar_util_u16_host2packet( &deltalen, tmp, VL_UNITS * sizeof(vlunit), v+1, v[0] ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_u8_b64encode( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	char tmp[ VL_BYTES +1 ] = {0}; // +1 for spare
+	if( rc = ar_util_u16_host2packet( &deltalen, tmp, tmp + VL_BYTES, v+1, v[0] ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u8_b64encode( &deltalen, buf + buflen, bufend, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 	buf[ buflen + deltalen ] = 0;
 EXIT:
 	return rc;
 }
 
-int ar_util_txttow16( word16* pw, char* buf, size_t bufsize )
+int ar_util_txttow16( word16ptr pw, byteptr buf, size_t bufsize )
 {
 	int rc = 0;
 	if( !pw ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	*pw = 0;
 	size_t deltalen = 0;
 	char tmp[ sizeof(word16) + 2 ] = {0};
-	if( rc = ar_util_u8_b64decode( &deltalen, tmp, sizeof(word16), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_u16_packet2host( &deltalen, pw, 1, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u8_b64decode( &deltalen, tmp, tmp + sizeof(word16), buf, bufsize ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u16_packet2host( &deltalen, pw, pw + 1, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 EXIT:
 	return rc;
 }
 
-int ar_util_w16totxt( char* buf, size_t bufsize, word16* pw )
+int ar_util_w16totxt( byteptr buf, byteptr bufend, word16ptr pw )
 {
 	int rc = 0;
 	size_t deltalen = 0;
 	size_t buflen = strlen(buf);
 	char tmp[ sizeof(word16) +1 ] = {0}; // +1 for spare
-	if( rc = ar_util_u16_host2packet( &deltalen, tmp, sizeof(word16), pw, 1 ) ) { LOGFAIL( rc ); goto EXIT; }
-	if( rc = ar_util_u8_b64encode( &deltalen, buf + buflen, bufsize - buflen, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u16_host2packet( &deltalen, tmp, tmp + sizeof(word16), pw, 1 ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_util_u8_b64encode( &deltalen, buf + buflen, bufend, tmp, deltalen ) ) { LOGFAIL( rc ); goto EXIT; }
 EXIT:
 	return rc;
 }
 
 ///////////////////////////////////////
 
-int ar_util_strcat( byteptr dst, size_t dstsize, byteptr src )
+int ar_util_memcpy( byteptr buf, byteptr bufend, byteptr src, size_t len )
 {
-	size_t len = 0;
-	while( *dst ) { dst++; if( ++len > dstsize-1 ) { return RC_BUFOVERFLOW; } }
-	while( *src ) { *dst = *src; src++; dst++; if( ++len > dstsize-1 ) { return RC_BUFOVERFLOW; } }
-	*dst = 0; 
-	return 0;
+	int rc = 0;
+
+	if( len == 0 ) { goto EXIT; }
+	if( !buf ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !bufend ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !src ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	while( len-- && buf <= bufend ) { *buf++ = *src++; }
+
+	if( buf > bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); goto EXIT; }
+
+EXIT:
+	return rc;
 }
 
-int ar_util_strncat( byteptr dst, size_t dstsize, byteptr src, size_t srcsize )
+int ar_util_strcpy( byteptr buf, byteptr bufend, byteptr src )
 {
-	size_t len = 0;
-	size_t cpy = 0;
-	while( *dst ) { dst++; if( ++len > dstsize-1 ) { return RC_BUFOVERFLOW; } }
-	while( *src ) { *dst = *src; src++; dst++; if( ++len > dstsize-1 ) { return RC_BUFOVERFLOW; } if( ++cpy == srcsize ) { break; } }
-	*dst = 0; 
-	return 0;
+	int rc = 0;
+	byteptr pTerm = 0;
+
+	if( !buf ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !bufend ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !src ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	while( *src && buf <= bufend ) { *buf++ = *src++; }
+	pTerm = buf <= bufend ? buf : bufend;
+
+	if( buf > bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); goto EXIT; }
+
+EXIT:
+	if( pTerm ) { *pTerm = 0; }
+
+	return rc;
+}
+
+int ar_util_strncpy( byteptr buf, byteptr bufend, byteptr src, size_t len )
+{
+	int rc = 0;
+	byteptr pTerm = 0;
+
+	if( len == 0 ) { goto EXIT; }
+	if( !buf ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !bufend ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !src ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	pTerm = buf <= bufend ? buf : bufend;
+
+	while( len-- && buf <= bufend ) { *buf++ = *src++; }
+
+	if( buf > bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); goto EXIT; }
+
+EXIT:
+	if( pTerm ) { *pTerm = 0; }
+
+	return rc;
+}
+
+int ar_util_strcat( byteptr buf, byteptr bufend, byteptr src )
+{
+	int rc = 0;
+	byteptr pTerm = 0;
+
+	if( !buf ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !bufend ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !src ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	while( *buf && buf <= bufend ) { buf++; }
+
+	if( buf > bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); goto EXIT; }
+
+	while( *src && buf <= bufend ) { *buf++ = *src++; }
+	pTerm = buf <= bufend ? buf : bufend;
+
+	if( buf > bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); goto EXIT; }
+
+EXIT:
+	if( pTerm ) { *pTerm = 0; }
+
+	return rc;
+}
+
+int ar_util_strncat( byteptr buf, byteptr bufend, byteptr src, size_t len )
+{
+	int rc = 0;
+	byteptr pTerm = 0;
+
+	if( len == 0 ) { goto EXIT; }
+	if( !buf ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !bufend ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !src ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	while( *buf && buf <= bufend ) { buf++; }
+
+	if( buf > bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); goto EXIT; }
+
+	while( len-- && buf <= bufend ) { *buf++ = *src++; }
+	pTerm = buf <= bufend ? buf : bufend;
+
+	if( buf > bufend ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); goto EXIT; }
+
+EXIT:
+	if( pTerm ) { *pTerm = 0; }
+
+	return rc;
 }
 
 ///////////////////////////////////////
@@ -471,7 +560,7 @@ void ar_util_test()
 			size_t deltalen = 0;
 			byteptr appendpos = buf1;
 			size_t appendsize = BUFSIZE;
-			rc = ar_util_u8_b64encode( &deltalen, appendpos, appendsize, txt, strlen(txt) );
+			rc = ar_util_u8_b64encode( &deltalen, appendpos, appendpos + appendsize, txt, strlen(txt) );
 			ASSERT( rc == 0 );
 			buf1[ deltalen ] = 0;
 		}
@@ -479,7 +568,7 @@ void ar_util_test()
 			size_t deltalen = 0;
 			byteptr appendpos = buf2;
 			size_t appendsize = BUFSIZE;
-			rc = ar_util_u8_b64decode( &deltalen, appendpos, appendsize, buf1, strlen(buf1) );
+			rc = ar_util_u8_b64decode( &deltalen, appendpos, appendpos + appendsize, buf1, strlen(buf1) );
 			ASSERT( rc == 0 );
 			buf2[ deltalen ] = 0;
 		}
@@ -498,7 +587,7 @@ void ar_util_test()
 		v0[2]=0x00ff;
 
 		buf[0]=0;
-		rc = ar_util_vl2txt( buf, 1024, v0 );
+		rc = ar_util_vl2txt( buf, buf + 1024, v0 );
 		ASSERT( rc == 0 );
 
 		rc = ar_util_txt2vl( v1, buf, strlen(buf) );

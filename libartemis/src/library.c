@@ -7,6 +7,7 @@
 #include "platform.h"
 #include "version.h"
 #include "ar_codes.h"
+#include "ar_util.h"
 
 #include "library.h"
 #include "ec_field.h"
@@ -164,9 +165,10 @@ int library_uri_clue( byteptr* clue_out, byteptr szShare )
 		size_t clen = pLast - pFirst + 1; // but, overestimates because of b64 encoding
 		
 		if( !(*clue_out = malloc( clen + 1 )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } // +1 for \0
+		byteptr bufend = *clue_out + clen;
 		
 		size_t deltalen = 0;
-		if( rc = ar_util_u8_b64decode( &deltalen, *clue_out, clen, pFirst, clen ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_util_u8_b64decode( &deltalen, *clue_out, bufend, pFirst, clen ) ) { LOGFAIL( rc ); goto EXIT; }
 
 		(*clue_out)[ deltalen ] = 0;
 	}
@@ -311,21 +313,26 @@ int library_uri_encoder( byteptr* recordArr_out, word16 shares, byte threshold, 
 
 	// calc outbuf size
 
-	size_t bufsize = 0;
-	ar_uri_bufsize_a( &bufsize, arecord );
-	for( int i = 0; i < shares; i++ ) { size_t s=0; ar_uri_bufsize_s( &s, srecordtbl[i] ); bufsize += s; }
+	byteptr bufend = 0;
+	{
+		size_t bufsize = 0;
+		ar_uri_bufsize_a( &bufsize, arecord );
+		for( int i = 0; i < shares; i++ ) { size_t s=0; ar_uri_bufsize_s( &s, srecordtbl[i] ); bufsize += s; }
 
-	if( !(*recordArr_out = malloc( bufsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	memset( *recordArr_out, 0, bufsize );
+		if( !(*recordArr_out = malloc( bufsize )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+		memset( *recordArr_out, 0, bufsize );
+
+		bufend = *recordArr_out + bufsize;
+	}
 
 	// concat to output buffer
 
 	(*recordArr_out)[0] = 0;
-	if( rc = ar_uri_create_a( (*recordArr_out), bufsize, arecord ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ar_uri_create_a( (*recordArr_out), bufend, arecord ) ) { LOGFAIL( rc ); goto EXIT; }
 	for( word16 s=0; s!=shares; s++ )
 	{
-		if( rc = ar_util_strcat( (*recordArr_out), bufsize, "\n" ) ) { LOGFAIL( rc ); goto EXIT; }
-		if( rc = ar_uri_create_s( (*recordArr_out), bufsize, srecordtbl[s] ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_util_strcat( (*recordArr_out), bufend, "\n" ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_uri_create_s( (*recordArr_out), bufend, srecordtbl[s] ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 EXIT:

@@ -12,8 +12,8 @@
 typedef word16 vlunit;
 typedef vlunit vlPoint [VL_UNITS +1 ]; // +1 for length
 
+#define VL_BYTES (VL_UNITS * sizeof(vlunit))
 #define vlIsValid(p) (p[0] <= VL_UNITS)
-
 #define vlIsZero(p) (p[0] == 0)
 
 #define DEBUGPRINT_V(v) \
