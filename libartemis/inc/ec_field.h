@@ -7,7 +7,7 @@
 #include "ec_param.h"
 #include "ec_vlong.h"
 
-#define GF_POINT_UNITS	( ( GF_K +1 ) *2 +1 ) // +1 for ??, *2 for holding square result, +1 for square-overflow
+#define GF_UNITS	( ( GF_K +1 ) *2 +1 ) // +1 for ??, *2 for holding square result, +1 for square-overflow
 
 #if GF_L < 8 || GF_L > 16
 	#error "this implementation assumes 8 <= GF_L <= 16"
@@ -15,10 +15,10 @@
 
 #if GF_L ==  8
 	#define BITS_PER_LUNIT 8
-	typedef byte	lunit;
+	typedef byte	gfunit;
 #else
 	#define BITS_PER_LUNIT 16
-	typedef word16	lunit;
+	typedef word16	gfunit;
 #endif
 
 #if GF_L == 16
@@ -28,10 +28,11 @@
 #endif
 
 // little endian format, i think
-typedef lunit gfPoint [ GF_POINT_UNITS +1 ]; // +1 for length
+typedef gfunit gfPoint [ GF_UNITS +1 ]; // +1 for length
 
-#define gfIsValid(p) (p[0] <= GF_POINT_UNITS)
-#define gfRoomForSquare(p) ((p[0]*2-1) <= GF_POINT_UNITS)
+#define GF_BYTES (GF_UNITS * sizeof(gfunit))
+#define gfIsValid(p) (p[0] <= GF_UNITS)
+#define gfRoomForSquare(p) ((p[0]*2-1) <= GF_UNITS)
 
 /* interface functions: */
 
@@ -41,7 +42,7 @@ int  gfInit (void);
 void gfQuit (void);
 	/* perform housekeeping for library termination */
 
-void gfSetLUnit(gfPoint p, lunit u);
+void gfSetLUnit(gfPoint p, gfunit u);
 	/* sets p := u */
 
 int  gfEqual (const gfPoint p, const gfPoint q);
@@ -62,7 +63,7 @@ void gfAdd (gfPoint p, const gfPoint q, const gfPoint r);
 void gfMultiply (gfPoint r, const gfPoint p, const gfPoint q);
 	/* sets r := p * q mod (x^GF_K + x^GF_T + 1) */
 
-void gfSmallDiv (gfPoint p, lunit b);
+void gfSmallDiv (gfPoint p, gfunit b);
 	/* sets p := (b^(-1))*p mod (x^GF_K + x^GF_T + 1) for b != 0 (of course...) */
 
 void gfSquare (gfPoint p, const gfPoint q);
@@ -72,7 +73,7 @@ int  gfInvert (gfPoint p, const gfPoint q);
 	/* sets p := q^(-1) mod (x^GF_K + x^GF_T + 1) */
 	/* warning: p and q must not overlap! */
 
-void gfSquareRoot (gfPoint p, lunit b);
+void gfSquareRoot (gfPoint p, gfunit b);
 	/* sets p := sqrt(b) = b^(2^(GF_M-1)) */
 
 int  gfTrace (const gfPoint p);

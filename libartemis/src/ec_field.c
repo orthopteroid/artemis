@@ -29,8 +29,8 @@
 #define BASE	(1U << GF_L)
 #define TOGGLE	(BASE-1)
 
-static lunit *expt = NULL; /* index range is [0..(BASE-2)] */
-static lunit *logt = NULL; /* index range is [1..(BASE-1)], but logt[0] is set to (BASE-1) */
+static gfunit *expt = NULL; /* index range is [0..(BASE-2)] */
+static gfunit *logt = NULL; /* index range is [1..(BASE-1)], but logt[0] is set to (BASE-1) */
 
 PRAGMA_PUSH
 PRAGMA_OPTIMIZE
@@ -48,10 +48,10 @@ int gfInit (void)
 		logt == NULL && expt != NULL) {
 		return 2; /* logic error: half initialized (?!) */
 	}
-	if ((logt = (lunit *) malloc (BASE * sizeof (lunit))) == NULL) {
+	if ((logt = (gfunit *) malloc (BASE * sizeof (gfunit))) == NULL) {
 		return 1; /* not enough memory */
 	}
-	if ((expt = (lunit *) malloc (BASE * sizeof (lunit))) == NULL) {
+	if ((expt = (gfunit *) malloc (BASE * sizeof (gfunit))) == NULL) {
 		free (logt); logt = NULL;
 		return 1; /* not enough memory */
 	}
@@ -62,10 +62,10 @@ int gfInit (void)
 		if (j & BASE) {
 			j ^= root;
 		}
-		expt[i] = (lunit)j;
+		expt[i] = (gfunit)j;
 	}
 	for (i = 0; i < TOGGLE; i++) {
-		logt[expt[i]] = (lunit)i;
+		logt[expt[i]] = (gfunit)i;
 	}
 	logt[0] = TOGGLE; /* a trick used by gfMultiply, gfSquare, gfAddMul */
 
@@ -93,7 +93,7 @@ int gfEqual (const gfPoint p, const gfPoint q)
 	if( p[0] != q[0] )
 		return 0;
 	else
-		return memcmp( p, q, (p[0] + 1) * sizeof(lunit) ) ? 0 : 1;
+		return memcmp( p, q, (p[0] + 1) * sizeof(gfunit) ) ? 0 : 1;
 } /* gfEqual */
 
 
@@ -104,7 +104,7 @@ void gfClear (gfPoint p)
 } /* gfClear */
 
 
-void gfSetLUnit (gfPoint p, lunit u)
+void gfSetLUnit (gfPoint p, gfunit u)
 	/* sets p := u */
 {
 	p[0] = 1; p[1] = u;
@@ -115,7 +115,7 @@ void gfCopy (gfPoint p, const gfPoint q)
 	/* sets p := q */
 {
 	if( !gfIsValid( q ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return; }
-	memcpy( p, q, (q[0] + 1) * sizeof(lunit) );
+	memcpy( p, q, (q[0] + 1) * sizeof(gfunit) );
 } /* gfCopy */
 
 
@@ -134,7 +134,7 @@ void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 		}
 		/* invariant: i == r[0] + 1 */
 		if( &p[i] != &q[i] ) { // skip unnecessary memcpy
-			memcpy( &p[i], &q[i], (q[0] - r[0]) * sizeof(lunit) );
+			memcpy( &p[i], &q[i], (q[0] - r[0]) * sizeof(gfunit) );
 		}
 		/* deg(p) inherits the value of deg(q): */
 		p[0] = q[0];
@@ -145,7 +145,7 @@ void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 		}
 		/* invariant: i == q[0] + 1 */
 		if( &p[i] != &r[i] ) { // skip unnecessary memcpy
-			memcpy( &p[i], &r[i], (r[0] - q[0]) * sizeof(lunit) );
+			memcpy( &p[i], &r[i], (r[0] - q[0]) * sizeof(gfunit) );
 		}
 		/* deg(p) inherits the value of deg(r): */
 		p[0] = r[0];
@@ -157,7 +157,7 @@ void gfAdd (gfPoint p, const gfPoint q, const gfPoint r)
 			}
 		}
 		/* xor the the common-degree coefficients, if any is left: */
-		for (p[0] = (lunit)i; i > 0; i--) {
+		for (p[0] = (gfunit)i; i > 0; i--) {
 			p[i] = q[i] ^ r[i];
 		}
 	}
@@ -195,7 +195,7 @@ void gfMultiply (gfPoint r, const gfPoint p, const gfPoint q)
 
 	int i, j;
 	ltemp x, log_pi, log_qj;
-	lunit lg[ GF_POINT_UNITS ]; /* this table should be cleared after use */
+	gfunit lg[ GF_UNITS ]; /* this table should be cleared after use */
 
 	if( p[0] && q[0] )
 	{
@@ -275,7 +275,7 @@ void gfSquare (gfPoint r, const gfPoint p)
 } /* gfSquare */
 
 
-void gfSmallDiv (gfPoint p, lunit b)
+void gfSmallDiv (gfPoint p, gfunit b)
 	/* sets p := (b^(-1))*p mod (x^GF_K + x^GF_T + 1) */
 {
 	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return; }
@@ -297,7 +297,7 @@ static void gfAddMul (gfPoint a, ltemp alpha, ltemp j, gfPoint b)
 	if( !gfIsValid( b ) ) { LOGFAIL( RC_INTERNAL ); gfClear( b ); return; }
 
 	ltemp i, x, la = logt[alpha];
-	lunit *aj = &a[j];
+	gfunit *aj = &a[j];
 
 	while (a[0] < j + b[0]) {
 		a[0]++; a[a[0]] = 0;
@@ -378,7 +378,7 @@ SWAP_FG:
 } /* gfInvert */
 
 
-void gfSquareRoot (gfPoint p, lunit b)
+void gfSquareRoot (gfPoint p, gfunit b)
 	/* sets p := sqrt(b) = b^(2^(GF_M-1)) */
 {
 	int i;
@@ -432,7 +432,7 @@ int gfTrace (const gfPoint p)
 #else
 	if (p[0]) {
 		int i;
-		lunit w;
+		gfunit w;
 
 		w = p[1] & GF_TM1;
 #if GF_TM0 != 1
@@ -536,11 +536,11 @@ int gfUnpack (gfPoint p, const vlPoint k)
 	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return 1; }
 
 	vlPoint x;
-	lunit n;
+	gfunit n;
 
 	vlCopy (x, k);
 	for (n = 0; x[0]; n++) {
-		p[n+1] = (lunit) (x[1] & TOGGLE);
+		p[n+1] = (gfunit) (x[1] & TOGGLE);
 		vlShortRshift (x, GF_L); /* this only works if GF_L <= 16 */
 	}
 	p[0] = n;
