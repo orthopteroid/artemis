@@ -18,7 +18,7 @@
 
 static INLINE byte strcrc( byteptr s ) { byte x = 0x41; while( *s ) { x += (x << 1) ^ *(s++); } return x; }
 
-#if defined(_DEBUG)
+#if defined(_DEBUG) && defined(_WINDOWS)
 
 #include <conio.h>
 
