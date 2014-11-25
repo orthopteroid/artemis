@@ -13,8 +13,8 @@
 #define AR_SESSKEYUNITS		AR_UNITS-1 // 8 units @ 136 gf_m
 #define AR_PRIVKEYUNITS		AR_UNITS-1 // 8 units @ 136 gf_m
 
-#define AR_LOCSTR	"arcanashare.com"
-#define AR_LOCHASH	0x53
+#define AR_LOCSTR	"arcanacard.com"
+#define AR_LOCHASH	0x1E
 
 #define AR_VERSION 1
 #define AR_DEMO

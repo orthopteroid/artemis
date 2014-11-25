@@ -1,4 +1,4 @@
-package com.tereslogica.arcanashare;
+package com.tereslogica.acanacard;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

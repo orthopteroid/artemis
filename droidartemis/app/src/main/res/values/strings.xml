@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">ArcanaShare</string>
-    <string name="app_loc">arcanashare.com</string>
+    <string name="app_name">ArcanaCard</string>
+    <string name="app_loc">arcanacard.com</string>
     <string name="app_weblink">http://tereslogica.com</string>
     <string name="menu_testtoken">Debug Scan Test</string>
     <string name="menu_sort">Sorting</string>
@@ -33,7 +33,7 @@
     <string name="button_less">Less</string>
 
     <string name="text_features_limitedversion">
-This version of ArcanaShare is restricted to 7 keys, 3 locks and 20 character
+This version of ArcanaCard is restricted to 7 keys, 3 locks and 20 character
  messages and clues.</string>
 
     <string name="text_eula">

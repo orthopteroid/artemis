@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tereslogica.arcanashare" >
+    package="com.tereslogica.acanacard" >
 
     <application
         android:allowBackup="true"
@@ -25,7 +25,7 @@
 
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.tereslogica.arcanashare.ActivityTopics"
+            android:authorities="com.tereslogica.acanacard.ActivityTopics"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
