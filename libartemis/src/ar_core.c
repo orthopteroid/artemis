@@ -133,10 +133,6 @@ static int ar_core_makekeypair( vlPoint pub, vlPoint pri )
 
 	// use placeholder vars to test the signature
 	cpPair sig;
-	vlPoint mac;
-	vlPoint session;
-	vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
-	vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
 	size_t i = 0;
 	for( rc = RC_PRIVATEKEY; rc == RC_PRIVATEKEY; )
@@ -144,9 +140,12 @@ static int ar_core_makekeypair( vlPoint pub, vlPoint pri )
 		if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
 
 		vlSetRandom( pri, AR_PRIVKEYUNITS, &ar_util_rnd16 );
-
 		cpMakePublicKey( pub, pri );
 
+		vlPoint mac;
+		vlPoint session;
+		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
+		vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 		rc = ar_core_sign( &sig, session, pub, pri, mac );
 	}
 	if( rc ) { LOGFAIL( rc ); goto EXIT; }

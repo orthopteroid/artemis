@@ -177,9 +177,7 @@ void ar_shamir_test()
 		{
 			vlPoint pub, pri;
 			cpPair sig;
-
 			vlPoint session;
-			vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
 			int rc = 0, i = 0;
 			for( rc = RC_PRIVATEKEY; rc == RC_PRIVATEKEY; )
@@ -194,6 +192,7 @@ void ar_shamir_test()
 				ecPoint t2;
 				if( ecUnpack( &t2, pub ) ) { continue; }
 
+				vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 				cpSign( pri, session, mac, &sig );
 				if( vlIsZero( sig.r ) ) { continue; }
 				if( !cpVerify( pub, mac, &sig ) ) { continue; }
