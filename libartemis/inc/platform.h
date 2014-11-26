@@ -144,6 +144,7 @@
 
 	#define INLINE __inline
 	#define DLLDECL __declspec(dllexport)
+	#define STACKGAP(b) _alloca((b))
 
 	#if !defined(strdup)
 		#define strdup _strdup
@@ -159,6 +160,7 @@
 
 	#define INLINE __attribute__((always_inline))
 	#define DLLDECL __attribute__((visibility ("default")))
+	#define STACKGAP(b) alloca((b))
 
 	#define max(a,b) ((a)>(b)?(a):(b))
 
