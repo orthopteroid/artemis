@@ -89,6 +89,8 @@ static void ar_core_mac_arecord( vlPoint mac, arAuthptr pa, byte version, size_t
 
 	sha1_final( c, digest );
 	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+
+	sha1_clear( c );
 }
 
 static void ar_core_mac_srecord( vlPoint mac, arShareptr ps, byte version, size_t buflen )
@@ -107,6 +109,8 @@ static void ar_core_mac_srecord( vlPoint mac, arShareptr ps, byte version, size_
 
 	sha1_final( c, digest );
 	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+
+	sha1_clear( c );
 }
 
 static int ar_core_sign( cpPair* sig, const vlPoint session, const vlPoint vlPublicKey, const vlPoint vlPrivateKey, const vlPoint mac )

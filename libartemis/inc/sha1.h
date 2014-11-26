@@ -17,6 +17,7 @@ typedef word32 sha1Digest [5];
 void sha1_initial( sha1_context * c );
 void sha1_process( sha1_context * c, unsigned char * data, unsigned len );
 void sha1_final( sha1_context * c, sha1Digest digest );
+void sha1_clear( sha1_context * c );
 
 void sha1_digest( sha1Digest digest, byteptr bytes, size_t len );
 

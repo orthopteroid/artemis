@@ -171,12 +171,18 @@ void sha1_final( sha1_context* context, sha1Digest digest )
 #endif
 }
 
+void sha1_clear( sha1_context * c )
+{
+	memset( c, 0, sizeof(sha1_context) );
+}
+
 void sha1_digest( sha1Digest digest, byteptr bytes, size_t len )
 {
 	sha1_context c[1];
 	sha1_initial( c );
 	sha1_process( c, bytes, (unsigned)len );
 	sha1_final( c, digest );
+	sha1_clear( c );
 }
 
 void sha1_test()
