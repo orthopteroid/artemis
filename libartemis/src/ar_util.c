@@ -532,13 +532,23 @@ word16 ar_util_rnd16()
 	return u.w16[i];
 }
 
-byte ar_util_rnd1()
+byte ar_util_rnd8()
 {
 	static union { byte b[4]; word32 w32; } u;
 	static byte i = 0;
 	if( i == 0 ) { u.w32 = ar_util_rnd32(); }
 	i = (i + 1) & 0x03;
-	return u.b[i] & 0x01;
+	return u.b[i];
+}
+
+byte ar_util_rnd4()
+{
+	return ar_util_rnd8() & 0x07;
+}
+
+byte ar_util_rnd1()
+{
+	return ar_util_rnd8() & 0x01;
 }
 
 #define BSWAP(a,b) do { word32 t = a; a=b; b=t; } while(0);

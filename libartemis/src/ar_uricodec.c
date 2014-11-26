@@ -370,7 +370,7 @@ EXIT:
 int ar_uri_create_a( byteptr buf, byteptr bufend, arAuth* pARecord )
 {
 	int rc = 0;
-	STACKGAP( ar_util_rnd1() );
+	STACKGAP( ar_util_rnd4() );
 
 	if( !buf ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
 	if( !pARecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
@@ -438,7 +438,7 @@ EXIT:
 int ar_uri_create_s( byteptr buf, byteptr bufend, arShare* pSRecord )
 {
 	int rc = 0;
-	STACKGAP( ar_util_rnd1() );
+	STACKGAP( ar_util_rnd4() );
 
 	size_t buflen = 0;
 	size_t tokenlen = 0;
@@ -500,7 +500,7 @@ EXIT:
 int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 {
 	int rc = 0;
-	STACKGAP( ar_util_rnd1() );
+	STACKGAP( ar_util_rnd4() );
 
 	if( !arecord_out ) { rc = RC_NULL; LOGFAIL( rc ); return rc; }
 
@@ -608,7 +608,7 @@ EXIT:
 int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 {
 	int rc = 0;
-	STACKGAP( ar_util_rnd1() );
+	STACKGAP( ar_util_rnd4() );
 
 	if( !srecord_out ) { rc = RC_NULL; LOGFAIL( rc ); return rc; }
 

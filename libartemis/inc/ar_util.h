@@ -44,6 +44,8 @@ const char* ar_util_rclookup( int rc );
 void ar_util_rndcrank( byteptr bytes, size_t len );
 word32 ar_util_rnd32();
 word16 ar_util_rnd16();
+byte ar_util_rnd8();
+byte ar_util_rnd4();
 byte ar_util_rnd1();
 
 void ar_util_rnd32_reorder( word32ptr buf, size_t len );
