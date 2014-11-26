@@ -313,6 +313,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		if( rc = ar_util_memcpy( arecord_out[0]->buf + msgoffset,	bufend, inbuf, inbuflen ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
+	// add cleartext to entropypool, prior to gen of cryptkey
+	ar_util_rndcrank( arecord_out[0]->buf, abufused );
+
 	// create cryptcoefs (and cryptkey)
 	for( word16 t = 0; t < numThres; t++ )
 	{

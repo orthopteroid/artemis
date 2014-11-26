@@ -10,6 +10,7 @@
 
 #include "platform.h"
 #include "ar_codes.h"
+#include "sha1.h"
 
 #include "ar_util.h"
 
@@ -484,26 +485,60 @@ const char* ar_util_rclookup( int rc )
 
 ///////////////////////////////////////
 
+static sha1_context epool_c[1];
+
+void ar_util_rndcrank( byteptr bytes, size_t len )
+{
+	sha1_process( epool_c, bytes, (unsigned)len );
+}
+
 word32 ar_util_rnd32()
 {
+	static int init = 0;
+	if( init == 0 )
+	{
+		init = 1;
+		sha1_initial( epool_c );
+	}
+
+	static int i = 0;
+	if( i == 0 )
+	{
 
 #if defined(_WINDOWS)
 
-	word32 r;
-	rand_s( &r );
-	return r;
+		word32 w32;
+		rand_s( &w32 );
 	
 #else
 
-	return rand();
+		word32 w32 = rand();
 
 #endif
 
+		ar_util_rndcrank( (byteptr)&w32, sizeof(word32) );
+	}
+
+	i += (i == 4) ? -4 : +1;
+	return (epool_c[0].state[ i ]);
 }
 
 word16 ar_util_rnd16()
 {
-	return (word16)ar_util_rnd32();
+	static union { word16 w16[2]; word32 w32; } u;
+	static byte i = 0;
+	if( i == 0 ) { u.w32 = ar_util_rnd32(); }
+	i = (i + 1) & 0x01;
+	return u.w16[i];
+}
+
+byte ar_util_rnd1()
+{
+	static union { byte b[4]; word32 w32; } u;
+	static byte i = 0;
+	if( i == 0 ) { u.w32 = ar_util_rnd32(); }
+	i = (i + 1) & 0x03;
+	return u.b[i] & 0x01;
 }
 
 #define BSWAP(a,b) do { word32 t = a; a=b; b=t; } while(0);
