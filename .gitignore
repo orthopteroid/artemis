@@ -10,7 +10,9 @@
 *.exp
 *.tlog
 *.log
-*.exe
+*.pdb
+*.idb
+*.ilk
 *.unsuccessfulbuild
 *.lastbuildstate
 
