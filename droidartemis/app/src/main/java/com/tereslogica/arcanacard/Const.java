@@ -1,4 +1,4 @@
-package com.tereslogica.acanacard;
+package com.tereslogica.arcanacard;
 
 /**
  * Created by john on 20/11/14.

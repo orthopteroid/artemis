@@ -1,4 +1,4 @@
-package com.tereslogica.acanacard;
+package com.tereslogica.arcanacard;
 
 import android.app.Activity;
 import android.content.Context;

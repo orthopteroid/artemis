@@ -1,4 +1,4 @@
-package com.tereslogica.acanacard;
+package com.tereslogica.arcanacard;
 
 import android.database.Cursor;
 import android.view.View;
