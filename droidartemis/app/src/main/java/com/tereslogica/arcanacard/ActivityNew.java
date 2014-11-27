@@ -262,7 +262,8 @@ public class ActivityNew extends Activity {
             }
         }
         String uri = thisActivity.getApplicationContext().getResources().getString(R.string.app_loc);
-        String shares = ArtemisLib.Get().nativeEncode(keys, locks, uri, clues.toString(), settings.get(2).getValue());
+        String message = settings.get(2).getValue();
+        String shares = ArtemisLib.Get().nativeEncode(keys, locks, uri, clues.toString(), message);
 
         if (ArtemisLib.Get().nativeDidFail()) {
             Notifier.ShowOk(this, R.string.dialog_err_encode, null);
@@ -272,12 +273,14 @@ public class ActivityNew extends Activity {
         ////////////////////////
 
         String[] tokenArr = shares.split("\n");
-        AppLogic.Get().addTokenArray( tokenArr );
+        int rc = AppLogic.Get().addTokenArray( tokenArr );
 
-        if (AppLogic.Get().detectedError) {
+        if( AppLogic.RCTest( rc, AppLogic.RC_ERROR ) ) {
+
             Notifier.ShowOk(this, R.string.dialog_err_decode, null);
-        }
-        else if( AppLogic.Get().detectedDecode ) {
+
+        } else if( AppLogic.RCTest( rc, AppLogic.RC_UNLOCKED | AppLogic.RC_MESSAGE ) ) {
+
             final Activity newActivity = this;
             final String topic = ArtemisLib.Get().nativeTopic( tokenArr[0] );
 
@@ -286,6 +289,7 @@ public class ActivityNew extends Activity {
                     newActivity.finish();
                 }
             });
+
         } else {
             this.finish(); // an odd codepath, but required to close activity when the app has been hacked...
         }

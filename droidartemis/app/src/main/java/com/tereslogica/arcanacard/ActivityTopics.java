@@ -178,26 +178,9 @@ public class ActivityTopics extends FragmentActivity {
     ///////////////////////////
 
     public void addScannedItem( String share ) {
-        AppLogic.Get().addToken(share);
-        if( AppLogic.Get().detectedError ) {
+        int rc = AppLogic.Get().addToken( share );
 
-            Notifier.ShowOk( this, R.string.dialog_err_decode, null );
-
-        } else if( AppLogic.Get().detectedDecode ) {
-            final String topic = ArtemisLib.Get().nativeTopic( share );
-
-            Notifier.ShowOk( this, R.string.dialog_info_decode, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int _which) {
-                    ArtemisTopic oTopic = ArtemisSQL.Get().getTopicInfo( topic );
-
-                    Notifier.ShowMessageOk(thisActivity, topic, oTopic.cleartext, null);
-
-                }
-            });
-
-        }
-
-        refreshListView();
+        AppLogic.Get().provideUserFeedback( rc, share );
     }
 
     //////////////////////
@@ -275,7 +258,6 @@ public class ActivityTopics extends FragmentActivity {
                             default:
                         }
                         if( intent != null ) { lbm.sendBroadcast( intent ); }
-                        //refreshListView(); // needed?
                     }
                 };
                 Notifier.ShowMenu(thisActivity, R.array.dialog_topicactions, ocl);
@@ -394,7 +376,8 @@ public class ActivityTopics extends FragmentActivity {
                 if( fs == null) {
                     fs = new FakeScanner();
                 }
-                addScannedItem( fs.nextItem() );
+                AppLogic.Get().addToken( fs.nextItem() );
+                refreshListView();
                 return true;
             case R.id.menu_sort:
                 onClickSort(null);
