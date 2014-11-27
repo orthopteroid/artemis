@@ -104,12 +104,13 @@ void gfClear (gfPoint p)
 } /* gfClear */
 
 
-void gfSetLUnit (gfPoint p, gfunit u)
+void gfSetUnit (gfPoint p, gfunit u)
 	/* sets p := u */
 {
-	p[0] = 1; p[1] = u;
-	if( !u ) p[0] = 0; // orthopteroid
-} /* gfSetLUnit */
+	gfClear(p);
+	p[0] = 1;
+	p[1] = u;
+} /* gfSetUnit */
 
 void gfCopy (gfPoint p, const gfPoint q)
 	/* sets p := q */

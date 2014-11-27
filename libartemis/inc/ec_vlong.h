@@ -21,8 +21,8 @@ typedef vlunit vlPoint [VL_UNITS +1 ]; // +1 for length
 
 void vlClear (vlPoint p);
 
-word16 vlGetWord16(vlPoint p, word16 i);
-void vlSetWord16(vlPoint p, word16 u);
+vlunit vlGetUnit(vlPoint p, word16 i);
+void vlSetUnit(vlPoint p, vlunit u);
 
 void vlSetWord32Ptr( vlPoint p, word16 maxWord16s, word32* q );
 

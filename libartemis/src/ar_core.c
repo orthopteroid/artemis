@@ -129,13 +129,9 @@ EXIT:
 
 static int ar_core_makekeypair( vlPoint pub, vlPoint pri )
 {
-	int rc = 0;
-
-	// use placeholder vars to test the signature
-	cpPair sig;
-
 	size_t i = 0;
-	for( rc = RC_PRIVATEKEY; rc == RC_PRIVATEKEY; )
+	int rc = RC_PRIVATEKEY;
+	while( rc == RC_PRIVATEKEY )
 	{
 		if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
 
@@ -143,10 +139,16 @@ static int ar_core_makekeypair( vlPoint pub, vlPoint pri )
 		cpMakePublicKey( pub, pri );
 
 		vlPoint mac;
-		vlPoint session;
 		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
+
+		vlPoint session;
 		vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
+
+		cpPair sig;
 		rc = ar_core_sign( &sig, session, pub, pri, mac );
+
+		vlClear(mac);
+		vlClear(session);
 	}
 	if( rc ) { LOGFAIL( rc ); goto EXIT; }
 EXIT:
@@ -158,7 +160,7 @@ static void ar_core_rc4( byteptr buf, size_t buflen, gfPoint gfKey )
 	vlPoint vlKey;
 	gfPack( gfKey, vlKey );
 
-	word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlKey, 0 ));
+	word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetUnit( vlKey, 0 ));
 
 	size_t deltalen = 0;
 	byte packetEndianBArr[ sizeof(vlPoint) +sizeof(vlunit) ]; // +sizeof(vlunit) for spare
@@ -211,7 +213,7 @@ EXIT:
 int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 numShares, byte numThres, byteptr inbuf, word16 inbuflen, bytetbl clueTbl, byteptr szLocation )
 {
 	int rc = 0;
-	STACKGAP( ar_util_rnd4() );
+	STACKGAP();
 	
 	gfPoint* gfCryptCoefArr = 0;
 	gfPoint* shareArr = 0;
@@ -323,6 +325,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		vlSetRandom( vlTmp, AR_CRYPTKEYUNITS, &ar_util_rnd16 );
 		gfUnpack( gfCryptCoefArr[t], vlTmp );
 		gfReduce( gfCryptCoefArr[t] );
+		vlClear(vlTmp);
 	}
 
 	// cipher the cleartext
@@ -356,7 +359,10 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		vlPoint session;
 		vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
-		if( rc = ar_core_sign( &arecord_out[0]->authsig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_core_sign( &arecord_out[0]->authsig, session, pubSigningkey, priSigningkey, mac ) )
+		{ vlClear(session); LOGFAIL( rc ); goto EXIT; }
+
+		vlClear(session); 
 	}
 
 	/////////////
@@ -397,7 +403,10 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			vlPoint session;
 			vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
 
-			if( rc = ar_core_sign( &(*srecordtbl_out)[i]->sharesig, session, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+			if( rc = ar_core_sign( &(*srecordtbl_out)[i]->sharesig, session, pubSigningkey, priSigningkey, mac ) )
+			{ vlClear(session); LOGFAIL( rc ); goto EXIT; }
+
+			vlClear(session);
 		}
 	}
 
@@ -406,6 +415,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	if( rc = ar_core_check_recordset( szLocation, *arecord_out, *srecordtbl_out, numShares ) ) { LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
+
+	// add entropy to pool, so we don't leave it available for easy snooping
+	ar_util_rndcrank(0,0);
 
 	if( gfCryptCoefArr ) { memset( gfCryptCoefArr, 0, sizeof(gfPoint) * numThres ); free( gfCryptCoefArr ); }
 	if( shareArr ) { memset( shareArr, 0, sizeof(gfPoint) * numShares ); free( shareArr ); }
@@ -429,7 +441,7 @@ EXIT:
 int ar_core_decrypt( byteptr* buf_out, byteptr szLocation, arAuthptr arecord, arSharetbl srecordtbl, word16 numSRecords )
 {
 	int rc = 0;
-	STACKGAP( ar_util_rnd4() );
+	STACKGAP();
 
 	gfPoint* shareArr = 0;
 	word16* shareIDArr = 0;

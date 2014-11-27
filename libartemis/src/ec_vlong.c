@@ -70,22 +70,18 @@ void vlCopy (vlPoint p, const vlPoint q)
 } /* vlCopy */
 
 
-word16 vlGetWord16(vlPoint p, word16 i)
+vlunit vlGetUnit(vlPoint p, word16 i)
 {
 	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
 
 	return ( i <= p[0] ) ? p[ p[0] - i ] : 0; // orthopteroid
 }
 
-void vlSetWord16(vlPoint p, word16 u)
+void vlSetUnit(vlPoint p, word16 u)
 {
-	if( u == 0 )
-		p[0] = 0;
-	else {
-		p[0] = 1;
-		p[1] = u;
-		if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
-	}
+	vlClear(p);
+	p[0] = 1;
+	p[1] = u;
 }
 
 int vlNumBits (const vlPoint k)
