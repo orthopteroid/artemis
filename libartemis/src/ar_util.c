@@ -489,11 +489,6 @@ static sha1_context epool_c[1];
 
 void ar_util_rndcrank( byteptr bytes, size_t len )
 {
-	sha1_process( epool_c, bytes, (unsigned)len );
-}
-
-word32 ar_util_rnd32()
-{
 	static int init = 0;
 	if( init == 0 )
 	{
@@ -501,8 +496,7 @@ word32 ar_util_rnd32()
 		sha1_initial( epool_c );
 	}
 
-	static int i = 0;
-	if( i == 0 )
+	if( bytes == 0 || len == 0 )
 	{
 
 #if defined(_WINDOWS)
@@ -516,29 +510,37 @@ word32 ar_util_rnd32()
 
 #endif
 
-		ar_util_rndcrank( (byteptr)&w32, sizeof(word32) );
-	}
+		sha1_process( epool_c, (byteptr)&w32, sizeof(word32) );
 
+	} else {
+
+		sha1_process( epool_c, bytes, (unsigned)len );
+
+	}
+}
+
+word32 ar_util_rnd32()
+{
+	static int i = 0;
+	if( i == 0 ) { ar_util_rndcrank(0,0); }
 	i += (i == 4) ? -4 : +1;
-	return (epool_c[0].state[ i ]);
+	return (epool_c[0].u.state[ i ]);
 }
 
 word16 ar_util_rnd16()
 {
-	static union { word16 w16[2]; word32 w32; } u;
-	static byte i = 0;
-	if( i == 0 ) { u.w32 = ar_util_rnd32(); }
-	i = (i + 1) & 0x01;
-	return u.w16[i];
+	static int i = 0;
+	if( i == 0 ) { ar_util_rndcrank(0,0); }
+	i += (i == 9) ? -9 : +1;
+	return (epool_c[0].u.state16[ i ]);
 }
 
 byte ar_util_rnd8()
 {
-	static union { byte b[4]; word32 w32; } u;
-	static byte i = 0;
-	if( i == 0 ) { u.w32 = ar_util_rnd32(); }
-	i = (i + 1) & 0x03;
-	return u.b[i];
+	static int i = 0;
+	if( i == 0 ) { ar_util_rndcrank(0,0); }
+	i += (i == 19) ? -19 : +1;
+	return (epool_c[0].u.state8[ i ]);
 }
 
 byte ar_util_rnd4()
@@ -551,7 +553,7 @@ byte ar_util_rnd1()
 	return ar_util_rnd8() & 0x01;
 }
 
-#define BSWAP(a,b) do { word32 t = a; a=b; b=t; } while(0);
+#define BSWAP(a,b) do { word32 t=a; a=b; b=t; } while(0);
 
 void ar_util_rnd32_reorder( word32ptr buf, size_t len )
 {
@@ -627,8 +629,8 @@ void ar_util_test()
 		vlPoint v0, v1;
 
 		vlClear( v0 );
-		v0[0] = ar_util_rnd32() % VL_UNITS;
-		for( int j=0; j<v0[0]; j++) { v0[j+1] = (word16)ar_util_rnd32(); }
+		v0[0] = ar_util_rnd16() % VL_UNITS;
+		for( int j=0; j<v0[0]; j++) { v0[j+1] = ar_util_rnd16(); }
 		v0[2]=0x00ff;
 
 		buf[0]=0;

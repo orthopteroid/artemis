@@ -764,14 +764,14 @@ void ar_uri_test()
 	{
 		int rc = 0;
 
-		for( int j=0; j<20; j++ ) { cleartextin[j] = (char)(ar_util_rnd32() % (122 - 32) + 32); }
-		cleartextin[ ar_util_rnd32() % 20 ] = 0;
+		for( int j=0; j<20; j++ ) { cleartextin[j] = (char)(ar_util_rnd8() % (122 - 32) + 32); }
+		cleartextin[ ar_util_rnd8() % 20 ] = 0;
 
 		// make clue optional
 		char* clues_rw[4] = {clues_r[0], clues_r[1], clues_r[2], 0}; // table ends in 0
-		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
-		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
-		if( ar_util_rnd32() % 9 > 5 ) {	clues_rw[ ar_util_rnd32() % 3 ] = ""; }
+		if( ar_util_rnd8() % 9 > 5 ) {	clues_rw[ ar_util_rnd8() % 3 ] = ""; }
+		if( ar_util_rnd8() % 9 > 5 ) {	clues_rw[ ar_util_rnd8() % 3 ] = ""; }
+		if( ar_util_rnd8() % 9 > 5 ) {	clues_rw[ ar_util_rnd8() % 3 ] = ""; }
 
 		// clear
 		memset( &bufa, 0, sizeof(byte2048) );
@@ -929,11 +929,11 @@ void ar_uri_test()
 				free( arecord_ );
 				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); srecordtbl_[i] = 0; }
 
-				byteptr p = buf[ ar_util_rnd32() & 0x01 ];
-				size_t ii = ar_util_rnd32() % strlen( p );
+				byteptr p = buf[ ar_util_rnd8() & 0x01 ];
+				size_t ii = ar_util_rnd16() % strlen( p );
 				{
 					byte bb = p[ii];
-					p[ii] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
+					p[ii] = 32 + (ar_util_rnd8() % (128 - 32)); // dirty without non-printables
 
 					rc = ar_uri_parse_a( &arecord_, buf[0] );
 					if( !rc ) { rc = ar_uri_parse_s( &srecordtbl_[0], buf[1] ); }
@@ -954,7 +954,7 @@ void ar_uri_test()
 		}
 
 		{
-			int stretch = ar_util_rnd32() % 5 +1;
+			int stretch = ar_util_rnd8() % 5 +1;
 
 			// test failure from uri streching
 			size_t  bufa_stretch_len = strlen( bufa ) +stretch +1; // +stretch for stretch, +1 for /0
@@ -966,10 +966,10 @@ void ar_uri_test()
 				free( arecord_ );
 				for( size_t i = 0; i < 2; i++ ) { free( srecordtbl_[i] ); srecordtbl_[i] = 0; }
 
-				size_t ii = ar_util_rnd32() % strlen( bufa );
+				size_t ii = ar_util_rnd16() % strlen( bufa );
 				TESTASSERT( ar_util_strncpy( bufa_stretch, bufa_stretch_end, bufa, ii ) == 0 );
 				for( int k=0; k<stretch; k++) {
-					bufa_stretch[ii +k] = 32 + (ar_util_rnd32() % (128 - 32)); // dirty without non-printables
+					bufa_stretch[ii +k] = 32 + (ar_util_rnd8() % (128 - 32)); // dirty without non-printables
 				}
 				TESTASSERT( ar_util_strncpy( bufa_stretch +ii +stretch, bufa_stretch_end, bufa +ii, strlen( bufa ) -1 -ii ) == 0 );
 

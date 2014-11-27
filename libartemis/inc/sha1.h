@@ -7,7 +7,11 @@
 
 typedef struct {
 	byte	buffer[64]; // requires proper alignment 
-	word32	state[5];
+	union {
+		word32	state[5];
+		word16	state16[10];
+		byte	state8[20];
+	} u;
 	word32	count[2];
 } sha1_context;
 

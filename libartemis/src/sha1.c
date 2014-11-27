@@ -109,11 +109,11 @@ void sha1_transform( word32 state[5], byte buffer[64])
 void sha1_initial(sha1_context* context)
 {
     /* SHA1 initialization constants */
-    context->state[0] = 0x67452301;
-    context->state[1] = 0xEFCDAB89;
-    context->state[2] = 0x98BADCFE;
-    context->state[3] = 0x10325476;
-    context->state[4] = 0xC3D2E1F0;
+    context->u.state[0] = 0x67452301;
+    context->u.state[1] = 0xEFCDAB89;
+    context->u.state[2] = 0x98BADCFE;
+    context->u.state[3] = 0x10325476;
+    context->u.state[4] = 0xC3D2E1F0;
     context->count[0] = context->count[1] = 0;
     memset(context->buffer, 0, 64);
 }
@@ -130,9 +130,9 @@ void sha1_process( sha1_context * context, unsigned char * data, unsigned len )
     context->count[1] += (len >> 29);
     if ((j + len) > 63) {
         memcpy(&context->buffer[j], data, (i = 64-j));
-        sha1_transform(context->state, context->buffer);
+        sha1_transform(context->u.state, context->buffer);
         for ( ; i + 63 < len; i += 64) {
-            sha1_transform(context->state, &data[i]);
+            sha1_transform(context->u.state, &data[i]);
         }
         j = 0;
     }
@@ -158,12 +158,12 @@ void sha1_final( sha1_context* context, sha1Digest digest )
     }
     sha1_process(context, finalcount, 8);  /* Should cause a sha1_transform() */
     for (i = 0; i < 5; i++) {
-        digest[i] = context->state[i];
+        digest[i] = context->u.state[i];
     }
     /* Wipe variables */
     i = j = 0;
     memset(context->buffer, 0, 64);
-    memset(context->state, 0, 20);
+    memset(context->u.state, 0, 20);
     memset(context->count, 0, 8);
     memset(&finalcount, 0, 8);
 #ifdef SHA1HANDSOFF  /* make sha1_transform overwrite it's own static vars */
