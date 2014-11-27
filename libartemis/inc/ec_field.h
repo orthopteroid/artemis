@@ -42,7 +42,7 @@ int  gfInit (void);
 void gfQuit (void);
 	/* perform housekeeping for library termination */
 
-void gfSetLUnit(gfPoint p, gfunit u);
+void gfSetUnit(gfPoint p, gfunit u);
 	/* sets p := u */
 
 int  gfEqual (const gfPoint p, const gfPoint q);

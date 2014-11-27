@@ -24,7 +24,7 @@ static void eval_horner( gfPoint* solnArr, word16 solnN, gfPoint* coefArr, word1
 	gfPoint g, x, tmp;
     for( word16 s = 0; s != solnN; s++ )
 	{
-		gfSetLUnit( x, s + 1 ); // x = 1 ... N
+		gfSetUnit( x, s + 1 ); // x = 1 ... N
 		gfCopy( g, coefArr[ coefM - 1 ] );
 	    for( word16 c = 1; c != coefM; c++ )
 		{
@@ -44,7 +44,7 @@ static void eval_lagrange( gfPoint y, gfPoint x, gfPoint* xArr, gfPoint* yArr, w
     for( int i = 0; i < K; ++i )
 	{
         //calculate the constant term of lagrange interpolation polynomial
-        gfSetLUnit( l, 1 );
+        gfSetUnit( l, 1 );
         for( int j = 0; j < K; ++j )
 		{
             if( i == j ) continue;
@@ -90,10 +90,10 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 
 	for( int i=0; i< numShares; i++ )
 	{
-		gfSetLUnit( gfShareIDArr[i], (gfunit)shareIDArr[i] );
+		gfSetUnit( gfShareIDArr[i], (gfunit)shareIDArr[i] );
 	}
 
-	gfSetLUnit( x, 0 ); // calc y at x = 0
+	gfSetUnit( x, 0 ); // calc y at x = 0
 	eval_lagrange( key, x, gfShareIDArr, shareArr, numShares );
 
 	if( gfShareIDArr ) free( gfShareIDArr );

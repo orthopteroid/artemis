@@ -160,7 +160,7 @@ static void ar_core_rc4( byteptr buf, size_t buflen, gfPoint gfKey )
 	vlPoint vlKey;
 	gfPack( gfKey, vlKey );
 
-	word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetWord16( vlKey, 0 ));
+	word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetUnit( vlKey, 0 ));
 
 	size_t deltalen = 0;
 	byte packetEndianBArr[ sizeof(vlPoint) +sizeof(vlunit) ]; // +sizeof(vlunit) for spare

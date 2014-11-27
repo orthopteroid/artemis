@@ -285,10 +285,10 @@ void ecPack (const ecPoint *p, vlPoint k)
 	{
 		gfPack(p->x, k);
 		vlShortLshift (k, 1);
-		vlSetWord16(a, (word16) ecYbit (p));
+		vlSetUnit(a, (word16) ecYbit (p));
 		vlAdd(k, a);
 	} else if( p->y[0] ) {
-		vlSetWord16(k, 1);
+		vlSetUnit(k, 1);
 	} else {
 		k[0] = 0;
 	}
