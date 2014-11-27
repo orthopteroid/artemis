@@ -179,8 +179,9 @@ void ar_shamir_test()
 			cpPair sig;
 			vlPoint session;
 
-			int rc = 0, i = 0;
-			for( rc = RC_PRIVATEKEY; rc == RC_PRIVATEKEY; )
+			int i = 0;
+			int rc = RC_PRIVATEKEY;
+			while( rc == RC_PRIVATEKEY )
 			{
 				if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
 
