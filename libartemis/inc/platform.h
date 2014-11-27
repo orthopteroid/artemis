@@ -160,7 +160,7 @@
 
 	#define INLINE __attribute__((always_inline))
 	#define DLLDECL __attribute__((visibility ("default")))
-	#define STACKGAP() _alloca( 8 * ar_util_rnd4() )
+	#define STACKGAP() alloca( 8 * ar_util_rnd4() )
 
 	#define max(a,b) ((a)>(b)?(a):(b))
 
