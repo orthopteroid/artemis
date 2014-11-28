@@ -7,6 +7,9 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -187,7 +190,7 @@ public class ActivityNew extends Activity {
         settings.clear();
         settings.add( (AbstractItem)new NumberItem( layout, inflater, "Keys", "2", NumType.key ) );
         settings.add( (AbstractItem)new NumberItem( layout, inflater, "Locks", "2", NumType.lock ) );
-        settings.add( (AbstractItem)new TextItem( layout, inflater, "Message to be Encrypted", "A Secret") );
+        settings.add( (AbstractItem)new TextItem( layout, inflater, "Hidden Message", "") );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Message Clue", "") );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
@@ -230,6 +233,53 @@ public class ActivityNew extends Activity {
         for( int i = 0; i < extraclues; i++ ) {
             String clueText = savedInstanceState.getString( Integer.toString(i) );
             settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", clueText) );
+        }
+    }
+
+    ////////////////
+    // menu creation & handling
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.new_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        FakeUserInput.Scenario s = null;
+
+        int keys = Integer.parseInt(settings.get(0).getValue());
+        int maxcluelen = BuildConfig.MAX_CHARS > 20 ? 20 : BuildConfig.MAX_CHARS;
+
+        switch (item.getItemId()) {
+            case R.id.menu_new_clearfill:
+                for (int i = 2; i < settings.size(); i++) { // 2 >= are user text
+                    settings.get(i).setValue( "" );
+                }
+                return true;
+            case R.id.menu_new_autofill_shakespeare:
+                s = FakeUserInput.Shakespeare(maxcluelen, keys);
+                break;
+            case R.id.menu_new_autofill_julesverneEN:
+                s = FakeUserInput.JulesVerneEN(maxcluelen, keys);
+                break;
+            case R.id.menu_new_autofill_julesverneFR:
+                s = FakeUserInput.JulesVerneFR(maxcluelen, keys);
+                break;
+            default:
+                break;
+        }
+        if( s != null ) {
+            settings.get(2).setValue( s.m );
+            settings.get(3).setValue( s.l );
+            for (int i = 4; i < settings.size(); i++) { // 4 >= are key clues
+                settings.get(i).setValue( s.k[i -4] ); // -4 to index from 0
+            }
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 

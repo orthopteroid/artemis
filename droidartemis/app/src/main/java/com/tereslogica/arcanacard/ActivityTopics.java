@@ -370,7 +370,6 @@ public class ActivityTopics extends FragmentActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
         switch (item.getItemId()) {
             case R.id.menu_testtoken:
                 if( fs == null) {

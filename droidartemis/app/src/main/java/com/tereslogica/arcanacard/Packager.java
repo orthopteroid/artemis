@@ -26,6 +26,15 @@ public class Packager {
     private ArrayList<ArtemisShare> oSRecords = new ArrayList<ArtemisShare>();
     private ProgressDialog dialog;
 
+    private static String TrimString( String s, int len ) {
+        if( s.length() > len ) {
+            int x = len/2 -3; // -3 for "..."
+            return s.substring(0, x) + "..." + s.substring(s.length()-x, s.length());
+        } else {
+            return s;
+        }
+    }
+
     ////////////////////////////////////
 
     // https://developer.android.com/reference/android/support/v4/content/FileProvider.html
@@ -69,10 +78,7 @@ public class Packager {
                 int height = Prefs.GetInt( Prefs.QR_HEIGHT, Prefs.DEFAULT_HEIGHT );
 
                 String fullclue = ArtemisLib.Get().nativeClue( sARecord );
-                String shortclue = fullclue;
-                if( shortclue.length() > 10 ) {
-                    shortclue = fullclue.substring(0, 5) + "..." + fullclue.substring(fullclue.length()-5, fullclue.length());
-                }
+                String shortclue = TrimString( fullclue, 10 );
                 if( shortclue.length() > 0 ) { shortclue = "-" + shortclue; }
                 String fname = "message" + shortclue + ".png";
                 ZipEntry ze = new ZipEntry( fname );
@@ -94,10 +100,7 @@ public class Packager {
             ArtemisShare sRecord = oSRecords.get( key );
             String istr = String.format("%05d", key); // 16 bits serialized = 4095 = 5 decimal digits, 0 padding
             String fullclue = ArtemisLib.Get().nativeClue(sRecord.share);
-            String shortclue = fullclue;
-            if( shortclue.length() > 10 ) {
-                shortclue = fullclue.substring(0, 5) + "..." + fullclue.substring(fullclue.length()-5, fullclue.length());
-            }
+            String shortclue = TrimString( fullclue, 10 );
             if( shortclue.length() > 0 ) { shortclue = "-" + shortclue; }
             String fname = "key" + istr + shortclue + ".png";
             ZipEntry ze = new ZipEntry( fname );

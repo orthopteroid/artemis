@@ -8,6 +8,10 @@
     <string name="menu_sort">Sorting</string>
     <string name="menu_licenses">Licenses</string>
     <string name="menu_website">Website</string>
+    <string name="menu_new_clearfill">Clear Items</string>
+    <string name="menu_new_autofill_shakespeare">Shakespeare</string>
+    <string name="menu_new_autofill_julesverneEN">Jules Verene (en)</string>
+    <string name="menu_new_autofill_julesverneFR">Jules Verene (fr)</string>
     <string name="dialog_selectsorting">Change Sorting</string>
     <string name="dialog_noscanner">Scanner app (zxing) not found.</string>
     <string name="dialog_nonativelib">Installation error: native library not found.</string>
