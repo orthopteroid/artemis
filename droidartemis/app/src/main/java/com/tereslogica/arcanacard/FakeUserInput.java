@@ -258,10 +258,10 @@ public class FakeUserInput {
         Random r = new Random();
 
         // enum word starts
-        ArrayList<Integer> arri = new ArrayList<Integer>();
+        ArrayList<Integer> wordpositions = new ArrayList<Integer>();
         int i = 0;
         while( i < s.length() ) {
-            arri.add( new Integer(i) );
+            wordpositions.add(new Integer(i));
             while( ++i < s.length() && s.charAt(i) != ' ' ) { ; } // find next space
             ++i; // advance to next word-start
             if( i > s.length() - len/3 ) { break; } // skip words past end-tolerance
@@ -270,17 +270,31 @@ public class FakeUserInput {
         // add, but try to prevent duplicates
         ArrayList<String> arrl = new ArrayList<String>();
         for( int c=0; c<count; c++) {
-            if( arri.size() == 0 ) { // eek! ran out! recycle some of the others
+            if( wordpositions.size() == 0 ) { // eek! ran out! recycle some of the others
                 int recycle = r.nextInt(arrl.size());
                 arrl.add( new String( arrl.get(recycle)));
             } else {
-                int ai = r.nextInt(arri.size());
-                int wp = arri.get(ai);
-                arri.remove(ai);
-                if( wp + len > s.length() ) {
-                    arrl.add(s.substring(wp));
+                // select a word, then remove it so it's not selected again
+                int wordarrindex = r.nextInt(wordpositions.size());
+
+                // remove *physically* adjacent words as well to prevent duplicates
+                // use -1 for nonexistant cases
+                int rightwordposition = wordarrindex +1 >= wordpositions.size() ? -1 : wordpositions.get(wordarrindex +1);
+                int wordposition = wordpositions.get(wordarrindex);
+                int leftwordposition = wordarrindex -1 <= 0 ? -1 : wordpositions.get(wordarrindex -1); // but not physical word 0
+
+                int index = wordpositions.size();
+                while( --index >= 0 ) {
+                    if (wordpositions.get(index) == rightwordposition) { wordpositions.remove(index); }
+                    else if (wordpositions.get(index) == wordposition) { wordpositions.remove(index); }
+                    else if (wordpositions.get(index) == leftwordposition) { wordpositions.remove(index); break; }
+                }
+
+                // check length
+                if( wordposition + len > s.length() ) {
+                    arrl.add(s.substring(wordposition));
                 } else {
-                    arrl.add(s.substring(wp, wp + len));
+                    arrl.add(s.substring(wordposition, wordposition + len));
                 }
             }
         }
