@@ -48,11 +48,6 @@ STATICASSERT( AR_PRIVKEYUNITS < VL_UNITS );
 //  8 authentication is distributed in the concatenated form L | Kpub | I | Sa | M' | Mc
 //  9 shares are distributed in the concatenated form      { L | Kpub | I | Si | i | C'i | Sc }
 
-// rc4 is cranked between 256 and 511 times before being used on stream
-// 256 + (LS 8 bits of cipher key)
-#define AR_RC4CRANK_OFFSET	256
-#define AR_RC4CRANK_MASK	255
-
 //////////////////////////
 
 static INLINE byte strcrc( byteptr s ) { byte x = 0x41; while( *s ) { x += (x << 1) ^ *(s++); } return x; }
@@ -160,10 +155,10 @@ static void ar_core_rc4( byteptr buf, size_t buflen, gfPoint gfKey )
 	vlPoint vlKey;
 	gfPack( gfKey, vlKey );
 
-	word32 rc4cranks = AR_RC4CRANK_OFFSET + (AR_RC4CRANK_MASK & vlGetUnit( vlKey, 0 ));
-
+	word32 rc4cranks = 1000;
 	size_t deltalen = 0;
 	byte packetEndianBArr[ sizeof(vlPoint) +sizeof(vlunit) ]; // +sizeof(vlunit) for spare
+
 	ar_util_u16_host2packet( &deltalen, packetEndianBArr, packetEndianBArr + sizeof(vlPoint), vlKey + 1, vlKey[0] );
 	rc4( packetEndianBArr, vlKey[0] *sizeof(vlunit), rc4cranks, buf, (word32)buflen );
 
