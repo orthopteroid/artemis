@@ -1,5 +1,6 @@
 // Implementation, Copyright 2014 John Howard (orthopteroid@gmail.com)
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

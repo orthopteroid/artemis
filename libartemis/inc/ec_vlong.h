@@ -1,8 +1,6 @@
 #ifndef __EC_VLONG_H
 #define __EC_VLONG_H
 
-#include <stdio.h>
-
 #include "ec_types.h"
 #include "ec_param.h"
 

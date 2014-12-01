@@ -6,6 +6,7 @@
  * George Barwood <george.barwood@dial.pipex.com>
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
