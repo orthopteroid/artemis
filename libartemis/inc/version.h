@@ -14,7 +14,7 @@
  * likley falls under classification 5x992 and can be exported without
  * encryption registration. Supposedly.
  *
- * pegwit uses a Kolbitz curve of the form: y^2 + xy = x^3 + b. Kolbitz curves
+ * pegwit uses a Koblitz curve of the form: y^2 + xy = x^3 + b. Koblitz curves
  * are weaker as their field is nonprime and can apparently be factored into
  * smaller attackable fields.
  */
