@@ -74,14 +74,14 @@ android {
     buildTypes {
         release {
             buildConfigField "int", "MAX_KEYS", "7"
-            buildConfigField "int", "MAX_LOCKS", "3"
-            buildConfigField "int", "MAX_CHARS", "20"
+            buildConfigField "int", "MAX_LOCKS", "7"
+            buildConfigField "int", "MAX_CHARS", "63"
             buildConfigField "boolean", "SOMEFLAG", "false"
         }
         debug {
             buildConfigField "int", "MAX_KEYS", "7"
-            buildConfigField "int", "MAX_LOCKS", "3"
-            buildConfigField "int", "MAX_CHARS", "20"
+            buildConfigField "int", "MAX_LOCKS", "7"
+            buildConfigField "int", "MAX_CHARS", "63"
             buildConfigField "boolean", "SOMEFLAG", "true"
         }
     }

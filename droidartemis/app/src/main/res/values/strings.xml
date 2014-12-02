@@ -68,7 +68,7 @@ ArcanaCards are minted in groups called \'Topics\', which all have a unique code
     </string>
 
     <string name="text_features_limitedversion">
-This version of ArcanaCard is restricted to 7 keys, 3 locks and 20 character
+This version of ArcanaCard is restricted to 7 keys, 7 locks and 63 character
  messages and clues.</string>
 
     <string name="text_eula">
