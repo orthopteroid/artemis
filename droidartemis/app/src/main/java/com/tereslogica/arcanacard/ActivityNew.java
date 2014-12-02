@@ -344,7 +344,15 @@ public class ActivityNew extends Activity {
 
             Notifier.ShowMessageOk(thisActivity, R.string.dialog_newtopic, topic, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int _which) {
-                    newActivity.finish();
+                    if( false == Prefs.GetAndSetBool( Prefs.HOWTO_TEST ) ) {
+                        Notifier.ShowHowto( thisActivity, R.string.text_howto_test, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int _which) {
+                                newActivity.finish();
+                            }
+                        });
+                    } else {
+                        newActivity.finish();
+                    }
                 }
             });
 

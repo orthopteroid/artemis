@@ -400,8 +400,16 @@ public class ActivityTopics extends FragmentActivity {
             case R.id.menu_licenses:
                 Notifier.ShowText(thisActivity, R.string.text_licenses);
                 return true;
-            case R.id.menu_website:
-                startActivity( new Intent(Intent.ACTION_VIEW).setData(Uri.parse(this.getResources().getString(R.string.app_weblink))) );
+            case R.id.menu_howtos:
+                Notifier.ShowHowto( thisActivity, R.string.text_howto_topic, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int _which) {
+                        Notifier.ShowHowto( thisActivity, R.string.text_howto_new, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int _which) {
+                                Notifier.ShowHowto( thisActivity, R.string.text_howto_test, null );
+                            }
+                        });
+                    }
+                });
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

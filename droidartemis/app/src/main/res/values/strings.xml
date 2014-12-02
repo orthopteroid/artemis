@@ -8,8 +8,9 @@
     <string name="activity_new">Create Topic</string>
     <string name="activity_qrviewer">View QRCodes</string>
     <string name="menu_testtoken">Debug Scan Test</string>
-    <string name="menu_sort">Sorting</string>
+    <string name="menu_sort">Sort Topics</string>
     <string name="menu_licenses">Licenses</string>
+    <string name="menu_howtos">Replay Howtos</string>
     <string name="menu_website">Website</string>
     <string name="menu_new_clearfill">Clear Items</string>
     <string name="menu_new_autofill_shakespeare">Shakespeare</string>
@@ -44,27 +45,38 @@
     <string name="button_less">Less</string>
 
     <string name="text_howto_topic">
-ArcanaCards are minted in groups called \'Topics\', which all have a unique code so you can\'t
- guess their hidden message. The topic indicators are shown on the top right of each topic.
- The indicators are:\n
+ArcanaCards are minted in groups called \'Topics\'. There are two types of cards: message cards and key cards. To
+ reveal a hidden message you need the message card and atleast two of the key cards (exactly
+ how many will depend on the \'locks\' setting when the topic was minted). ArcanaCard groups
+ cards together when you scan them and shows you how many more you might need before you can
+ reveal the hidden message.\n
+\nOn the main screen the topics are listed, each with a set of letter indicators at the top
+ right. The indicators are:\n
 \n* M nnnK nnnL nnnT\n
-\n* You can read the hidden message (short-press on the topic to read the message),\n
-\nM You have scanned the message code,\n
-\nnnnK How many keys you have for this topic (nnn is some number),\n
-\nnnnL How many locks are on the message. To unlock a hidden message you need the message and this many keys (nnn is some number),\n
-\nnnnT The total number of keys that were made for this message (nnn is some number).\n
-\n
-\nYou can long-press on a topic to access other topic-related options), but to get
- started press the NEW button to create your first topic!
+\n\'*\' Means you can read the hidden message because you have the message card and enough of the keys to unlock it (short-press on the topic to read the message),\n
+\n\'M\' Means you have scanned the message code (but you may not be able to read it if you don\'t have enough keys),\n
+\nnnnK How many keys you have for this topic (nnn is shorthand for the number of keys you\'ve collected),\n
+\nnnnL How many locks are on the message. To unlock a hidden message you need the message and this many keys (nnn is the number locks on the message),\n
+\nnnnT The total number of keys that were made for this message.\n
+\nYou can long-press on a topic to access other topic-related options, but to get
+ started press the NEW button to create your first topic.
     </string>
 
     <string name="text_howto_new">
 \'Keys\' are the number of codes that will be created.\n
 \n\'Locks\' are the number of keys that must be scanned to reveal your hidden message.\n
 \n\'Clues\' can be attached to keys and can be read as soon as a key is scanned.\n
- Choose clues that create an interesting game mechanic, ie. the locations of other keys or
+\nChoose clues that create an interesting game mechanic, ie. the locations of other keys or
  portions of a text. Use the menu autofill options to get started with some quote-based
  games from some public domain texts.
+    </string>
+
+    <string name="text_howto_test">
+Great work, you\' made a new topic. You can test out your new topic with a long-press and
+ selecting \'View QRCodes\' (if you have a friend with ArcanaCard they can try scanning the
+ codes) or you can select \'Export for printing\'.\n
+\nExporting your topic to a PC and printing the codes is the way to take ArcanaCard out
+ into the real world.
     </string>
 
     <string name="text_features_limitedversion">
@@ -72,7 +84,8 @@ This version of ArcanaCard is restricted to 7 keys, 7 locks and 63 character
  messages and clues.</string>
 
     <string name="text_eula">
-By using this software you accept the following:\n
+TLDR: This software is a toy. Don\'t do anything serious with it.\n
+\nBy using this software you accept the following:\n
 \nTHIS SOFTWARE IS PROVIDED \"AS IS\" AND ANY EXPRESS
  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -87,13 +100,15 @@ By using this software you accept the following:\n
     <string name="text_licenses">
 This software contains components developed by tereslogica &lt;tereslogica@gmail.com&gt;
  as well as the following licensed components:
-\n\npegwit, Public Domain, License granted by
- George Barwood  &lt;george.barwood@dial.pipex.com&gt;,
- Paulo S.L.M. Barreto &lt;pbarreto@uninet.com.br&gt; and
- Mr. Tines &lt;tines@windsong.demon.co.uk&gt;
-\n\nzxing, Copyright 2007 ZXing Authors, Apache 2.0 License, http://www.apache.org/licenses/LICENSE-2.0.html
-\n\nsha1, Public Domain, License granted by
- Steve Reid &lt;steve@edmweb.com&gt;
+\n\npegwit, Public Domain, License granted by George Barwood  &lt;george.barwood@dial.pipex.com&gt;,
+ Paulo S.L.M. Barreto &lt;pbarreto@uninet.com.br&gt; and Mr. Tines &lt;tines@windsong.demon.co.uk&gt;
+\n\nsha1, Public Domain, License granted by Steve Reid &lt;steve@edmweb.com&gt;\n
+\n\nzxing, Copyright 2007 ZXing Authors, Apache 2.0 License, http://www.apache.org/licenses/LICENSE-2.0.html\n
+\n\nThis application implements a version of Shamir\'s Secret Sharing Algorithm
+ with 56 bit polynomial coefficients to reveal a 56 bit rc4 cipher key to decrypt the hidden
+ message. Topic tokens are signed with a per-topic single-use 96 bit authentication key. Arithmetic
+ for the polynomial evaluation and for the authentication signature are performed on the
+ non-prime binary-field GF(2^112), a Koblitz curve.\n
     </string>
 
 </resources>

@@ -10,7 +10,7 @@
 
         <activity
             android:name=".ActivityTopics"
-            android:label="@string/activity_topics"
+            android:label="@string/app_name"
             android:grantUriPermissions="true"
             >
             <intent-filter>

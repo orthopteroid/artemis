@@ -14,6 +14,7 @@ public class Prefs {
     public static final String QR_HEIGHT = "qr-height";
     public static final String HOWTO_NEW = "howto-new";
     public static final String HOWTO_TOPIC = "howto-topic";
+    public static final String HOWTO_TEST = "howto-test";
 
     public static int DEFAULT_WIDTH = 300;
     public static int DEFAULT_HEIGHT = 300;
