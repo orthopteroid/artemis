@@ -172,10 +172,7 @@ void vlSubtract (vlPoint u, const vlPoint v)
 		while( u[i] == 0 ) { i++; }
 		u[i]--;
 	}
-	while( u[u[0]] == 0 && u[0] )
-	{
-		u[0]--;
-	}
+	while( u[0] && u[u[0]] == 0 ) { u[0]--; }
 } /* vlSubtract */
 
 
@@ -185,12 +182,11 @@ void vlShortLshift (vlPoint p, int n)
 	if( p[0] == 0 ) { return; }
 
 	/* this will only work if 0 <= n <= 16 */
-	if (p[p[0]] >> (16 - n)) {
-		/* check if there is enough space for an extra unit: */
-		if (p[0] <= VL_UNITS + 1) {
-			++p[0];
-			p[p[0]] = 0; /* just make room for one more unit */
-		}
+	if( p[p[0]] >> (16 - n) ) {
+		if( p[0] +1 <= VL_UNITS ) // was 'p[0] <= VL_UNITS +1', but probably only worked due to other bugs
+		{ p[++p[0]] = 0; } // just make room for one more unit
+		else
+		{ LOGFAIL( RC_INTERNAL ); } // uncaught overflow
 	}
 
 	for( word16 i = p[0]; i > 1; i-- )
@@ -198,6 +194,8 @@ void vlShortLshift (vlPoint p, int n)
 		p[i] = (p[i] << n) | (p[i - 1] >> (16 - n));
 	}
 	p[1] <<= n;
+
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
 } /* vlShortLshift */
 
 
@@ -213,9 +211,12 @@ void vlShortRshift (vlPoint p, int n)
 	}
 
 	p[p[0]] >>= n;
-	if (p[p[0]] == 0) {
-		--p[0];
-	}
+	if( p[0] && p[p[0]] == 0 )
+	{ --p[0]; }
+	else
+	{ LOGFAIL( RC_INTERNAL ); } // uncaught onderflow
+
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
 } /* vlShortRshift */
 
 

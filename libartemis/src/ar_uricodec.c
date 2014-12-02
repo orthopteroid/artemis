@@ -580,7 +580,6 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 
 	if( uLocation == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 	if( uMessage == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
-	if( uLocation + uClue + uMessage > (*arecord_out)->bufmax ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); goto EXIT; }
 
 	byteptr bufloc = (*arecord_out)->buf;
 	byteptr bufend = (*arecord_out)->buf + (*arecord_out)->bufmax;
@@ -688,7 +687,6 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 	// assemble order-dependent text body
 
 	if( uLocation == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
-	if( uLocation + uClue > (*srecord_out)->bufmax ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); goto EXIT; }
 
 	byteptr bufloc = (*srecord_out)->buf;
 	byteptr bufend = (*srecord_out)->buf + (*srecord_out)->bufmax;
