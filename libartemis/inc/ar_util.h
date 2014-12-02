@@ -20,6 +20,7 @@ int ar_util_u8_hexdecode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr
 
 int ar_util_u8_b64encode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize );
 int ar_util_u8_b64decode( size_t* deltalen, byteptr buf, byteptr bufend, byteptr in, size_t insize );
+int ar_util_u8_b64sizecheck( size_t* deltalen, byteptr in, size_t insize );
 
 int ar_util_u16_host2packet( size_t* deltalen, byteptr   buf, byteptr   bufend, word16ptr in, size_t insize );
 int ar_util_u16_packet2host( size_t* deltalen, word16ptr buf, word16ptr bufend, byteptr   in, size_t insize );

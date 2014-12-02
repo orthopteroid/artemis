@@ -45,4 +45,7 @@ typedef struct arShare_
 typedef arShare*	arShareptr;
 typedef arShareptr*	arSharetbl;
 
+#define DEBUGPRINT_AR(s,p) \
+	do { DEBUGPRINT(s); for( size_t j=0; j<(sizeof(arAuth)+p->bufmax); j++ ) { DEBUGPRINT("%02X", ((byteptr)(p))[j]); } DEBUGPRINT("\n"); } while(0)
+
 #endif // _AR_TYPES_H_

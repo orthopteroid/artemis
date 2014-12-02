@@ -30,6 +30,7 @@
  *		"Handbook of Applied Cryptography", CRC Press (1997), section 14.2.5.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -171,10 +172,7 @@ void vlSubtract (vlPoint u, const vlPoint v)
 		while( u[i] == 0 ) { i++; }
 		u[i]--;
 	}
-	while( u[u[0]] == 0 && u[0] )
-	{
-		u[0]--;
-	}
+	while( u[0] && u[u[0]] == 0 ) { u[0]--; }
 } /* vlSubtract */
 
 
@@ -184,12 +182,11 @@ void vlShortLshift (vlPoint p, int n)
 	if( p[0] == 0 ) { return; }
 
 	/* this will only work if 0 <= n <= 16 */
-	if (p[p[0]] >> (16 - n)) {
-		/* check if there is enough space for an extra unit: */
-		if (p[0] <= VL_UNITS + 1) {
-			++p[0];
-			p[p[0]] = 0; /* just make room for one more unit */
-		}
+	if( p[p[0]] >> (16 - n) ) {
+		if( p[0] +1 <= VL_UNITS ) // was 'p[0] <= VL_UNITS +1', but probably only worked due to other bugs
+		{ p[++p[0]] = 0; } // just make room for one more unit
+		else
+		{ LOGFAIL( RC_INTERNAL ); } // uncaught overflow
 	}
 
 	for( word16 i = p[0]; i > 1; i-- )
@@ -197,6 +194,8 @@ void vlShortLshift (vlPoint p, int n)
 		p[i] = (p[i] << n) | (p[i - 1] >> (16 - n));
 	}
 	p[1] <<= n;
+
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
 } /* vlShortLshift */
 
 
@@ -212,9 +211,12 @@ void vlShortRshift (vlPoint p, int n)
 	}
 
 	p[p[0]] >>= n;
-	if (p[p[0]] == 0) {
-		--p[0];
-	}
+	if( p[0] && p[p[0]] == 0 )
+	{ --p[0]; }
+	else
+	{ LOGFAIL( RC_INTERNAL ); } // uncaught onderflow
+
+	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
 } /* vlShortRshift */
 
 
@@ -326,23 +328,31 @@ void vlMulMod (vlPoint u, const vlPoint v, const vlPoint w, const vlPoint m)
 } /* vlMulMod */
 
 
-void vlSetRandom( vlPoint p, word16 maxWord16s, rnd16gen fn )
+void vlSetRandom( vlPoint p, rnd16gen fn, word16 bytelen )
 {
-	if( maxWord16s > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
-	p[0] = maxWord16s;
- 	for( size_t i = 0; i < p[0]; i++ ) { p[i+1] = fn(); } // +1 to skip length indicator
+	if( bytelen > VL_BYTES ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
+
+	p[0] = ( bytelen +1 ) /2; // use +1 because /2 will round down
+
+	// doing straight w16 transfers resolves endian issues?
+	for( size_t i = 0; i < p[0]; i++ ) { p[i+1] = fn(); } // +1 to skip length indicator
+
+	if( bytelen & 0x01 ) { p[p[0]] &= 0x00FF; } // if odd, clear MSB (big endian array)
+
  	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
 }
 
-void vlSetWord32Ptr( vlPoint p, word16 maxWord16s, word32* q )
+void vlSetBytes( vlPoint p, word16* q, word16 bytelen )
 {
-	if( maxWord16s > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
-	p[0] = maxWord16s;
-	for( size_t j = 0, i = 0; i < p[0]; i++ )
-	{
-		p[i+1] = 0xFFFF & (q[j] >> ( (i & 0x01) ? 0 : 16 ) ); // hi on even and low on odd, +1 to skip length indicator
-		j += (i & 0x01 ); // inc j on odd i
-	}
+	if( bytelen > VL_BYTES ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
+
+	p[0] = ( bytelen +1 ) /2; // use +1 because /2 will round down
+
+	// doing straight w16 transfers resolves endian issues?
+	for( size_t i = 0; i < p[0]; i++ ) { p[i+1] = q[ i ]; } // +1 to skip length indicator
+
+	if( bytelen & 0x01 ) { p[p[0]] &= 0x00FF; } // if odd, clear MSB (big endian array)
+
 	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
 }
 

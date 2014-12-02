@@ -1,5 +1,6 @@
 // Implementation, Copyright 2014 John Howard (orthopteroid@gmail.com)
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -118,7 +119,7 @@ void ar_shamir_test()
 		{
 			for( int t=0;t<2;t++ )
 			{
-				vlSetRandom( vlTmp, AR_CRYPTKEYUNITS, &ar_util_rnd16 );
+				vlSetRandom( vlTmp, &ar_util_rnd16, AR_CRYPTKEYBYTES );
 				gfUnpack( gfCryptCoef[t], vlTmp );
 				gfReduce( gfCryptCoef[t] );
 			}
@@ -139,7 +140,7 @@ void ar_shamir_test()
 		for( int i=0; i<100; i++ )
 		{
 			vlPoint vl0, vl1;
-			vlSetRandom( vl0, VL_UNITS, &ar_util_rnd16 );
+			vlSetRandom( vl0, &ar_util_rnd16, VL_BYTES );
 
 			if(0){
 				gfPoint g;
@@ -162,7 +163,7 @@ void ar_shamir_test()
 		printf("# test signing\n");
 
 		vlPoint mac;
-		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
+		vlSetRandom( mac, &ar_util_rnd16, AR_MACBYTES );
 
 #if defined(ENABLE_FUZZING)
 
@@ -186,14 +187,14 @@ void ar_shamir_test()
 				if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
 
 				// so, it seems that some pri-keys wont work...
-				vlSetRandom( pri, AR_PRIVKEYUNITS, &ar_util_rnd16 );
+				vlSetRandom( pri, &ar_util_rnd16, AR_AUTHKEYBYTES );
 
 				cpMakePublicKey( pub, pri );
 
 				ecPoint t2;
 				if( ecUnpack( &t2, pub ) ) { continue; }
 
-				vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
+				vlSetRandom( session, &ar_util_rnd16, AR_AUTHKEYBYTES );
 				cpSign( pri, session, mac, &sig );
 				if( vlIsZero( sig.r ) ) { continue; }
 				if( !cpVerify( pub, mac, &sig ) ) { continue; }
@@ -221,7 +222,7 @@ void ar_shamir_test()
 			for( int i=0; i<20; i++)
 			{
 				vlPoint mac;
-				vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
+				vlSetRandom( mac, &ar_util_rnd16, AR_MACBYTES );
 
 				cpSign( pri, session, mac, &sig );
 				TESTASSERT( 0 == vlIsZero( sig.r ) );

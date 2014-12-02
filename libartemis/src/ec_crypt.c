@@ -18,6 +18,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdio.h>
+
 #include "platform.h"
 #include "ar_codes.h"
 #include "ar_util.h"

@@ -109,11 +109,11 @@ void sha1_transform( word32 state[5], byte buffer[64])
 void sha1_initial(sha1_context* context)
 {
     /* SHA1 initialization constants */
-    context->u.state[0] = 0x67452301;
-    context->u.state[1] = 0xEFCDAB89;
-    context->u.state[2] = 0x98BADCFE;
-    context->u.state[3] = 0x10325476;
-    context->u.state[4] = 0xC3D2E1F0;
+    context->digest.w32[0] = 0x67452301;
+    context->digest.w32[1] = 0xEFCDAB89;
+    context->digest.w32[2] = 0x98BADCFE;
+    context->digest.w32[3] = 0x10325476;
+    context->digest.w32[4] = 0xC3D2E1F0;
     context->count[0] = context->count[1] = 0;
     memset(context->buffer, 0, 64);
 }
@@ -130,9 +130,9 @@ void sha1_process( sha1_context * context, unsigned char * data, unsigned len )
     context->count[1] += (len >> 29);
     if ((j + len) > 63) {
         memcpy(&context->buffer[j], data, (i = 64-j));
-        sha1_transform(context->u.state, context->buffer);
+        sha1_transform(context->digest.w32, context->buffer);
         for ( ; i + 63 < len; i += 64) {
-            sha1_transform(context->u.state, &data[i]);
+            sha1_transform(context->digest.w32, &data[i]);
         }
         j = 0;
     }
@@ -143,7 +143,7 @@ void sha1_process( sha1_context * context, unsigned char * data, unsigned len )
 
 /* Add padding and return the message digest. */
 
-void sha1_final( sha1_context* context, sha1Digest digest )
+void sha1_final( sha1_context* context, sha1Digest* pDigest )
 {
 	unsigned long i, j;
 	unsigned char finalcount[8];
@@ -157,13 +157,12 @@ void sha1_final( sha1_context* context, sha1Digest digest )
         sha1_process(context, (unsigned char *)"\0", 1);
     }
     sha1_process(context, finalcount, 8);  /* Should cause a sha1_transform() */
-    for (i = 0; i < 5; i++) {
-        digest[i] = context->u.state[i];
-    }
+	//
+    memcpy(pDigest->b8, context->digest.b8, 20);
     /* Wipe variables */
     i = j = 0;
     memset(context->buffer, 0, 64);
-    memset(context->u.state, 0, 20);
+    memset(context->digest.b8, 0, 20);
     memset(context->count, 0, 8);
     memset(&finalcount, 0, 8);
 #ifdef SHA1HANDSOFF  /* make sha1_transform overwrite it's own static vars */
@@ -176,12 +175,12 @@ void sha1_clear( sha1_context * c )
 	memset( c, 0, sizeof(sha1_context) );
 }
 
-void sha1_digest( sha1Digest digest, byteptr bytes, size_t len )
+void sha1_digest( sha1Digest* pDigest, byteptr bytes, size_t len )
 {
 	sha1_context c[1];
 	sha1_initial( c );
 	sha1_process( c, bytes, (unsigned)len );
-	sha1_final( c, digest );
+	sha1_final( c, pDigest );
 	sha1_clear( c );
 }
 
@@ -200,13 +199,13 @@ void sha1_test()
 
 	x = "abc";
 	y = "A9993E364706816ABA3E25717850C26C9CD0D89D";
-	sha1_digest( digest, x, strlen(x) );
+	sha1_digest( &digest, x, strlen(x) );
 #if defined(_WINDOWS)
 	sprintf_s( buf, bufSize,
 #else
 	sprintf( buf, 
 #endif
-		"%X%X%X%X%X", (unsigned int)digest[0], (unsigned int)digest[1], (unsigned int)digest[2], (unsigned int)digest[3], (unsigned int)digest[4] );
+		"%X%X%X%X%X", (unsigned int)digest.w32[0], (unsigned int)digest.w32[1], (unsigned int)digest.w32[2], (unsigned int)digest.w32[3], (unsigned int)digest.w32[4] );
 	if( strcmp( y, buf ) != 0 )
 	{
 		printf( "%s -> %s (should be %s)\n", x, buf, y );
@@ -215,13 +214,13 @@ void sha1_test()
 		
 	x = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
 	y = "84983E441C3BD26EBAAE4AA1F95129E5E54670F1";
-	sha1_digest( digest, x, strlen(x) );
+	sha1_digest( &digest, x, strlen(x) );
 #if defined(_WINDOWS)
 	sprintf_s( buf, bufSize,
 #else
 	sprintf( buf, 
 #endif
-		"%X%X%X%X%X", (unsigned int)digest[0], (unsigned int)digest[1], (unsigned int)digest[2], (unsigned int)digest[3], (unsigned int)digest[4] );
+		"%X%X%X%X%X", (unsigned int)digest.w32[0], (unsigned int)digest.w32[1], (unsigned int)digest.w32[2], (unsigned int)digest.w32[3], (unsigned int)digest.w32[4] );
 	if( strcmp( y, buf ) != 0 )
 	{
 		printf( "%s -> %s (should be %s)\n", x, buf, y );

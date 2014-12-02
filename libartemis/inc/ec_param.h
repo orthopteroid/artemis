@@ -1,3 +1,6 @@
+#ifndef _EC_PARAM_H_
+#define _EC_PARAM_H_
+
 /*
 	GF_M	dimension of the large finite field (GF_M = GF_L*GF_K)
 	GF_L	dimension of the small finite field
@@ -14,7 +17,7 @@
 // ok 77 80 84 91 105 112 136 153 187 204 207 255 279 299 368 372
 // iter 99 143 165 261 
 // fail 63 65 70 110 154 176 132
-#define GF_M		91 /* choose this value from the list below */
+#define GF_M		112 /* choose this value from the list below */
 
 #if GF_M == 24
 
@@ -1308,3 +1311,10 @@
 #error "The selected GF_M value is not acceptable"
 
 #endif /* GF_M */
+
+//////////////////////////////////
+
+#define VL_UNITS ((GF_K*GF_L + 15)/16 + 1) /* must be large enough to hold a (packed) curve point (+1 for rounding) */
+#define VL_BYTES (VL_UNITS * sizeof(word16))
+
+#endif // _EC_PARAM_H_
