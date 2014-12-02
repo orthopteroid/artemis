@@ -231,6 +231,26 @@ PAD:
 	return rc;
 }
 
+int ar_util_u8_b64sizecheck( size_t* deltalen, byteptr in, size_t insize )
+{
+	int p=0, rc=0;
+	size_t j=0, i=0;
+	while( i != insize )
+	{
+		word32 char3 = 0;
+		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 18; if( i == insize ) { rc = RC_BUFOVERFLOW; LOGFAIL( rc ); break; }
+		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) << 12; if( i == insize ) { p=2; goto PAD; }
+		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 ) <<  6; if( i == insize ) { p=1; goto PAD; }
+		char3 |= (word32)( b64charin[ in[i++] - 0x2D ] & 63 );
+PAD:
+		j++;
+		if( p < 2 ) { j++; }
+		if( p < 1 ) { j++; }
+	}
+	*deltalen = j;
+	return rc;
+}
+
 ///////////
 
 int ar_util_u16_host2packet( size_t* deltalen, byteptr buf, byteptr bufend, word16ptr in, size_t insize )
@@ -524,7 +544,7 @@ word32 ar_util_rnd32()
 	static int i = 0;
 	if( i == 0 ) { ar_util_rndcrank(0,0); }
 	i += (i == 4) ? -4 : +1;
-	return (epool_c[0].u.state[ i ]);
+	return (epool_c[0].digest.w32[ i ]);
 }
 
 word16 ar_util_rnd16()
@@ -532,7 +552,7 @@ word16 ar_util_rnd16()
 	static int i = 0;
 	if( i == 0 ) { ar_util_rndcrank(0,0); }
 	i += (i == 9) ? -9 : +1;
-	return (epool_c[0].u.state16[ i ]);
+	return (epool_c[0].digest.w16[ i ]);
 }
 
 byte ar_util_rnd8()
@@ -540,7 +560,7 @@ byte ar_util_rnd8()
 	static int i = 0;
 	if( i == 0 ) { ar_util_rndcrank(0,0); }
 	i += (i == 19) ? -19 : +1;
-	return (epool_c[0].u.state8[ i ]);
+	return (epool_c[0].digest.b8[ i ]);
 }
 
 byte ar_util_rnd4()
