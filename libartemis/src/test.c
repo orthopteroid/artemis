@@ -47,15 +47,7 @@ void test_all()
 
 	struct {
 		int locks; char* message;
-	} testdata[] = {
-
-#if !defined(AR_DEMO)
-
-		{5, "message five"}, {4, "message four"},
-
-#endif
-
-		{3, "message three"}, {2, "message two"}, {0,0}	};
+	} testdata[] = { {5, "message five"}, {4, "message four"}, {3, "message three"}, {2, "message two"}, {0,0}	};
 
 	for( int i = 0; testdata[i].locks ; i++ ) {
 		library_uri_encoder( &shares, 5, testdata[i].locks, AR_LOCSTR, "main\none\ntwo\nthree\nfour\nfive", testdata[i].message );

@@ -262,7 +262,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 #define BIT_MASK(a,b)  ( ~( (a) & (b) ) ^ (b) )
 
 	// anti-crack: raise bug when we're called outside demo limits and address has bits 5 & 2
-    bug = ( ((numShares >> 3) | (numThres >> 2)) & BIT_MASK( (size_t)inbuf, 0x22) ) ? 1 : 0;
+    bug = ( ((numShares >> 3) | (numThres >> 3)) & BIT_MASK( (size_t)inbuf, 0x22) ) ? 1 : 0;
 
 #endif
 

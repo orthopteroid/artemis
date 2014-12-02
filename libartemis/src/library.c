@@ -296,14 +296,14 @@ int library_uri_encoder( byteptr* recordArr_out, word16 shares, byte threshold, 
 
 #if defined(AR_DEMO)
 
-    // check RC_DEMO_7K_3L_20C
+    // check RC_DEMO_7K_7L_63C
     {
         int demofail = 0;
         demofail |= (shares > 7) ? 1 : 0;
-        demofail |= (threshold > 3) ? 1 : 0;
-        demofail |= (messlen > 20) ? 1 : 0;
-        for( byteptr* ppClue = clueTbl; *ppClue; ppClue++ ) { demofail |= (strlen( *ppClue ) > 20) ? 1 : 0; }
-        if( demofail ) { rc = RC_DEMO_7K_3L_20C; LOGFAIL( rc ); goto EXIT; }
+        demofail |= (threshold > 7) ? 1 : 0;
+        demofail |= (messlen > 63) ? 1 : 0;
+        for( byteptr* ppClue = clueTbl; *ppClue; ppClue++ ) { demofail |= (strlen( *ppClue ) > 63) ? 1 : 0; }
+        if( demofail ) { rc = RC_DEMO_7K_7L_63C; LOGFAIL( rc ); goto EXIT; }
     }
 
 #endif // AR_DEMO
