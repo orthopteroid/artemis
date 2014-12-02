@@ -312,6 +312,8 @@ EXIT:
 
 void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf )
 {
+	int rc = 0;
+
 	*pLen = 0;
 
 	parsestate2 ss;
@@ -321,17 +323,25 @@ void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf )
 	word32 token;
 	while( token = ps2_token( pss ) )
 	{
+		size_t deltalen = 0;
+
 		switch( token )
 		{
-		case 'ht=0': // url location
-		case 'mt=0': // message text
-		case 'mc=0': // message clue
-		case 'sc=0': // share clue
-			*pLen += ss.data_len; // will overest the b64 text, but thats ok
+		case 'ht=0':
+			*pLen += ss.data_len - 7; break; // url location
+		case 'mt=0':
+		case 'mc=0':
+		case 'sc=0':
+			if( rc = ar_util_u8_b64sizecheck( &deltalen, pss->data_first, pss->data_len ) ) { LOGFAIL( rc ); goto EXIT; }
+			*pLen += deltalen;
 			break;
 		default: break;
 		}
 	}
+
+EXIT:
+
+	;
 }
 
 int ar_uri_parse_info( word16ptr pType, word16ptr pShares, byteptr pThreshold, byteptr szRecord )
