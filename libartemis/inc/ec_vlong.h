@@ -4,18 +4,15 @@
 #include "ec_types.h"
 #include "ec_param.h"
 
-#define VL_UNITS ((GF_K*GF_L + 15)/16 + 1) /* must be large enough to hold a (packed) curve point (+1 for length ?or? rounding) */
-
-// little endian format, i think
+// vlAdd seems to propagate carry from start to end of array, so vlPoint is big endian format, i think
 typedef word16 vlunit;
 typedef vlunit vlPoint [VL_UNITS +1 ]; // +1 for length
 
-#define VL_BYTES (VL_UNITS * sizeof(vlunit))
 #define vlIsValid(p) (p[0] <= VL_UNITS)
 #define vlIsZero(p) (p[0] == 0)
 
-#define DEBUGPRINT_V(v) \
-	do { for( int j=0; j< (v)[0]; j++ ) { DEBUGPRINT("%s %d/%d: %04X\n", #v, j, (v)[0], (v)[j+1]); } } while(0)
+#define DEBUGPRINT_V(s,v) \
+	do { DEBUGPRINT(s); for( int j=0; j< (v)[0]; j++ ) { DEBUGPRINT("%04X", (v)[j+1]); } DEBUGPRINT("\n"); } while(0)
 
 void vlClear (vlPoint p);
 

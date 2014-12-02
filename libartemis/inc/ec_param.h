@@ -1308,3 +1308,10 @@
 #error "The selected GF_M value is not acceptable"
 
 #endif /* GF_M */
+
+//////////////////////////////////
+
+#define VL_UNITS ((GF_K*GF_L + 15)/16 + 1) /* must be large enough to hold a (packed) curve point (+1 for rounding) */
+#define VL_BYTES (VL_UNITS * sizeof(word16))
+
+#endif // _EC_PARAM_H_
