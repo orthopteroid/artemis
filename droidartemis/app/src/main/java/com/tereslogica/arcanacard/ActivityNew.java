@@ -149,7 +149,7 @@ public class ActivityNew extends Activity {
                         public void afterTextChanged(Editable s) {
                             if( s.length() > BuildConfig.MAX_CHARS ) {
                                 Notifier.ShowOk( thisActivity, R.string.text_features_limitedversion, null );
-                                setValue(s.toString().substring(0, 19));
+                                setValue(s.toString().substring(0, BuildConfig.MAX_CHARS -1));
                             }
                             for (int i = 0; i < s.length(); i++) {
                                 if (s.charAt(i) == '\n') {
@@ -188,10 +188,15 @@ public class ActivityNew extends Activity {
         thisActivity = this;
 
         settings.clear();
-        settings.add( (AbstractItem)new NumberItem( layout, inflater, "Keys", "2", NumType.key ) );
-        settings.add( (AbstractItem)new NumberItem( layout, inflater, "Locks", "2", NumType.lock ) );
-        settings.add( (AbstractItem)new TextItem( layout, inflater, "Hidden Message", "") );
+        settings.add((AbstractItem) new NumberItem(layout, inflater, "Keys", "7", NumType.key));
+        settings.add( (AbstractItem)new NumberItem( layout, inflater, "Locks", "5", NumType.lock ) );
+        settings.add((AbstractItem) new TextItem(layout, inflater, "Hidden Message", ""));
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Message Clue", "") );
+        settings.add((AbstractItem) new TextItem(layout, inflater, "Optional Key Clue", ""));
+        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
+        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
+        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
+        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
 
@@ -255,7 +260,6 @@ public class ActivityNew extends Activity {
         FakeUserInput.Scenario s = null;
 
         int keys = Integer.parseInt(settings.get(0).getValue());
-        int maxcluelen = BuildConfig.MAX_CHARS > 20 ? 20 : BuildConfig.MAX_CHARS;
 
         switch (item.getItemId()) {
             case R.id.menu_new_clearfill:
@@ -264,13 +268,13 @@ public class ActivityNew extends Activity {
                 }
                 return true;
             case R.id.menu_new_autofill_shakespeare:
-                s = FakeUserInput.Shakespeare(maxcluelen, keys);
+                s = FakeUserInput.Shakespeare(BuildConfig.MAX_CHARS, keys);
                 break;
             case R.id.menu_new_autofill_julesverneEN:
-                s = FakeUserInput.JulesVerneEN(maxcluelen, keys);
+                s = FakeUserInput.JulesVerneEN(BuildConfig.MAX_CHARS, keys);
                 break;
             case R.id.menu_new_autofill_julesverneFR:
-                s = FakeUserInput.JulesVerneFR(maxcluelen, keys);
+                s = FakeUserInput.JulesVerneFR(BuildConfig.MAX_CHARS, keys);
                 break;
             default:
                 break;
