@@ -29,4 +29,4 @@
 #define AR_LOCHASH	0x1E
 
 #define AR_VERSION 1
-//#define AR_DEMO
+#define AR_DEMO
