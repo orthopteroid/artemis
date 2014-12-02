@@ -46,13 +46,16 @@
     <string name="text_howto_topic">
 ArcanaCards are minted in groups called \'Topics\', which all have a unique code so you can\'t
  guess their hidden message. The topic indicators are shown on the top right of each topic.
- The indicators are\n
-\n* M K L T\n
-\n* You can read the hidden message,\n
+ The indicators are:\n
+\n* M nnnK nnnL nnnT\n
+\n* You can read the hidden message (short-press on the topic to read the message),\n
 \nM You have scanned the message code,\n
-\nK How many keys you have for this topic,\n
-\nL How many locks are on the message. To unlock a hidden message you need the message and this many keys,\n
-\nT The total number of keys that were made for this message
+\nnnnK How many keys you have for this topic (nnn is some number),\n
+\nnnnL How many locks are on the message. To unlock a hidden message you need the message and this many keys (nnn is some number),\n
+\nnnnT The total number of keys that were made for this message (nnn is some number).\n
+\n
+\nYou can long-press on a topic to access other topic-related options), but to get
+ started press the NEW button to create your first topic!
     </string>
 
     <string name="text_howto_new">
@@ -60,7 +63,8 @@ ArcanaCards are minted in groups called \'Topics\', which all have a unique code
 \n\'Locks\' are the number of keys that must be scanned to reveal your hidden message.\n
 \n\'Clues\' can be attached to keys and can be read as soon as a key is scanned.\n
  Choose clues that create an interesting game mechanic, ie. the locations of other keys or
- portions of a text. Try using the menu to autofill with some public domain texts.
+ portions of a text. Use the menu autofill options to get started with some quote-based
+ games from some public domain texts.
     </string>
 
     <string name="text_features_limitedversion">
