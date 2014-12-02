@@ -71,7 +71,7 @@ static void sha1_process_blob16( sha1_context* c, word16 blob16 )
 	memset( composebuf, 0, sizeof(composebuf) );
 }
 
-static void ar_core_mac_arecord( vlPoint mac, arAuthptr pa, byte version, size_t buflen )
+static void ar_core_mac_arecord( vlPoint mac, arAuthptr pa, byte version )
 {
 	sha1Digest digest;
 	sha1_context c[1];
@@ -81,7 +81,7 @@ static void ar_core_mac_arecord( vlPoint mac, arAuthptr pa, byte version, size_t
 	sha1_process_blob16( c, pa->shares );
 	sha1_process_blob16( c, pa->threshold );
 	sha1_process_blob16( c, version );
-	sha1_process( c, pa->buf, (unsigned)(buflen) );
+	sha1_process( c, pa->buf, (unsigned)(pa->bufmax) );
 
 	sha1_final( c, digest );
 	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
@@ -89,7 +89,7 @@ static void ar_core_mac_arecord( vlPoint mac, arAuthptr pa, byte version, size_t
 	sha1_clear( c );
 }
 
-static void ar_core_mac_srecord( vlPoint mac, arShareptr ps, byte version, size_t buflen )
+static void ar_core_mac_srecord( vlPoint mac, arShareptr ps, byte version )
 {
 	sha1Digest digest;
 	sha1_context c[1];
@@ -101,7 +101,7 @@ static void ar_core_mac_srecord( vlPoint mac, arShareptr ps, byte version, size_
 	sha1_process_blob16( c, version );
 	sha1_process_blob16( c, ps->shareid );
 	sha1_process_vlpoint( c, ps->share );
-	sha1_process( c, ps->buf, (unsigned)(buflen) );
+	sha1_process( c, ps->buf, (unsigned)(ps->bufmax) );
 
 	sha1_final( c, digest );
 	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
@@ -109,17 +109,26 @@ static void ar_core_mac_srecord( vlPoint mac, arShareptr ps, byte version, size_
 	sha1_clear( c );
 }
 
-static int ar_core_sign( cpPair* sig, const vlPoint session, const vlPoint vlPublicKey, const vlPoint vlPrivateKey, const vlPoint mac )
+static int ar_core_sign( cpPair* sig, const vlPoint vlPublicKey, const vlPoint vlPrivateKey, const vlPoint mac )
 {
 	int rc = 0;
+
+	vlPoint session;
+	vlSetRandom( session, &ar_util_rnd16, AR_AUTHKEYBYTES );
 
 	// ensure pubkey is valid, sign mac and verify
 	ecPoint t2;
 	if( ecUnpack( &t2, vlPublicKey ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
+
 	cpSign( vlPrivateKey, session, mac, sig );
 	if( vlIsZero( sig->r ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
+
 	if( !cpVerify( vlPublicKey, mac, sig ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
+
 EXIT:
+
+	vlClear(session);
+
 	return rc;
 }
 
@@ -137,18 +146,26 @@ static int ar_core_makekeypair( vlPoint pub, vlPoint pri )
 		vlPoint mac;
 		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
 
-		vlPoint session;
-		vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
-
 		cpPair sig;
-		rc = ar_core_sign( &sig, session, pub, pri, mac );
+		rc = ar_core_sign( &sig, pub, pri, mac );
 
 		vlClear(mac);
-		vlClear(session);
 	}
 	if( rc ) { LOGFAIL( rc ); goto EXIT; }
 EXIT:
 	return rc;
+}
+
+static void ar_core_cryptcoefs( gfPoint* pCryptCoefArr, size_t numThres )
+{
+	vlPoint vlTmp;
+	for( word16 t = 0; t < numThres; t++ )
+	{
+		vlSetRandom( vlTmp, &ar_util_rnd16, AR_CRYPTKEYBYTES );
+		gfUnpack( pCryptCoefArr[t], vlTmp );
+		gfReduce( pCryptCoefArr[t] );
+	}
+	vlClear(vlTmp);
 }
 
 static void ar_core_rc4( byteptr buf, size_t buflen, gfPoint gfKey )
@@ -161,6 +178,7 @@ static void ar_core_rc4( byteptr buf, size_t buflen, gfPoint gfKey )
 	byte packetEndianBArr[ sizeof(vlPoint) +sizeof(vlunit) ]; // +sizeof(vlunit) for spare
 
 	ar_util_u16_host2packet( &deltalen, packetEndianBArr, packetEndianBArr + sizeof(vlPoint), vlKey + 1, vlKey[0] );
+
 	rc4( packetEndianBArr, vlKey[0] *sizeof(vlunit), rc4cranks, buf, (word32)buflen );
 
 	vlClear( vlKey );
@@ -178,11 +196,14 @@ int ar_core_check_arecord( byteptr szLocation, arAuthptr arecord )
 	if( memcmp( szLocation, arecord->buf, arecord->loclen ) ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
 
 	vlPoint mac;
-	ar_core_mac_arecord( mac, arecord, AR_VERSION, arecord->msglen + arecord->loclen + arecord->cluelen );
+	ar_core_mac_arecord( mac, arecord, AR_VERSION );
 
 	if( !cpVerify( arecord->pubkey, mac, &arecord->authsig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
+
+	vlClear( mac );
+
 	return rc;
 }
 
@@ -196,11 +217,14 @@ int ar_core_check_srecord( byteptr szLocation, arShareptr srecord )
 	if( memcmp( szLocation, srecord->buf, srecord->loclen ) ) { rc = RC_LOCATION; LOGFAIL( rc ); goto EXIT; }
 
 	vlPoint mac;
-	ar_core_mac_srecord( mac, srecord, AR_VERSION, srecord->loclen + srecord->cluelen );
+	ar_core_mac_srecord( mac, srecord, AR_VERSION );
 
 	if( !cpVerify( srecord->pubkey, mac, &srecord->sharesig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
+
+	vlClear( mac );
+
 	return rc;
 }
 
@@ -312,17 +336,10 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	}
 
 	// add cleartext to entropypool, prior to gen of cryptkey
-	ar_util_rndcrank( arecord_out[0]->buf, abufused );
+	ar_util_rndcrank( arecord_out[0]->buf, arecord_out[0]->bufmax );
 
 	// create cryptcoefs (and cryptkey)
-	for( word16 t = 0; t < numThres; t++ )
-	{
-		vlPoint vlTmp;
-		vlSetRandom( vlTmp, AR_CRYPTKEYUNITS, &ar_util_rnd16 );
-		gfUnpack( gfCryptCoefArr[t], vlTmp );
-		gfReduce( gfCryptCoefArr[t] );
-		vlClear(vlTmp);
-	}
+	ar_core_cryptcoefs( gfCryptCoefArr, numThres );
 
 	// cipher the cleartext
 	ar_core_rc4( arecord_out[0]->buf + msgoffset, inbuflen, gfCryptCoefArr[0] );
@@ -350,15 +367,10 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	{
 		vlPoint mac;
-		ar_core_mac_arecord( mac, arecord_out[0], AR_VERSION, abufused );
+		ar_core_mac_arecord( mac, arecord_out[0], AR_VERSION );
 
-		vlPoint session;
-		vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
+		if( rc = ar_core_sign( &arecord_out[0]->authsig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 
-		if( rc = ar_core_sign( &arecord_out[0]->authsig, session, pubSigningkey, priSigningkey, mac ) )
-		{ vlClear(session); LOGFAIL( rc ); goto EXIT; }
-
-		vlClear(session); 
 	}
 
 	/////////////
@@ -394,15 +406,9 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 		{
 			vlPoint mac;
-			ar_core_mac_srecord( mac, (*srecordtbl_out)[i], AR_VERSION, sbufused );
+			ar_core_mac_srecord( mac, (*srecordtbl_out)[i], AR_VERSION );
 
-			vlPoint session;
-			vlSetRandom( session, AR_SESSKEYUNITS, &ar_util_rnd16 );
-
-			if( rc = ar_core_sign( &(*srecordtbl_out)[i]->sharesig, session, pubSigningkey, priSigningkey, mac ) )
-			{ vlClear(session); LOGFAIL( rc ); goto EXIT; }
-
-			vlClear(session);
+			if( rc = ar_core_sign( &(*srecordtbl_out)[i]->sharesig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 		}
 	}
 
