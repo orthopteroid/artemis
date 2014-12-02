@@ -19,8 +19,6 @@ void vlClear (vlPoint p);
 vlunit vlGetUnit(vlPoint p, word16 i);
 void vlSetUnit(vlPoint p, vlunit u);
 
-void vlSetWord32Ptr( vlPoint p, word16 maxWord16s, word32* q );
-
 int  vlEqual (const vlPoint p, const vlPoint q);
 
 int  vlGreater (const vlPoint p, const vlPoint q);
@@ -50,7 +48,9 @@ int  vlShortMultiply (vlPoint p, const vlPoint q, word16 d);
 	/* sets p = q * d, where d is a single digit */
 
 typedef word16 (*rnd16gen)();
-void vlSetRandom( vlPoint p, word16 maxWord16s, rnd16gen fn );
+void vlSetRandom( vlPoint p, rnd16gen fn, word16 bytelen );
+
+void vlSetBytes( vlPoint p, word16* q, word16 bytelen );
 
 int  vlSelfTest (int test_count);
 

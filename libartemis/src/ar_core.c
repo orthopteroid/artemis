@@ -17,10 +17,9 @@
 #include "version.h" // for version related defines
 
 // some sanity checks
-STATICASSERT( AR_MACUNITS < VL_UNITS );
-STATICASSERT( AR_CRYPTKEYUNITS < VL_UNITS );
-STATICASSERT( AR_SESSKEYUNITS < VL_UNITS );
-STATICASSERT( AR_PRIVKEYUNITS < VL_UNITS );
+STATICASSERT( AR_MACBYTES <= VL_BYTES );
+STATICASSERT( AR_CRYPTKEYBYTES <= VL_BYTES );
+STATICASSERT( AR_AUTHKEYBYTES <= VL_BYTES );
 
 #if defined(AR_DEMO)
     #define AR_HIDDEN_BYTE 1
@@ -83,8 +82,8 @@ static void ar_core_mac_arecord( vlPoint mac, arAuthptr pa, byte version )
 	sha1_process_blob16( c, version );
 	sha1_process( c, pa->buf, (unsigned)(pa->bufmax) );
 
-	sha1_final( c, digest );
-	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+	sha1_final( c, &digest );
+	vlSetBytes( mac, digest.w16, AR_AUTHKEYBYTES );
 
 	sha1_clear( c );
 }
@@ -103,8 +102,8 @@ static void ar_core_mac_srecord( vlPoint mac, arShareptr ps, byte version )
 	sha1_process_vlpoint( c, ps->share );
 	sha1_process( c, ps->buf, (unsigned)(ps->bufmax) );
 
-	sha1_final( c, digest );
-	vlSetWord32Ptr( mac, AR_MACUNITS, digest );
+	sha1_final( c, &digest );
+	vlSetBytes( mac, digest.w16, AR_AUTHKEYBYTES );
 
 	sha1_clear( c );
 }
@@ -140,11 +139,11 @@ static int ar_core_makekeypair( vlPoint pub, vlPoint pri )
 	{
 		if( ++i == 100 ) { break; } // 100 is big and will create failures in lieu of lockups
 
-		vlSetRandom( pri, AR_PRIVKEYUNITS, &ar_util_rnd16 );
+		vlSetRandom( pri, &ar_util_rnd16, AR_AUTHKEYBYTES );
 		cpMakePublicKey( pub, pri );
 
 		vlPoint mac;
-		vlSetRandom( mac, AR_MACUNITS, &ar_util_rnd16 );
+		vlSetRandom( mac, &ar_util_rnd16, AR_MACBYTES );
 
 		cpPair sig;
 		rc = ar_core_sign( &sig, pub, pri, mac );
@@ -300,17 +299,21 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	///////////
 	// alloc return values
 
-	size_t abufused = loclen + inbuflen + acluelen;
-	if( abufused > 0xFFFF ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+	{
+		size_t abufused = loclen + inbuflen + acluelen;
+		if( abufused > 0xFFFF ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
-	size_t astructsize = sizeof(arAuth) + abufused;
-	if( !(arecord_out[0] = malloc( astructsize + AR_HIDDEN_BYTE )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	memset( arecord_out[0], 0, astructsize + AR_HIDDEN_BYTE );
-	arecord_out[0]->bufmax = (word16)abufused;
+		size_t astructsize = sizeof(arAuth) + abufused;
+		if( !(arecord_out[0] = malloc( astructsize + AR_HIDDEN_BYTE )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+		memset( arecord_out[0], 0, astructsize + AR_HIDDEN_BYTE );
+		arecord_out[0]->bufmax = (word16)abufused;
+	}
 
-	size_t stblsize = sizeof(arShareptr) * numShares;
-	if( !((*srecordtbl_out) = malloc( stblsize ) )) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
-	memset( (*srecordtbl_out), 0, stblsize );
+	{
+		size_t stblsize = sizeof(arShareptr) * numShares;
+		if( !((*srecordtbl_out) = malloc( stblsize ) )) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
+		memset( (*srecordtbl_out), 0, stblsize );
+	}
 
 	for( int i=0; i<numShares; i++ )
 	{

@@ -328,23 +328,31 @@ void vlMulMod (vlPoint u, const vlPoint v, const vlPoint w, const vlPoint m)
 } /* vlMulMod */
 
 
-void vlSetRandom( vlPoint p, word16 maxWord16s, rnd16gen fn )
+void vlSetRandom( vlPoint p, rnd16gen fn, word16 bytelen )
 {
-	if( maxWord16s > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
-	p[0] = maxWord16s;
- 	for( size_t i = 0; i < p[0]; i++ ) { p[i+1] = fn(); } // +1 to skip length indicator
+	if( bytelen > VL_BYTES ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
+
+	p[0] = ( bytelen +1 ) /2; // use +1 because /2 will round down
+
+	// doing straight w16 transfers resolves endian issues?
+	for( size_t i = 0; i < p[0]; i++ ) { p[i+1] = fn(); } // +1 to skip length indicator
+
+	if( bytelen & 0x01 ) { p[p[0]] &= 0x00FF; } // if odd, clear MSB (big endian array)
+
  	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
 }
 
-void vlSetWord32Ptr( vlPoint p, word16 maxWord16s, word32* q )
+void vlSetBytes( vlPoint p, word16* q, word16 bytelen )
 {
-	if( maxWord16s > VL_UNITS ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
-	p[0] = maxWord16s;
-	for( size_t j = 0, i = 0; i < p[0]; i++ )
-	{
-		p[i+1] = 0xFFFF & (q[j] >> ( (i & 0x01) ? 0 : 16 ) ); // hi on even and low on odd, +1 to skip length indicator
-		j += (i & 0x01 ); // inc j on odd i
-	}
+	if( bytelen > VL_BYTES ) { LOGFAIL( RC_INTERNAL ); vlClear( p ); return; }
+
+	p[0] = ( bytelen +1 ) /2; // use +1 because /2 will round down
+
+	// doing straight w16 transfers resolves endian issues?
+	for( size_t i = 0; i < p[0]; i++ ) { p[i+1] = q[ i ]; } // +1 to skip length indicator
+
+	if( bytelen & 0x01 ) { p[p[0]] &= 0x00FF; } // if odd, clear MSB (big endian array)
+
 	if( !vlIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); return; }
 }
 
