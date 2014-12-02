@@ -194,6 +194,10 @@ public class ActivityNew extends Activity {
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Message Clue", "") );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
+
+        if( false == Prefs.GetAndSetBool( Prefs.HOWTO_NEW ) ) {
+            Notifier.ShowHowto( thisActivity, R.string.text_howto_new, null );
+        }
     }
 
     ////////

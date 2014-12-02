@@ -10,7 +10,7 @@
 
         <activity
             android:name=".ActivityTopics"
-            android:label="@string/app_name"
+            android:label="@string/activity_topics"
             android:grantUriPermissions="true"
             >
             <intent-filter>
@@ -37,7 +37,7 @@
 
         <activity
             android:name=".ActivityNew"
-            android:label="@string/app_name"
+            android:label="@string/activity_new"
             android:windowSoftInputMode="stateUnspecified|adjustUnspecified"
             >
         </activity>
@@ -47,7 +47,7 @@
 
         <activity
             android:name=".ActivityQRViewer"
-            android:label="@string/app_name"
+            android:label="@string/activity_qrviewer"
             android:windowSoftInputMode="stateUnspecified|adjustUnspecified"
             >
         </activity>

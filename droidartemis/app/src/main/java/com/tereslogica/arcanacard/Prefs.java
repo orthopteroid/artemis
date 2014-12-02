@@ -12,6 +12,8 @@ public class Prefs {
     public static final String EULA_VERSION = "eula-version-1";
     public static final String QR_WIDTH = "qr-width";
     public static final String QR_HEIGHT = "qr-height";
+    public static final String HOWTO_NEW = "howto-new";
+    public static final String HOWTO_TOPIC = "howto-topic";
 
     public static int DEFAULT_WIDTH = 300;
     public static int DEFAULT_HEIGHT = 300;
@@ -39,5 +41,10 @@ public class Prefs {
     }
     static void SetBool( String foo, boolean newvalue ) {
         preferences.edit().putBoolean( foo, newvalue ).commit();
+    }
+    static boolean GetAndSetBool( String foo ) {
+        boolean b = preferences.getBoolean( foo, false );
+        if( !b ) { preferences.edit().putBoolean( foo, true ).commit(); }
+        return b;
     }
 }

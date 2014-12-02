@@ -77,6 +77,15 @@ public class ActivityTopics extends FragmentActivity {
         }
     };
 
+    private BroadcastReceiver howtoTopicIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if( false == Prefs.GetAndSetBool( Prefs.HOWTO_TOPIC ) ) {
+                Notifier.ShowHowto( thisActivity, R.string.text_howto_topic, null );
+            }
+        }
+    };
+
     ////////////////////////////////////
 
     private class TopicArrayLoader extends AsyncTask<Cursor, Void, Long> {
@@ -192,6 +201,7 @@ public class ActivityTopics extends FragmentActivity {
         lbm.unregisterReceiver(packageIntentReceiver);
         lbm.unregisterReceiver(deleteoneIntentReceiver);
         lbm.unregisterReceiver(deleteallIntentReceiver);
+        lbm.unregisterReceiver(howtoTopicIntentReceiver);
 
         super.onDestroy();
     }
@@ -208,6 +218,7 @@ public class ActivityTopics extends FragmentActivity {
         lbm.registerReceiver(packageIntentReceiver, new IntentFilter( Const.INTENT_PACKAGE ));
         lbm.registerReceiver(deleteoneIntentReceiver, new IntentFilter( Const.INTENT_DELETEONE ));
         lbm.registerReceiver(deleteallIntentReceiver, new IntentFilter( Const.INTENT_DELETEALL ));
+        lbm.registerReceiver(howtoTopicIntentReceiver, new IntentFilter( Const.INTENT_HOWTOTOPIC ));
 
         Prefs.Init( this );
         ArtemisSQL.Init( this );
@@ -288,17 +299,22 @@ public class ActivityTopics extends FragmentActivity {
         //////////////////
         // show startup dialogs
 
-        if( false == Prefs.GetBool( Prefs.EULA_VERSION, false ) ) {
+        if( false == Prefs.GetAndSetBool( Prefs.EULA_VERSION ) ) {
             Notifier.ShowOk_AppVersionTitle(thisActivity, R.string.text_eula, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int _which) {
-                    Prefs.SetBool(Prefs.EULA_VERSION, true);
 
-                    // then show freeware warning
-                    Notifier.ShowOk( thisActivity, R.string.text_features_limitedversion, null );
-                }
+                    // then show crippleware warning
+                    Notifier.ShowOk( thisActivity, R.string.text_features_limitedversion, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int _which) {
+
+                            lbm.sendBroadcast(new Intent(Const.INTENT_HOWTOTOPIC));
+                        }
+                    });
+                };
             });
+        } else {
+            lbm.sendBroadcast(new Intent(Const.INTENT_HOWTOTOPIC));
         }
-
     }
 
     @Override

@@ -12,15 +12,15 @@ public class FakeUserInput {
             "Hamlet", "To be not to be that is the question", "Act III Scene I",
             "*", "Neither a borrower nor a lender be; For loan oft loses both itself and friend, and borrowing dulls the edge of husbandry", "Act I Scene III",
             "*", "This above all: to thine own self be true", "Act I Scene III",
-            "*", "Though this be madness, yet there is method in 't.", "Act II Scene II",
+            "*", "Though this be madness, yet there is method in't.", "Act II Scene II",
             "*", "That it should come to this!", "Act I Scene II",
             "*", "There is nothing either good or bad, but thinking makes it so", "Act II Scene II",
             "*", "What a piece of work is man! How noble in reason! How infinite in faculty! In form and moving how express and admirable!", "Act II Scene II",
-            "*", "In action how like an angel! In apprehension how like a god! The beauty of the world, the paragon of animals! ", "Act II Scene II",
+            "*", "In action how like an angel! In apprehension how like a god! The beauty of the world, the paragon of animals!", "Act II Scene II",
             "*", "The lady doth protest too much, methinks", "Act III Scene II",
             "*", "In my mind's eye", "Act I Scene II",
             "*", "A little more than kin, and less than kind", "Act I Scene II",
-            "*", "The play 's the thing wherein I'll catch the conscience of the king", "Act II Scene II",
+            "*", "The play's the thing wherein I'll catch the conscience of the king", "Act II Scene II",
             "*", "And it must follow, as the night the day, thou canst not then be false to any man", "Act I Scene III",
             "*", "This is the very ecstasy of love", "Act II Scene I",
             "*", "Brevity is the soul of wit", "Act II Scene II",
@@ -61,7 +61,7 @@ public class FakeUserInput {
             "*", "If you prick us, do we not bleed? if you tickle us, do we not laugh? if you poison us, do we not die? and if you wrong us, shall we not revenge?", "Act III Scene I",
             "*", "The devil can cite Scripture for his purpose", "Act I Scene III",
             "*", "I like not fair terms and a villain's mind", "Act I Scene III",
-            "Merry Wives of Windsor", "Why, then the world 's mine oyster", "Act II Scene II",
+            "Merry Wives of Windsor", "Why, then the world's mine oyster", "Act II Scene II",
             "*", "This is the short and the long of it", "Act II Scene II",
             "*", "I cannot tell what the dickens his name is", "Act III Scene II",
             "*", "As good luck would have it", "Act III Scene V",
@@ -83,7 +83,7 @@ public class FakeUserInput {
             "*", "Small things make base men proud", "Act IV Scene I",
             "*", "True nobility is exempt from fear", "Act IV Scene I",
             "*", "Having nothing, nothing can he lose", "Act III Scene III",
-            "Taming of the Shrew", "I 'll not budge an inch", "Induction Scene I",
+            "Taming of the Shrew", "I'll not budge an inch", "Induction Scene I",
             "Timon of Athens", "We have seen better days", "Act IV Scene II",
             "Julius Caesar", "Friends, Romans, countrymen, lend me your ears; I come to bury Caesar, not to praise him", "Act III Scene II",
             "*", "But, for my own part, it was Greek to me", "Act I Scene II",
@@ -100,8 +100,8 @@ public class FakeUserInput {
             "*", "As he was valiant, I honor him; but, as he was ambitious, I slew him", "Act III Scene II",
             "*", "Cowards die many times before their deaths; The valiant never taste of death but once.", "Act II Scene II",
             "*", "Of all the wonders that I yet have heard, it seems to me most strange that men should fear; Seeing that death, a necessary end, will come when it will come", "Act II Scene II",
-            "Macbeth", "There 's daggers in men's smiles", "Act II Scene III",
-            "*", "what 's done is done", "Act III Scene II",
+            "Macbeth", "There's daggers in men's smiles", "Act II Scene III",
+            "*", "what's done is done", "Act III Scene II",
             "*", "I dare do all that may become a man; Who dares do more is none", "Act I Scene VII",
             "*", "Fair is foul, and foul is fair", "Act I Scene I",
             "*", "I bear a charmed life", "Act V Scene VIII",
@@ -116,14 +116,15 @@ public class FakeUserInput {
             "*", "Look like the innocent flower, but be the serpent under 't.", "Act I Scene V",
             "*", "I have no spur to prick the sides of my intent, but only vaulting ambition, which o'erleaps itself, and falls on the other.", "Act I Scene VII",
             "*", "Is this a dagger which I see before me, The handle toward my hand?", "Act II Scene I",
-            "*", "Out, out, brief candle! Life's but a walking shadow, a poor player that struts and frets his hour upon the stage and then is heard no more: it is a tale told by an idiot, full of sound and fury, signifying nothing.", "Act V Scene V",
+            "*", "Life's but a walking shadow, a poor player that struts and frets his hour upon the stage and then is heard no more", "Act V Scene V",
+            "*", "It is a tale told by an idiot, full of sound and fury, signifying nothing.", "Act V Scene V",
             "King Lear", "How sharper than a serpent's tooth it is to have a thankless child!", "Act I Scene IV",
             "*", "I am a man more sinned against than sinning", "Act III Scene II",
             "*", "My love's more richer than my tongue", "Act I Scene I",
             "*", "Nothing will come of nothing.", "Act I Scene I",
             "*", "Have more than thou showest, speak less than thou knowest, lend less than thou owest", "Act I Scene IV",
             "*", "The worst is not, So long as we can say, 'This is the worst.' ", "Act IV Scene I",
-            "Othello", "‘T’is neither here nor there.", "Act IV Scene III",
+            "Othello", "T’is neither here nor there.", "Act IV Scene III",
             "*", "I will wear my heart upon my sleeve for daws to peck at", "Act I Scene I",
             "*", "To mourn a mischief that is past and gone is the next way to draw new mischief on", "Act I Scene III",
             "*", "The robbed that smiles steals something from the thief", "Act I Scene III",
@@ -137,9 +138,9 @@ public class FakeUserInput {
             "*", "Love looks not with the eyes, but with the mind, and therefore is winged Cupid painted blind", "Act I Scene I",
             "Much Ado About Nothing", "Everyone can master a grief but he that has it", "Act III Scene II",
             "Titus Andronicus", "These words are razors to my wounded heart", "Act I Scene I",
-            "Winter's Tale", "What 's gone and what's past help should be past grief", "Act III Scene II",
+            "Winter's Tale", "What's gone and what's past help should be past grief", "Act III Scene II",
             "*", "You pay a great deal too dear for what's given freely", "Act I Scene I",
-            "Taming of the Shrew", "Out of the jaws of death", "Act III Scene IV",
+            "Taming of the Shrew", "I snatched one half out of the jaws of death", "Act III Scene IV",
             "*", "Thus the whirligig of time brings in his revenges", "Act V Scene I",
             "*", "For the rain it raineth every day", "Act V Scene I",
     };
@@ -257,31 +258,42 @@ public class FakeUserInput {
     private static String[] SelectSubStrings( String s, int len, int count ) {
         Random r = new Random();
 
-        // enum word starts
-        ArrayList<Integer> arri = new ArrayList<Integer>();
-        int i = 0;
-        while( i < s.length() ) {
-            arri.add( new Integer(i) );
-            while( ++i < s.length() && s.charAt(i) != ' ' ) { ; } // find next space
-            ++i; // advance to next word-start
-            if( i > s.length() - len/3 ) { break; } // skip words past end-tolerance
+        String[] singleWords = s.split(" ");
+
+        final float minTol = (float)0.6;
+        float level = (float)singleWords.length / (float)count;
+        if( level < minTol ) { level = minTol; }
+
+        final float diffSetting = (float)0.2; // smaller is easier
+
+        // glob words together
+        ArrayList<String> segments = new ArrayList<String>();
+        for( int i = 0; i < singleWords.length; ) {
+            float l = level;
+            String seg = singleWords[ i++ ];
+            int segWords = 0;
+            while( i < singleWords.length ) {
+                if( l < minTol ) { break; } else { l -= diffSetting; }
+                if( seg.length() + singleWords[ i ].length() >= len ) { break; }
+                seg += " " + singleWords[ i++ ];
+                segWords++;
+            }
+            i -= segWords / 2; // create overlap in clues
+            segments.add( seg.substring(0, seg.length() > len ? len : seg.length()) );
         }
 
-        // add, but try to prevent duplicates
+        // fill clues, but try to prevent duplicates
         ArrayList<String> arrl = new ArrayList<String>();
         for( int c=0; c<count; c++) {
-            if( arri.size() == 0 ) { // eek! ran out! recycle some of the others
+            if( segments.size() == 0 ) { // eek! ran out! recycle some of the others
                 int recycle = r.nextInt(arrl.size());
                 arrl.add( new String( arrl.get(recycle)));
             } else {
-                int ai = r.nextInt(arri.size());
-                int wp = arri.get(ai);
-                arri.remove(ai);
-                if( wp + len > s.length() ) {
-                    arrl.add(s.substring(wp));
-                } else {
-                    arrl.add(s.substring(wp, wp + len));
-                }
+                // select a segment, then remove it so it's not selected again
+                int segmentarrindex = r.nextInt(segments.size());
+                String segment = segments.get( segmentarrindex );
+                segments.remove( segmentarrindex );
+                arrl.add( segment );
             }
         }
         return arrl.toArray(new String[arrl.size()]);

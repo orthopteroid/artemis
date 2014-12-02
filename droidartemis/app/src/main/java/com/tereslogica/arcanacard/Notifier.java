@@ -62,6 +62,18 @@ public class Notifier {
                 .show();
     }
 
+    public static void ShowHowto(Context cxt, int stringid, DialogInterface.OnClickListener ocl) {
+        String message = cxt.getResources().getString( stringid );
+        String title = cxt.getResources().getString(R.string.dialog_howto);
+        String response = cxt.getResources().getString(R.string.button_gotit);
+        new AlertDialog.Builder(cxt)
+                .setIcon(R.drawable.app_icon)
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton(response, ocl)
+                .show();
+    }
+
     public static void ShowMenu(Context cxt, int listid, DialogInterface.OnClickListener ocl ) {
         new AlertDialog.Builder(cxt)
                 .setIcon(R.drawable.app_icon)

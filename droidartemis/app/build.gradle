@@ -15,7 +15,7 @@ android {
     buildToolsVersion '20.0.0'
     ////////////////
     defaultConfig {
-        applicationId 'com.tereslogica.arcanashare'
+        applicationId 'com.tereslogica.arcanacard'
         minSdkVersion 8
         targetSdkVersion 8
         // see productFlavors section for versionCode/Name magic

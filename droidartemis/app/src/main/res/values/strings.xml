@@ -4,6 +4,9 @@
     <string name="app_name">ArcanaCard</string>
     <string name="app_loc">arcanacard.com</string>
     <string name="app_weblink">http://tereslogica.com</string>
+    <string name="activity_topics">Topics</string>
+    <string name="activity_new">Create Topic</string>
+    <string name="activity_qrviewer">View QRCodes</string>
     <string name="menu_testtoken">Debug Scan Test</string>
     <string name="menu_sort">Sorting</string>
     <string name="menu_licenses">Licenses</string>
@@ -12,6 +15,7 @@
     <string name="menu_new_autofill_shakespeare">Shakespeare</string>
     <string name="menu_new_autofill_julesverneEN">Jules Verene (en)</string>
     <string name="menu_new_autofill_julesverneFR">Jules Verene (fr)</string>
+    <string name="dialog_howto">Howto</string>
     <string name="dialog_selectsorting">Change Sorting</string>
     <string name="dialog_noscanner">Scanner app (zxing) not found.</string>
     <string name="dialog_nonativelib">Installation error: native library not found.</string>
@@ -26,6 +30,7 @@
     <string name="sharelist_needmorekeys">More keys needed to unlock message.</string>
     <string name="sharelist_nomessage">Message not yet scanned.</string>
     <string name="button_ok">Ok</string>
+    <string name="button_gotit">Got it!</string>
     <string name="button_yes">Yes</string>
     <string name="button_cancel">Cancel</string>
     <string name="button_no">No</string>
@@ -37,6 +42,30 @@
     <string name="button_accept">Accept</string>
     <string name="button_more">More</string>
     <string name="button_less">Less</string>
+
+    <string name="text_howto_topic">
+ArcanaCards are minted in groups called \'Topics\', which all have a unique code so you can\'t
+ guess their hidden message. The topic indicators are shown on the top right of each topic.
+ The indicators are:\n
+\n* M nnnK nnnL nnnT\n
+\n* You can read the hidden message (short-press on the topic to read the message),\n
+\nM You have scanned the message code,\n
+\nnnnK How many keys you have for this topic (nnn is some number),\n
+\nnnnL How many locks are on the message. To unlock a hidden message you need the message and this many keys (nnn is some number),\n
+\nnnnT The total number of keys that were made for this message (nnn is some number).\n
+\n
+\nYou can long-press on a topic to access other topic-related options), but to get
+ started press the NEW button to create your first topic!
+    </string>
+
+    <string name="text_howto_new">
+\'Keys\' are the number of codes that will be created.\n
+\n\'Locks\' are the number of keys that must be scanned to reveal your hidden message.\n
+\n\'Clues\' can be attached to keys and can be read as soon as a key is scanned.\n
+ Choose clues that create an interesting game mechanic, ie. the locations of other keys or
+ portions of a text. Use the menu autofill options to get started with some quote-based
+ games from some public domain texts.
+    </string>
 
     <string name="text_features_limitedversion">
 This version of ArcanaCard is restricted to 7 keys, 3 locks and 20 character
