@@ -257,7 +257,7 @@ public class ActivityNew extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        FakeUserInput.Scenario s = null;
+        ConstShakespeare.Scenario s = null;
 
         int keys = Integer.parseInt(settings.get(0).getValue());
 
@@ -268,13 +268,13 @@ public class ActivityNew extends Activity {
                 }
                 return true;
             case R.id.menu_new_autofill_shakespeare:
-                s = FakeUserInput.Shakespeare(BuildConfig.MAX_CHARS, keys);
+                s = ConstShakespeare.Shakespeare(BuildConfig.MAX_CHARS, keys);
                 break;
             case R.id.menu_new_autofill_julesverneEN:
-                s = FakeUserInput.JulesVerneEN(BuildConfig.MAX_CHARS, keys);
+                s = ConstShakespeare.JulesVerneEN(BuildConfig.MAX_CHARS, keys);
                 break;
             case R.id.menu_new_autofill_julesverneFR:
-                s = FakeUserInput.JulesVerneFR(BuildConfig.MAX_CHARS, keys);
+                s = ConstShakespeare.JulesVerneFR(BuildConfig.MAX_CHARS, keys);
                 break;
             default:
                 break;
