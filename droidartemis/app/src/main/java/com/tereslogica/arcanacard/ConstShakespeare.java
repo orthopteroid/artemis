@@ -6,7 +6,7 @@ import java.util.Random;
 /**
  * Created by john on 27/11/14.
  */
-public class FakeUserInput {
+public class ConstShakespeare {
     // http://en.wikiquote.org/wiki/Jules_Verne
     private final static String shakespeare[] = {
             "Hamlet", "To be not to be that is the question", "Act III Scene I",
