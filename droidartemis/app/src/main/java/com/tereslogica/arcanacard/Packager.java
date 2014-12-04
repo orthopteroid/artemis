@@ -27,12 +27,7 @@ public class Packager {
     private ProgressDialog dialog;
 
     private static String TrimString( String s, int len ) {
-        if( s.length() > len ) {
-            int x = len/2 -3; // -3 for "..."
-            return s.substring(0, x) + "..." + s.substring(s.length()-x, s.length());
-        } else {
-            return s;
-        }
+        return ( s.length() > len ) ? s.substring(0, len -1) : s;
     }
 
     ////////////////////////////////////

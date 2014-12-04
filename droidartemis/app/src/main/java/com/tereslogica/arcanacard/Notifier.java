@@ -81,6 +81,14 @@ public class Notifier {
                 .show();
     }
 
+    public static void ShowMenu(Context cxt, int titleid, String items[], DialogInterface.OnClickListener ocl ) {
+        String title = cxt.getResources().getString(titleid);
+        new AlertDialog.Builder(cxt)
+                .setIcon(R.drawable.app_icon)
+                .setItems(items, ocl)
+                .show();
+    }
+
     public static void ShowOptions(Context cxt, int titleid, int listid, int selectedid, DialogInterface.OnClickListener ocl) {
         String title = cxt.getResources().getString(titleid);
         new AlertDialog.Builder(cxt)

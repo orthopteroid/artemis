@@ -12,10 +12,8 @@
     <string name="menu_licenses">Licenses</string>
     <string name="menu_howtos">Replay Howtos</string>
     <string name="menu_website">Website</string>
-    <string name="menu_new_clearfill">Clear Items</string>
-    <string name="menu_new_autofill_shakespeare">Shakespeare</string>
-    <string name="menu_new_autofill_julesverneEN">Jules Verene (en)</string>
-    <string name="menu_new_autofill_julesverneFR">Jules Verene (fr)</string>
+    <string name="menu_clearfill">Clear Items</string>
+    <string name="menu_autofill">Autofill</string>
     <string name="dialog_howto">Howto</string>
     <string name="dialog_selectsorting">Change Sorting</string>
     <string name="dialog_noscanner">Scanner app (zxing) not found.</string>
@@ -24,6 +22,7 @@
     <string name="dialog_info_decode">New message decoded</string>
     <string name="dialog_info_clue">New clue found</string>
     <string name="dialog_info_topic">New topic found</string>
+    <string name="dialog_info_autofill">Select Autofill</string>
     <string name="dialog_newtopic">New topic created</string>
     <string name="dialog_err_encode">There was an encoding failure.</string>
     <string name="dialog_err_decode">There was a decoding failure.</string>

@@ -257,38 +257,33 @@ public class ActivityNew extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        ConstShakespeare.Scenario s = null;
-
-        int keys = Integer.parseInt(settings.get(0).getValue());
-
         switch (item.getItemId()) {
             case R.id.menu_new_clearfill:
                 for (int i = 2; i < settings.size(); i++) { // 2 >= are user text
                     settings.get(i).setValue( "" );
                 }
                 return true;
-            case R.id.menu_new_autofill_shakespeare:
-                s = ConstShakespeare.Shakespeare(BuildConfig.MAX_CHARS, keys);
-                break;
-            case R.id.menu_new_autofill_julesverneEN:
-                s = ConstShakespeare.JulesVerneEN(BuildConfig.MAX_CHARS, keys);
-                break;
-            case R.id.menu_new_autofill_julesverneFR:
-                s = ConstShakespeare.JulesVerneFR(BuildConfig.MAX_CHARS, keys);
+            case R.id.menu_new_autofill:
+                final int keys = Integer.parseInt( settings.get(0).getValue() );
+                final AppAutofill.AuthorQuoteUple quoteset = AppAutofill.EnumQuotes();
+
+                String authoritems[] = quoteset.authors.toArray( new String[quoteset.authors.size()] );
+
+                Notifier.ShowMenu( thisActivity, R.string.dialog_info_autofill, authoritems, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int _which) {
+                        AppAutofill.Scenario s = AppAutofill.Scenario.MakeRndScenario( quoteset.quotes.get( _which ), BuildConfig.MAX_CHARS, keys );
+                        settings.get(2).setValue(s.m);
+                        settings.get(3).setValue(s.l);
+                        for (int i = 4; i < settings.size(); i++) { // 4 >= are key clues
+                            settings.get(i).setValue(s.k[i - 4]); // -4 to index from 0
+                        }
+                    }
+                });
                 break;
             default:
                 break;
         }
-        if( s != null ) {
-            settings.get(2).setValue( s.m );
-            settings.get(3).setValue( s.l );
-            for (int i = 4; i < settings.size(); i++) { // 4 >= are key clues
-                settings.get(i).setValue( s.k[i -4] ); // -4 to index from 0
-            }
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
-        }
+        return super.onOptionsItemSelected(item);
     }
 
     ////////
