@@ -28,6 +28,8 @@ public class ActivityNew extends Activity {
     private ArrayList<AbstractItem> settings = new ArrayList<AbstractItem>();
 
     public enum NumType { key, lock };
+    public EditText keyValueView;
+    public EditText lockValueView;
 
     public interface AbstractItem {
         public void setTitle( String t );
@@ -51,6 +53,8 @@ public class ActivityNew extends Activity {
             titleView = ((TextView) containerView.findViewById(R.id.numsetting_title));
             valueView = ((EditText) containerView.findViewById( R.id.numsetting_value));
 
+            if( numType == NumType.key ) { keyValueView = valueView; } else { lockValueView = valueView; }
+
             // configure view-holder pattern
 
             containerView.setTag( R.id.numsetting_title, titleView );
@@ -68,7 +72,6 @@ public class ActivityNew extends Activity {
 
             // init properties
 
-            //valueView.setInputType( InputType.TYPE_CLASS_NUMBER );
             valueView.addTextChangedListener(
                     new TextWatcher() {
                         public void afterTextChanged(Editable s) {
@@ -89,10 +92,19 @@ public class ActivityNew extends Activity {
                 @Override
                 public void onClick(View view) {
                     try {
-                        String value = getValue();
-                        setValue(String.valueOf(Integer.parseInt(value) + 1));
+                        int newvalue = Integer.parseInt( getValue() ) +1;
+                        setValue( String.valueOf( newvalue ) );
+
                         if( numType == NumType.key ) {
-                            settings.add((AbstractItem) new TextItem(layoutClone, inflaterClone, "Optional Key Clue", ""));
+                            // nothing much to do other than add item
+                            addClue( layoutClone, inflaterClone );
+                        } else if( numType == NumType.lock ) {
+                            // inc lock, check and set key
+                            int keyvalue = Integer.parseInt( keyValueView.getText().toString() );
+                            if( newvalue > keyvalue ) {
+                                keyValueView.setText( lockValueView.getText() );
+                                addClue( layoutClone, inflaterClone );
+                            }
                         }
                     } catch (Exception e) {}
                 }
@@ -102,15 +114,20 @@ public class ActivityNew extends Activity {
                 @Override
                 public void onClick(View view) {
                     try {
-                        String value = getValue();
-                        int delta =  ( Integer.parseInt( value ) < 2 ) ? 0 : -1;
-                        setValue( String.valueOf( Integer.parseInt( value ) + delta ) );
-                        if( numType == NumType.key ) {
-                            if (delta == -1) {
-                                int lastItem = settings.size() - 1; // -1 to remove last
-                                AbstractItem lastClue = settings.get(lastItem);
-                                lastClue.removeFromLayout(layoutClone);
-                                settings.remove(lastItem);
+                        int newvalue = Integer.parseInt( getValue() ) -1;
+                        if( newvalue >= 2 ) {
+
+                            if( numType == NumType.key  ) {
+                                // dec key
+                                setValue( String.valueOf( newvalue ) );
+                                removeClue( layoutClone );
+
+                                // check and set lock
+                                int lockvalue = Integer.parseInt( lockValueView.getText().toString() );
+                                if( newvalue < lockvalue ) { lockValueView.setText( keyValueView.getText() ); }
+                            } else if( numType == NumType.lock ) {
+                                // nothing much to do other than change #
+                                setValue( String.valueOf( newvalue ) );
                             }
                         }
                     } catch( Exception e ) {}
@@ -179,6 +196,16 @@ public class ActivityNew extends Activity {
 
     ///////////////////////////
 
+    private void addClue( LinearLayout L, LayoutInflater I ) {
+        settings.add((AbstractItem) new TextItem( L, I, "Optional Key Clue", ""));
+    }
+
+    private void removeClue( LinearLayout L ) {
+        int lastItem = settings.size() -1; // -1 to remove last
+        settings.get( lastItem ).removeFromLayout( L );
+        settings.remove( lastItem );
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -192,13 +219,13 @@ public class ActivityNew extends Activity {
         settings.add( (AbstractItem)new NumberItem( layout, inflater, "Locks", "5", NumType.lock ) );
         settings.add((AbstractItem) new TextItem(layout, inflater, "Hidden Message", ""));
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Message Clue", "") );
-        settings.add((AbstractItem) new TextItem(layout, inflater, "Optional Key Clue", ""));
-        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
-        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
-        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
-        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
-        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
-        settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Key Clue", "") );
+        addClue( layout, inflater );
+        addClue( layout, inflater );
+        addClue( layout, inflater );
+        addClue( layout, inflater );
+        addClue( layout, inflater );
+        addClue( layout, inflater );
+        addClue( layout, inflater );
 
         if( false == Prefs.GetAndSetBool( Prefs.HOWTO_NEW ) ) {
             Notifier.ShowHowto( thisActivity, R.string.text_howto_new, null );
