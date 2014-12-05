@@ -77,11 +77,11 @@ public class ActivityTopics extends FragmentActivity {
         }
     };
 
-    private BroadcastReceiver howtoTopicIntentReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver howtoIntroIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if( false == Prefs.GetAndSetBool( Prefs.HOWTO_TOPIC ) ) {
-                Notifier.ShowHowto( thisActivity, R.string.text_howto_topic, null );
+            if( false == Prefs.GetAndSetBool( Prefs.HOWTO_INTRO) ) {
+                Notifier.ShowHowto( thisActivity, R.string.text_howto_intro, null );
             }
         }
     };
@@ -201,7 +201,7 @@ public class ActivityTopics extends FragmentActivity {
         lbm.unregisterReceiver(packageIntentReceiver);
         lbm.unregisterReceiver(deleteoneIntentReceiver);
         lbm.unregisterReceiver(deleteallIntentReceiver);
-        lbm.unregisterReceiver(howtoTopicIntentReceiver);
+        lbm.unregisterReceiver(howtoIntroIntentReceiver);
 
         super.onDestroy();
     }
@@ -218,7 +218,7 @@ public class ActivityTopics extends FragmentActivity {
         lbm.registerReceiver(packageIntentReceiver, new IntentFilter( Const.INTENT_PACKAGE ));
         lbm.registerReceiver(deleteoneIntentReceiver, new IntentFilter( Const.INTENT_DELETEONE ));
         lbm.registerReceiver(deleteallIntentReceiver, new IntentFilter( Const.INTENT_DELETEALL ));
-        lbm.registerReceiver(howtoTopicIntentReceiver, new IntentFilter( Const.INTENT_HOWTOTOPIC ));
+        lbm.registerReceiver(howtoIntroIntentReceiver, new IntentFilter( Const.INTENT_HOWTOINTRO));
 
         Prefs.Init( this );
         ArtemisSQL.Init( this );
@@ -307,13 +307,13 @@ public class ActivityTopics extends FragmentActivity {
                     Notifier.ShowOk( thisActivity, R.string.text_features_limitedversion, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int _which) {
 
-                            lbm.sendBroadcast(new Intent(Const.INTENT_HOWTOTOPIC));
+                            lbm.sendBroadcast(new Intent(Const.INTENT_HOWTOINTRO));
                         }
                     });
                 };
             });
         } else {
-            lbm.sendBroadcast(new Intent(Const.INTENT_HOWTOTOPIC));
+            lbm.sendBroadcast(new Intent(Const.INTENT_HOWTOINTRO));
         }
     }
 
@@ -400,12 +400,23 @@ public class ActivityTopics extends FragmentActivity {
             case R.id.menu_licenses:
                 Notifier.ShowText(thisActivity, R.string.text_licenses);
                 return true;
+            case R.id.menu_cryptoinfo:
+                Notifier.ShowText(thisActivity, R.string.text_cryptoinfo);
+                return true;
             case R.id.menu_howtos:
-                Notifier.ShowHowto( thisActivity, R.string.text_howto_topic, new DialogInterface.OnClickListener() {
+                Notifier.ShowHowto( thisActivity, R.string.text_howto_intro, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int _which) {
                         Notifier.ShowHowto( thisActivity, R.string.text_howto_new, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int _which) {
-                                Notifier.ShowHowto( thisActivity, R.string.text_howto_test, null );
+                                Notifier.ShowHowto( thisActivity, R.string.text_howto_autofill, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int _which) {
+                                        Notifier.ShowHowto( thisActivity, R.string.text_howto_indicators, new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int _which) {
+                                                Notifier.ShowHowto( thisActivity, R.string.text_howto_test, null );
+                                            }
+                                        });
+                                    }
+                                });
                             }
                         });
                     }

@@ -10,10 +10,11 @@
     <string name="menu_testtoken">Debug Scan Test</string>
     <string name="menu_sort">Sort Topics</string>
     <string name="menu_licenses">Licenses</string>
-    <string name="menu_howtos">Replay Howtos</string>
+    <string name="menu_howtos">Replay howto</string>
     <string name="menu_website">Website</string>
-    <string name="menu_clearfill">Clear Items</string>
+    <string name="menu_clearfill">Clear items</string>
     <string name="menu_autofill">Autofill</string>
+    <string name="menu_cryptoinfo">Crypto info</string>
     <string name="dialog_howto">Howto</string>
     <string name="dialog_selectsorting">Change Sorting</string>
     <string name="dialog_noscanner">Scanner app (zxing) not found.</string>
@@ -43,38 +44,56 @@
     <string name="button_more">More</string>
     <string name="button_less">Less</string>
 
-    <string name="text_howto_topic">
-ArcanaCards are minted in groups called \'Topics\'. There are two types of cards: message cards and key cards. To
- reveal a hidden message you need the message card and atleast two of the key cards (exactly
- how many will depend on the \'locks\' setting when the topic was minted). ArcanaCard groups
- cards together when you scan them and shows you how many more you might need before you can
- reveal the hidden message.\n
-\nOn the main screen the topics are listed, each with a set of letter indicators at the top
- right. The indicators are:\n
-\n* M nnnK nnnL nnnT\n
-\n\'*\' Means you can read the hidden message because you have the message card and enough of the keys to unlock it (short-press on the topic to read the message),\n
-\n\'M\' Means you have scanned the message code (but you may not be able to read it if you don\'t have enough keys),\n
-\nnnnK How many keys you have for this topic (nnn is shorthand for the number of keys you\'ve collected),\n
-\nnnnL How many locks are on the message. To unlock a hidden message you need the message and this many keys (nnn is the number locks on the message),\n
-\nnnnT The total number of keys that were made for this message.\n
-\nYou can long-press on a topic to access other topic-related options, but to get
- started press the NEW button to create your first topic.
+    <string name="text_howto_intro">
+ArcanaCard allows you to make short hidden messages that require multiple keys to reveal.
+ You \'mint\' your message with it\'s keys, ie. they become a set. Each set is called a \'Topic\' and
+ although topics have cryptic names you can put a clue on the message or any of the keys.
+\n\nTo reveal a message you must have the message card and at least two of the key
+ cards; exactly how many keys you require will depend on the \'locks\' setting when the topic was minted.
+\n\nArcanaCard shares topics using QRCodes and so needs you to install a QRCode scanning app,
+ like ZXing or Google Goggles. As well, it works best with physically printed QRCodes that
+ you can trade between friends or hide for friends to find.
+\n\nTo get started press the NEW BUTTON to create your first topic.
     </string>
 
     <string name="text_howto_new">
-\'Keys\' are the number of codes that will be created.\n
-\n\'Locks\' are the number of keys that must be scanned to reveal your hidden message.\n
-\n\'Clues\' can be attached to keys and can be read as soon as a key is scanned.\n
-\nChoose clues that create an interesting game mechanic, ie. the locations of other keys or
- portions of a text. Use the menu autofill options to get started with some quote-based
- games from some public domain texts.
+You create a new topic with a message, hidden by a number of locks and unlockable using some number of keys.
+\n\n\'Keys\' are the number of completely interchangeable keys that will be created. It can be larger than the number of locks on a message but not smaller.
+\n\n\'Locks\' are the number of keys that someone must possess to reveal your hidden message. They must have your message card as well!
+\n\n\'Clues\' can be attached to keys and can be read as soon as a key is scanned. Clues are
+ not encrypted. Choose clues that are interesting or helpful, ie. the locations of other
+ keys or perhaps portions of a text.
+\n\nUse the AUTOFILL MENU to get started with some quote-based games from some public domain texts.
+    </string>
+
+    <string name="text_howto_autofill">
+Autofill will create an example game for you using some works that are in the
+ public domain.
+\n\nThis kind of game requires you to guess the title of an author\'s book or play from
+ only seeing famous portions of its text. You lose if you collect enough keys to unlock it.
+\n\nAutofill works with your current key and lock settings, so you can customize the difficulty of each game.
+    </string>
+
+    <string name="text_howto_greatwork">
+Great work, you\'ve made a new topic!
+    </string>
+
+    <string name="text_howto_indicators">
+Each card contains information about the set it was minted with. ArcanaCard can show you this
+ information and how many cards of each topic you currently have. The main screen shows
+ these indicators in the top right of each topic:
+\n\n* M nK nL nT
+\n\n\'*\' Means you can read the hidden message because you have the message card and enough of the keys to unlock it,
+\n\n\'M\' Means you have scanned the message card (but you may not be able to read it if you don\'t have enough keys!),
+\n\n\'nK\' Shows that you have collected \'n\' keys for a particular topic,
+\n\n\'nL\' Shows how many locks are on the message. To unlock a hidden message you would need the message card and \'n\' keys,
+\n\n\'nT\' Shows that there are a total of \'n\' keys made for this message.
     </string>
 
     <string name="text_howto_test">
-Great work, you\' made a new topic. You can test out your new topic with a long-press and
- selecting \'View QRCodes\' (if you have a friend with ArcanaCard they can try scanning the
- codes) or you can select \'Export for printing\'.\n
-\nExporting your topic to a PC and printing the codes is the way to take ArcanaCard out
+On the main screen you can short-press on a topic to read a message or long-press to access
+ other topic-related options where you can view the QRCodes or send them to a PC for printing.
+\n\nExporting your topic to a PC and printing the codes is the way to take ArcanaCard out
  into the real world.
     </string>
 
@@ -101,13 +120,16 @@ This software contains components developed by tereslogica &lt;tereslogica@gmail
  as well as the following licensed components:
 \n\npegwit, Public Domain, License granted by George Barwood  &lt;george.barwood@dial.pipex.com&gt;,
  Paulo S.L.M. Barreto &lt;pbarreto@uninet.com.br&gt; and Mr. Tines &lt;tines@windsong.demon.co.uk&gt;
-\n\nsha1, Public Domain, License granted by Steve Reid &lt;steve@edmweb.com&gt;\n
-\n\nzxing, Copyright 2007 ZXing Authors, Apache 2.0 License, http://www.apache.org/licenses/LICENSE-2.0.html\n
-\n\nThis application implements a version of Shamir\'s Secret Sharing Algorithm
- with 56 bit polynomial coefficients to reveal a 56 bit rc4 cipher key to decrypt the hidden
- message. Topic tokens are signed with a per-topic single-use 96 bit authentication key. Arithmetic
- for the polynomial evaluation and for the authentication signature are performed on the
- non-prime binary-field GF(2^112), a Koblitz curve.\n
+\n\nsha1, Public Domain, License granted by Steve Reid &lt;steve@edmweb.com&gt;
+\n\nzxing, Copyright 2007 ZXing Authors, Apache 2.0 License, http://www.apache.org/licenses/LICENSE-2.0.html
+\n\nPortions of works by William Shakespeare, Jules Verne and Beatrix Potter all Public Domain.
+    </string>
+    <string name="text_cryptoinfo">
+This application stores hidden messages using the rc4 cipher with a 56 bit key and uses
+ Shamir\'s Secret Sharing Algorithm with 56 bit coefficients for key reconstruction. Topic
+ tokens are signed with per-topic, single-use 96 bit authentication keys. All field
+ arithmetic is performed on the non-prime binary-field GF(2^112). This application claims
+ export-restriction exempt status under Wassenaar 5.A.2.a.1.a and US EAR 5x992.
     </string>
 
 </resources>

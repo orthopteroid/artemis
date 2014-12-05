@@ -11,7 +11,7 @@ public class Const {
     public final static String INTENT_DELETEONE = "intent-deleteone";
     public final static String INTENT_DELETEALL = "intent-deleteall";
     public final static String INTENT_PACKAGE = "intent-package";
-    public final static String INTENT_HOWTOTOPIC = "intent-howtotopic";
+    public final static String INTENT_HOWTOINTRO = "intent-howtointro";
 
     public final static String EXTRA_TOPICSTRING = "extra-topic";
     public final static String EXTRA_URISTRING = "extra-uristring";

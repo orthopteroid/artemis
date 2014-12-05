@@ -85,6 +85,7 @@ public class Notifier {
         String title = cxt.getResources().getString(titleid);
         new AlertDialog.Builder(cxt)
                 .setIcon(R.drawable.app_icon)
+                .setTitle(title)
                 .setItems(items, ocl)
                 .show();
     }

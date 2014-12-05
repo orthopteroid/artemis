@@ -97,13 +97,13 @@ public class ActivityNew extends Activity {
 
                         if( numType == NumType.key ) {
                             // nothing much to do other than add item
-                            addClue( layoutClone, inflaterClone );
+                            addClue(layoutClone, inflaterClone);
                         } else if( numType == NumType.lock ) {
                             // inc lock, check and set key
                             int keyvalue = Integer.parseInt( keyValueView.getText().toString() );
                             if( newvalue > keyvalue ) {
                                 keyValueView.setText( lockValueView.getText() );
-                                addClue( layoutClone, inflaterClone );
+                                addClue(layoutClone, inflaterClone);
                             }
                         }
                     } catch (Exception e) {}
@@ -120,7 +120,7 @@ public class ActivityNew extends Activity {
                             if( numType == NumType.key  ) {
                                 // dec key
                                 setValue( String.valueOf( newvalue ) );
-                                removeClue( layoutClone );
+                                removeClue(layoutClone);
 
                                 // check and set lock
                                 int lockvalue = Integer.parseInt( lockValueView.getText().toString() );
@@ -203,7 +203,7 @@ public class ActivityNew extends Activity {
     private void removeClue( LinearLayout L ) {
         int lastItem = settings.size() -1; // -1 to remove last
         settings.get( lastItem ).removeFromLayout( L );
-        settings.remove( lastItem );
+        settings.remove(lastItem);
     }
 
     @Override
@@ -219,13 +219,13 @@ public class ActivityNew extends Activity {
         settings.add( (AbstractItem)new NumberItem( layout, inflater, "Locks", "5", NumType.lock ) );
         settings.add((AbstractItem) new TextItem(layout, inflater, "Hidden Message", ""));
         settings.add( (AbstractItem)new TextItem( layout, inflater, "Optional Message Clue", "") );
-        addClue( layout, inflater );
-        addClue( layout, inflater );
-        addClue( layout, inflater );
-        addClue( layout, inflater );
-        addClue( layout, inflater );
-        addClue( layout, inflater );
-        addClue( layout, inflater );
+        addClue(layout, inflater);
+        addClue(layout, inflater);
+        addClue(layout, inflater);
+        addClue(layout, inflater);
+        addClue(layout, inflater);
+        addClue(layout, inflater);
+        addClue(layout, inflater);
 
         if( false == Prefs.GetAndSetBool( Prefs.HOWTO_NEW ) ) {
             Notifier.ShowHowto( thisActivity, R.string.text_howto_new, null );
@@ -275,6 +275,24 @@ public class ActivityNew extends Activity {
     ////////////////
     // menu creation & handling
 
+    private void doAutofill() {
+        final int keys = Integer.parseInt( settings.get(0).getValue() );
+        final AppAutofill.AuthorQuoteUple quoteset = AppAutofill.EnumQuotes();
+
+        String authoritems[] = quoteset.authors.toArray( new String[quoteset.authors.size()] );
+
+        Notifier.ShowMenu( thisActivity, R.string.dialog_info_autofill, authoritems, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int _which) {
+                AppAutofill.Scenario s = AppAutofill.Scenario.MakeRndScenario( quoteset.quotes.get( _which ), BuildConfig.MAX_CHARS, keys );
+                settings.get(2).setValue(s.m);
+                settings.get(3).setValue(s.l);
+                for (int i = 4; i < settings.size(); i++) { // 4 >= are key clues
+                    settings.get(i).setValue(s.k[i - 4]); // -4 to index from 0
+                }
+            }
+        });
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -291,21 +309,16 @@ public class ActivityNew extends Activity {
                 }
                 return true;
             case R.id.menu_new_autofill:
-                final int keys = Integer.parseInt( settings.get(0).getValue() );
-                final AppAutofill.AuthorQuoteUple quoteset = AppAutofill.EnumQuotes();
 
-                String authoritems[] = quoteset.authors.toArray( new String[quoteset.authors.size()] );
-
-                Notifier.ShowMenu( thisActivity, R.string.dialog_info_autofill, authoritems, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int _which) {
-                        AppAutofill.Scenario s = AppAutofill.Scenario.MakeRndScenario( quoteset.quotes.get( _which ), BuildConfig.MAX_CHARS, keys );
-                        settings.get(2).setValue(s.m);
-                        settings.get(3).setValue(s.l);
-                        for (int i = 4; i < settings.size(); i++) { // 4 >= are key clues
-                            settings.get(i).setValue(s.k[i - 4]); // -4 to index from 0
+                if( false == Prefs.GetAndSetBool( Prefs.HOWTO_AUTOFILL ) ) {
+                    Notifier.ShowHowto( thisActivity, R.string.text_howto_autofill, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int _which) {
+                            doAutofill();
                         }
-                    }
-                });
+                    });
+                } else {
+                    doAutofill();
+                }
                 break;
             default:
                 break;
@@ -367,9 +380,17 @@ public class ActivityNew extends Activity {
             Notifier.ShowMessageOk(thisActivity, R.string.dialog_newtopic, topic, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int _which) {
                     if( false == Prefs.GetAndSetBool( Prefs.HOWTO_TEST ) ) {
-                        Notifier.ShowHowto( thisActivity, R.string.text_howto_test, new DialogInterface.OnClickListener() {
+                        Notifier.ShowHowto( thisActivity, R.string.text_howto_greatwork, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int _which) {
-                                newActivity.finish();
+                                Notifier.ShowHowto(thisActivity, R.string.text_howto_indicators, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int _which) {
+                                        Notifier.ShowHowto(thisActivity, R.string.text_howto_test, new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int _which) {
+                                                newActivity.finish();
+                                            }
+                                        });
+                                    }
+                                });
                             }
                         });
                     } else {
