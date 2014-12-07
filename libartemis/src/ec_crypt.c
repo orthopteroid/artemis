@@ -28,78 +28,98 @@
 #include "ec_vlong.h"
 #include "ec_crypt.h"
 
-void cpMakePublicKey (vlPoint vlPublicKey, const vlPoint vlPrivateKey)
+int cpMakePublicKey( vlPoint vlPublicKey, const vlPoint vlPrivateKey)
 {
+	int rc = 0;
 	ecPoint ecPublicKey;
 
 	ecCopy (&ecPublicKey, &curve_point);
-	if( 1 == ecMultiply( &ecPublicKey, vlPrivateKey ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( rc = ecMultiply( &ecPublicKey, vlPrivateKey ) ) { LOGFAIL( rc ); goto EXIT; }
 	ecPack (&ecPublicKey, vlPublicKey);
+EXIT:
+	return rc;
 } /* cpMakePublicKey */
 
 
-void cpEncodeSecret (const vlPoint vlPublicKey, vlPoint vlMessage, vlPoint vlSecret)
+int cpEncodeSecret(vlPoint vlSecret, vlPoint vlMessage, const vlPoint vlPublicKey)
 {
+	int rc = 0;
 	ecPoint q;
 
 	ecCopy (&q, &curve_point);
-	if( 1 == ecMultiply( &q, vlSecret ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( rc = ecMultiply( &q, vlSecret ) ) { LOGFAIL( rc ); goto EXIT; }
 	ecPack (&q, vlMessage);
 	ecUnpack (&q, vlPublicKey);
-	if( 1 == ecMultiply( &q, vlSecret ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( rc = ecMultiply( &q, vlSecret ) ) { LOGFAIL( rc ); goto EXIT; }
 	gfPack (q.x, vlSecret);
+EXIT:
+	return rc;
 } /* cpMakeSecret */
 
 
-void cpDecodeSecret (const vlPoint vlPrivateKey, const vlPoint vlMessage, vlPoint d)
+int cpDecodeSecret(vlPoint d, vlPoint vlMessage, const vlPoint vlPrivateKey)
 {
+	int rc = 0;
 	ecPoint q;
 
 	ecUnpack (&q, vlMessage);	
-	if( 1 == ecMultiply( &q, vlPrivateKey ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( rc = ecMultiply( &q, vlPrivateKey ) ) { LOGFAIL( rc ); goto EXIT; }
 	gfPack(q.x, d);
+EXIT:
+	return rc;
 } /* ecDecodeSecret */
 
-void cpSign(const vlPoint vlPrivateKey, const vlPoint k, const vlPoint vlMac, cpPair * sig)
+int cpSign(cpPair * sig, const vlPoint vlPrivateKey, const vlPoint k, const vlPoint vlMac)
 {
+	int rc = 0;
 	ecPoint q;
 	vlPoint tmp;
 	
 	vlClear( tmp );
 	ecCopy( &q, &curve_point );
-	if( 1 == ecMultiply( &q, k ) ) { LOGFAIL( RC_INTERNAL ); return; }
+	if( rc = ecMultiply( &q, k ) ) { LOGFAIL( rc ); goto EXIT; }
 	gfPack(q.x, sig->r);
 	vlAdd( sig->r, vlMac );
 	vlRemainder( sig->r, prime_order );
-	if( sig->r[0] == 0 ) { return; }
+	if( sig->r[0] == 0 ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 	vlMulMod( tmp, vlPrivateKey, sig->r, prime_order );
 	vlCopy( sig->s, k );
 	if( vlGreater( tmp, sig->s ) ) { vlAdd( sig->s, prime_order ); }
 	vlSubtract( sig->s, tmp );
+EXIT:
+	return rc;
 } /* cpSign */
 
-int cpVerify(const vlPoint vlPublicKey, const vlPoint vlMac, cpPair * sig )
+int cpVerify(int* pEqual, cpPair * sig, const vlPoint vlPublicKey, const vlPoint vlMac)
 {
-	if( !vlIsValid( vlPublicKey ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
-	if( !vlIsValid( vlMac) ) { LOGFAIL( RC_INTERNAL ); return 0; }
-	if( !sig ) { LOGFAIL( RC_INTERNAL ); return 0; }
-	if( !vlIsValid( sig->r ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
-	if( !vlIsValid( sig->s ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	int rc = 0;
+
+	if( !pEqual ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !sig ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
+	*pEqual = 0; // assume !equal
+
+	if( !vlIsValid( vlPublicKey ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+	if( !vlIsValid( vlMac) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+	if( !vlIsValid( sig->r ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+	if( !vlIsValid( sig->s ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 
 	ecPoint t1,t2;
 	vlPoint t3,t4;
 	
 	ecCopy( &t1, &curve_point );
-	if( 1 == ecMultiply( &t1, sig->s ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
-	if( 1 == ecUnpack( &t2, vlPublicKey ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
-	if( 1 == ecMultiply( &t2, sig->r ) ) { LOGFAIL( RC_INTERNAL ); return 0; }
+	if( rc = ecMultiply( &t1, sig->s ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ecUnpack( &t2, vlPublicKey ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ecMultiply( &t2, sig->r ) ) { LOGFAIL( rc ); goto EXIT; }
 	ecAdd( &t1, &t2 );
 	gfPack( t1.x, t4 );
 	vlRemainder( t4, prime_order );
 	vlCopy( t3, sig->r );
 	if( vlGreater( t4, t3 ) ) { vlAdd( t3, prime_order ); }
 	vlSubtract( t3, t4 );
-	return vlEqual( t3, vlMac );
+	*pEqual = vlEqual( t3, vlMac );
+EXIT:
+	return rc;
 } /* cpVerify */
 
 void cpCopy( cpPair* pp, const cpPair* pq )

@@ -8,11 +8,11 @@ typedef struct {
 	vlPoint r, s;
 } cpPair;
 
-void cpMakePublicKey (vlPoint vlPublicKey, const vlPoint vlPrivateKey);
-void cpEncodeSecret (const vlPoint vlPublicKey, vlPoint vlMessage, vlPoint vlSecret);
-void cpDecodeSecret (const vlPoint vlPrivateKey, const vlPoint vlMessage, vlPoint d);
-void cpSign(const vlPoint vlPrivateKey, const vlPoint secret, const vlPoint mac, cpPair * cpSig);
-int  cpVerify(const vlPoint vlPublicKey, const vlPoint vlMac, cpPair * cpSig );
+int cpMakePublicKey(vlPoint vlPublicKey, const vlPoint vlPrivateKey);
+int cpEncodeSecret(vlPoint vlSecret, vlPoint vlMessage, const vlPoint vlPublicKey);
+int cpDecodeSecret(vlPoint d, vlPoint vlMessage, const vlPoint vlPrivateKey);
+int cpSign(cpPair * cpSig, const vlPoint vlPrivateKey, const vlPoint secret, const vlPoint mac);
+int cpVerify(int* pEqual, cpPair * cpSig, const vlPoint vlPublicKey, const vlPoint vlMac);
 
 void cpCopy( cpPair* pp, const cpPair* pq );
 void cpClear( cpPair* p );

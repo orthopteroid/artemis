@@ -117,12 +117,14 @@ static int ar_core_sign( cpPair* sig, const vlPoint vlPublicKey, const vlPoint v
 
 	// ensure pubkey is valid, sign mac and verify
 	ecPoint t2;
-	if( ecUnpack( &t2, vlPublicKey ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
+	if( ecUnpack( &t2, vlPublicKey ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
-	cpSign( vlPrivateKey, session, mac, sig );
-	if( vlIsZero( sig->r ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
+	if( rc = cpSign( sig, vlPrivateKey, session, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( vlIsZero( sig->r ) ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
-	if( !cpVerify( vlPublicKey, mac, sig ) ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
+	int equal = 0;
+	if( rc = cpVerify( &equal, sig, vlPublicKey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( !equal ) { rc = RC_PRIVATEKEY; LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 
@@ -197,7 +199,9 @@ int ar_core_check_arecord( byteptr szLocation, arAuthptr arecord )
 	vlPoint mac;
 	ar_core_mac_arecord( mac, arecord, AR_VERSION );
 
-	if( !cpVerify( arecord->pubkey, mac, &arecord->authsig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
+	int equal = 0;
+	if( rc = cpVerify( &equal, &arecord->authsig, arecord->pubkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( !equal ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 
@@ -218,7 +222,9 @@ int ar_core_check_srecord( byteptr szLocation, arShareptr srecord )
 	vlPoint mac;
 	ar_core_mac_srecord( mac, srecord, AR_VERSION );
 
-	if( !cpVerify( srecord->pubkey, mac, &srecord->sharesig ) ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
+	int equal = 0;
+	if( rc = cpVerify( &equal, &srecord->sharesig, srecord->pubkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( !equal ) { rc = RC_SIGNATURE; LOGFAIL( rc ); goto EXIT; }
 
 EXIT:
 

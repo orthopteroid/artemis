@@ -102,6 +102,7 @@ void ar_shamir_recoversecret( gfPoint key, word16* shareIDArr, gfPoint* shareArr
 
 void ar_shamir_test()
 {
+	int equal = 0;
 
 #if defined(ENABLE_TESTS)
 
@@ -195,9 +196,11 @@ void ar_shamir_test()
 				if( ecUnpack( &t2, pub ) ) { continue; }
 
 				vlSetRandom( session, &ar_util_rnd16, AR_AUTHKEYBYTES );
-				cpSign( pri, session, mac, &sig );
+				if( rc = cpSign( &sig, pri, session, mac ) ) { continue; }
 				if( vlIsZero( sig.r ) ) { continue; }
-				if( !cpVerify( pub, mac, &sig ) ) { continue; }
+				equal = 0;
+				if( rc = cpVerify( &equal, &sig, pub, mac ) ) { continue; }
+				if( !equal ) { continue; }
 				rc = 0;
 			}
 			TESTASSERT( rc == 0 );
@@ -214,7 +217,8 @@ void ar_shamir_test()
 				ar_util_u16_hexencode( &len, buf, buf + 1024, session+1, session[0] ); buf[len]=0; DEBUGPRINT( "session %s\n\n", buf );
 			}
 
-			TESTASSERT( cpVerify( pub, mac, &sig ) );
+			TESTASSERT( 0 == cpVerify( &equal, &sig, pub, mac ) );
+			TESTASSERT( equal );
 
 #if defined(ENABLE_FUZZING)
 
@@ -224,9 +228,10 @@ void ar_shamir_test()
 				vlPoint mac;
 				vlSetRandom( mac, &ar_util_rnd16, AR_MACBYTES );
 
-				cpSign( pri, session, mac, &sig );
+				TESTASSERT( 0 == cpSign( &sig, pri, session, mac ) );
 				TESTASSERT( 0 == vlIsZero( sig.r ) );
-				TESTASSERT( cpVerify( pub, mac, &sig ) );
+				TESTASSERT( 0 == cpVerify( &equal, &sig, pub, mac ) );
+				TESTASSERT( equal );
 			}
 
 #endif // ENABLE_FUZZING

@@ -231,8 +231,10 @@ int ecDouble (ecPoint *p)
 int ecMultiply (ecPoint *p, const vlPoint k)
 	/* sets p := k*p */
 {
-	if( !p ) { LOGFAIL( RC_INTERNAL ); return 1; }
-	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
+	int rc = 0;
+
+	if( !p ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !vlIsValid( k ) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 
 	vlPoint h;
 	int z, hi, ki;
@@ -241,7 +243,7 @@ int ecMultiply (ecPoint *p, const vlPoint k)
 
 	gfCopy(r.x, p->x); p->x[0] = 0;
 	gfCopy(r.y, p->y); p->y[0] = 0;
-	if( vlShortMultiply(h, k, 3) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
+	if( vlShortMultiply(h, k, 3) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 	z = vlNumBits(h) - 1; /* so vlTakeBit (h, z) == 1 */
 	i = 1;
 	for (;;) {
@@ -251,10 +253,14 @@ int ecMultiply (ecPoint *p, const vlPoint k)
 		if( hi == 0 && ki == 1 ) { ecSub (p, &r); }
 		if( i >= z ) { break; }
 		i++;
-		if( 1 == ecDouble(&r) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
+		if( 1 == ecDouble(&r) ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
 	}
 
-	return 0;
+EXIT:
+
+	if( p && rc ) { ecClear( p ); }
+
+	return rc;
 } /* ecMultiply */
 
 
