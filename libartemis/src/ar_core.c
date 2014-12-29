@@ -29,9 +29,9 @@ STATICASSERT( AR_AUTHKEYBYTES <= VL_BYTES );
 
 ////////////////////////////
 
-// Artemis A uri is http://<location>?tp=<auth.pubkey>&ai=<info>&as=<authsig.r>|<authsig.r>&mt=<messagetext>&mc=<messageclue>
+// Artemis A uri is http://<location>?tp=<auth.pubkey>&ai=<info>&as=<authsig.r>|<authsig.r>&mt=<messagetext>[&mc=<messageclue>]
 //
-// Artemis S uri is http://<location>?tp=<auth.pubkey>&si=<info>&ss=<sharesig.r>|<sharesig.s>&sh=<shareid>|<share>&sc=<shareclue>
+// Artemis S uri is http://<location>?tp=<auth.pubkey>&si=<info>&ss=<sharesig.r>|<sharesig.s>&sh=<shareid>|<share>[&sc=<shareclue>]
 //
 // where:
 // <info> == <version>|<shares>|<threshold>
@@ -42,8 +42,8 @@ STATICASSERT( AR_AUTHKEYBYTES <= VL_BYTES );
 //  2 random cipher key C is used on message M to crypt message (producing M')
 //  3 split C into shares {C'1...C'n} as C'i
 //  4 random private key Kpri is used to create a matching public key Kpub
-//  5 private key Kpri is applied to hash of Kpub | T | I to produce authsignature Sa
-//  6 private key Kpri is applied to hash of Kpub | T | I | { 1, ... i, ... n } | { C'1, ... C'i, ... C'n } to produce sharesignatures {S1...Sn}
+//  5 private key Kpri is applied to hash of Kpub | I to produce authsignature Sa
+//  6 private key Kpri is applied to hash of Kpub | I | { 1, ... i, ... n } | { C'1, ... C'i, ... C'n } to produce sharesignatures {S1...Sn}
 //  7 private key Kpri and cipher key C are thrown away
 //  8 authentication is distributed in the concatenated form L | Kpub | I | Sa | M' | Mc
 //  9 shares are distributed in the concatenated form      { L | Kpub | I | Si | i | C'i | Sc }
@@ -279,7 +279,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	if( loclen == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto EXIT; }
 
 	size_t acluelen = strlen( clueTbl[ 0 ] ); // 0 for message clue
-	size_t msgoffset = loclen + acluelen +bug; // msg comes after clue + location, +bug to conditionally prefix message with \0
+
+	size_t msgoffset = loclen + acluelen +bug; // msg comes after location + clue, +bug to conditionally prefix message with \0
 
 	///////////
 	// alloc tmp storage
@@ -297,7 +298,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			{
 			case 0: if( !(shareArr = malloc( sizeof(gfPoint) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } break;
 			case 1: if( !(shareIDArr = malloc( sizeof(word16) * numShares )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } break;
-			case 2: if( !(gfCryptCoefArr = malloc( numThres * sizeof(gfPoint) )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } break;
+			case 2: if( !(gfCryptCoefArr = malloc( sizeof(gfPoint) * numThres )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; } break;
 			}
 		}
 	}
@@ -306,7 +307,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	// alloc return values
 
 	{
-		size_t abufused = loclen + inbuflen + acluelen;
+		size_t abufused = loclen + acluelen + inbuflen;
 		if( abufused > 0xFFFF ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
 		size_t astructsize = sizeof(arAuth) + abufused;
@@ -335,6 +336,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	arecord_out[0]->loclen = (word16)loclen;
 	arecord_out[0]->cluelen = (word16)acluelen;
 	arecord_out[0]->msglen = inbuflen;
+	arecord_out[0]->shares = numShares;
+	arecord_out[0]->threshold = numThres;
 
 	// fill buf with location, clue (if applic) then message
 	{
@@ -344,42 +347,15 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		if( rc = ar_util_memcpy( arecord_out[0]->buf + msgoffset,	bufend, inbuf, inbuflen ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
-	// add cleartext to entropypool, prior to gen of cryptkey
-	ar_util_rndcrank( arecord_out[0]->buf, arecord_out[0]->bufmax );
-
-	// create cryptcoefs (and cryptkey)
-	ar_core_cryptcoefs( gfCryptCoefArr, numThres );
-
-	// cipher the cleartext
-	ar_core_rc4( arecord_out[0]->buf + msgoffset, inbuflen, gfCryptCoefArr[0] );
-
-	// split the shares
-	ar_shamir_splitsecret( shareArr, shareIDArr, numShares, gfCryptCoefArr, numThres );
-
-	// cleanup secret coefs
-	memset( gfCryptCoefArr, 0, sizeof(gfPoint) * numThres );
-
-	/////////
-	// construct a valid keypair
-
-	vlPoint pubSigningkey, priSigningkey;
-
-	if( rc = ar_core_makekeypair( pubSigningkey, priSigningkey ) ) { LOGFAIL( rc ); goto EXIT; }
-
-	//////////
-	// sign the auth record
-
-	arecord_out[0]->shares = numShares;
-	arecord_out[0]->threshold = numThres;
-
-	vlCopy( arecord_out[0]->pubkey, pubSigningkey );
+	////////////////
+	// create cryptcoefs, cryptkey and split shares
 
 	{
-		vlPoint mac;
-		ar_core_mac_arecord( mac, arecord_out[0], AR_VERSION );
-
-		if( rc = ar_core_sign( &arecord_out[0]->authsig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
-
+		ar_util_rndcrank( arecord_out[0]->buf, arecord_out[0]->bufmax );							// add cleartext to entropypool, prior to gen of cryptkey
+		ar_core_cryptcoefs( gfCryptCoefArr, numThres );												// create cryptcoefs (and cryptkey)
+		ar_core_rc4( arecord_out[0]->buf + msgoffset, inbuflen, gfCryptCoefArr[0] );				// cipher the cleartext
+		ar_shamir_splitsecret( shareArr, shareIDArr, numShares, gfCryptCoefArr, numThres );			// split the shares
+		memset( gfCryptCoefArr, 0, sizeof(gfPoint) * numThres );									// cleanup secret coefs
 	}
 
 	/////////////
@@ -387,8 +363,6 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 
 	for( int i=0; i<numShares; i++ )
 	{
-		vlCopy( (*srecordtbl_out)[i]->pubkey, pubSigningkey );
-
 		(*srecordtbl_out)[i]->shares = numShares;
 		(*srecordtbl_out)[i]->threshold = numThres;
 		(*srecordtbl_out)[i]->shareid = shareIDArr[i];
@@ -409,18 +383,37 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 			if( rc = ar_util_memcpy( (*srecordtbl_out)[i]->buf,				bufend,	szLocation,		loclen ) ) { LOGFAIL( rc ); goto EXIT; }
 			if( rc = ar_util_memcpy( (*srecordtbl_out)[i]->buf + loclen,	bufend,	clueTbl[i +1],	scluelen ) ) { LOGFAIL( rc ); goto EXIT; } // +1 skips message clue
 		}
+	}
 
-		//////////
-		// construct sharesignature to ensure consistiency between topic, shareid, share and clue
+	///////////////////
+	// make keypair and sign structures
+
+	{
+		vlPoint pubSigningkey, priSigningkey;
+
+		if( rc = ar_core_makekeypair( pubSigningkey, priSigningkey ) ) { LOGFAIL( rc ); goto EXIT; }
 
 		{
 			vlPoint mac;
-			ar_core_mac_srecord( mac, (*srecordtbl_out)[i], AR_VERSION );
 
-			if( rc = ar_core_sign( &(*srecordtbl_out)[i]->sharesig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+			vlCopy( arecord_out[0]->pubkey, pubSigningkey );
+			ar_core_mac_arecord( mac, arecord_out[0], AR_VERSION );
+			if( rc = ar_core_sign( &arecord_out[0]->authsig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+
+			for( int i=0; i<numShares; i++ )
+			{
+				vlCopy( (*srecordtbl_out)[i]->pubkey, pubSigningkey );
+				ar_core_mac_srecord( mac, (*srecordtbl_out)[i], AR_VERSION );
+				if( rc = ar_core_sign( &(*srecordtbl_out)[i]->sharesig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+			}
+
+			vlClear( mac );
 		}
+		vlClear( pubSigningkey );
+		vlClear( priSigningkey );
 	}
 
+	///////////////////
 	// double-check signatures
 
 	if( rc = ar_core_check_recordset( szLocation, *arecord_out, *srecordtbl_out, numShares ) ) { LOGFAIL( rc ); goto EXIT; }
@@ -486,10 +479,10 @@ int ar_core_decrypt( byteptr* buf_out, byteptr szLocation, arAuthptr arecord, ar
 	if( !(*buf_out = malloc( arecord->msglen )) ) { rc = RC_MALLOC; LOGFAIL( rc ); goto EXIT; }
 
 	{	
-		byteptr cryptext = arecord->buf + arecord->loclen + arecord->cluelen;
+		size_t cryptOffset = arecord->loclen + arecord->cluelen;
 		byteptr bufend = *buf_out + arecord->msglen;
 
-		if( rc = ar_util_memcpy( *buf_out, bufend, cryptext, arecord->msglen ) ) { LOGFAIL( rc ); goto EXIT; }
+		if( rc = ar_util_memcpy( *buf_out, bufend, arecord->buf + cryptOffset, arecord->msglen ) ) { LOGFAIL( rc ); goto EXIT; }
 
 		gfPoint gfCryptkey;
 		ar_shamir_recoversecret( gfCryptkey, shareIDArr, shareArr, numSRecords );
