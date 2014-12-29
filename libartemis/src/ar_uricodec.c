@@ -19,146 +19,6 @@
 
 #define DELIM_INIT( f, t ) { ((f) ? '?' : '&'), 0xff & ((t) >> 24), 0xff & ((t) >> 16), 0xff & ((t) >> 8), 0 }
 
-//////////////////////
-
-typedef struct
-{
-	byteptr buf_first;
-	byteptr buf_last;
-	//
-	byteptr curr;
-	word32	tagID;
-	byteptr	tagPTR;
-	//
-	byte	data_item;
-	byteptr	data_first;
-	byteptr	data_last;
-	size_t	data_len;
-} parsestate2;
-typedef parsestate2* ps2ptr;
-
-static void ps2_init( ps2ptr pps, byteptr buf, size_t buflen )
-{
-	int rc = 0;
-
-	if( !pps ) { rc = RC_INTERNAL; LOGFAIL( rc ); return; }
-	pps->buf_first = pps->curr = buf;
-	pps->buf_last = buf + buflen - 1;
-	pps->tagID = 0;
-	//
-	pps->tagPTR = pps->data_last = pps->data_first = 0;
-}
-
-static void ps2_scan_private( ps2ptr pps )
-{
-	while( pps->curr <= pps->buf_last )
-	{
-		// buf can't start with tag marker, as there would be no psuedotag (+2 to ensure a 2 char psuedotag)
-		// also, buf can't end with tag marker, as there would be no data (-1 to allow 1 char of data at end)
-		if( pps->buf_first + 2 <= pps->curr && pps->curr <= pps->buf_last - 3 - 1 )
-		{
-			// look for tag patterns ?__= or &__=
-			if( pps->curr[0] == '?' && pps->curr[3] == '=' ) { break; } // found front tag
-			if( pps->curr[0] == '&' && pps->curr[3] == '=' ) { break; } // found interior tag
-		}
-		// buf can't start with tag delim, as there would be no tag marker (+7 to ensure a 2 char psuedotag, 4 char tag with markers and 1 char data before delim)
-		// also, buf can't end with tag delim, as there would be no data (-1 to allow 1 char of data at end)
-		if( pps->buf_first + 7 <= pps->curr && pps->curr <= pps->buf_last - 1 )
-		{
-			if( pps->curr[0] == '!' ) { break; } // found tag delim
-		}
-		if( pps->curr[0] == '\n' ) { break; } // end of line
-		(pps->curr) += 1; // next char
-	}
-}
-
-static word32 ps2_token( ps2ptr pps )
-{
-	int rc = 0;
-
-	int bPsuedoTag = ( pps->curr == pps->buf_first );
-
-	if( pps->curr > pps->buf_last ) { return pps->tagID = 0; } // no more
-
-	///////////////////////
-	// find next tag
-
-	ps2_scan_private( pps );
-	if( pps->curr[0] == '\n' ) { pps->curr++; return pps->tagID = '\n\0\0\0'; } // end of line
-	if( pps->curr > pps->buf_last ) { rc = RC_ARG; LOGFAIL( rc ); goto FINI; } // found buffer end without finding a tag
-	if( bPsuedoTag && pps->curr[0] != '?' ) { rc = RC_ARG; LOGFAIL( rc ); goto FINI; } // first delim not '?'
-
-	///////////////////////
-	// handle tag type
-
-	if( bPsuedoTag )
-	{
-		pps->tagPTR = pps->buf_first; // return psuedotag
-	}
-	else if( pps->curr[0] == '&' || pps->curr[0] == '?' )
-	{
-		pps->tagPTR = pps->curr + 1; // construct tag from buf chars
-	}
-	else if( pps->curr[0] == '!' )
-	{
-		// no touchie tagPTR
-	}
-	else { rc = RC_ARG; LOGFAIL( rc ); goto FINI; } // check for invalid scan termination
-
-	///////////////////////
-	// scan for data
-
-	if( bPsuedoTag )
-	{
-		if( pps->curr[0] != '?' ) { rc = RC_ARG; LOGFAIL( rc ); goto FINI; }
-		pps->data_item = 0;
-		pps->data_first = pps->buf_first; // data for tag starts at start of buf
-		pps->data_last = pps->curr - 1;
-	}
-	else
-	{
-		if( pps->data_last == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto FINI; }
-
-		if( pps->data_last[1] == '!' )
-		{
-			pps->curr += 1; // skip sequence delimiter
-			pps->data_item++; // inc count when data is split
-		}
-		else
-		{
-			pps->curr += 4; // skip over tag to start of data
-			pps->data_item = 0;
-		}
-		pps->data_first = pps->curr;
-		ps2_scan_private( pps ); // find data for tag
-		pps->data_last = pps->curr - 1; // data ends prior to stopping char (or buf end)
-	}
-	pps->data_len = pps->data_last - pps->data_first + 1;
-
-	///////////////////////
-	// set the return tag
-
-	char char3 = bPsuedoTag ? '=' : pps->tagPTR[2];
-
-	pps->tagID = 0;
-#if defined(LITTLE_ENDIAN)
-	pps->tagID |= ((pps->tagPTR[0])     <<24)&0xff000000;
-	pps->tagID |= ((pps->tagPTR[1])     <<16)&0x00ff0000;
-	pps->tagID |= ((char3)              << 8)&0x0000ff00;
-	pps->tagID |= ((0x30+pps->data_item)<< 0)&0x000000ff;
-#else
-	pps->tagID |= ((pps->tagPTR[0])     << 0)&0x000000ff;
-	pps->tagID |= ((pps->tagPTR[1])     << 8)&0x0000ff00;
-	pps->tagID |= ((char3)              <<16)&0x00ff0000;
-	pps->tagID |= ((0x30+pps->data_item)<<24)&0xff000000;
-#endif
-	return pps->tagID;
-
-FINI:
-	pps->curr = pps->buf_last;
-	return pps->tagID = 0;
-}
-
 ///////////////////
 
 static void ar_uri_arglen( size_t* pArglen, byteptr arg, byteptr buf )
@@ -239,10 +99,10 @@ int ar_uri_locate_clue( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 	
 	parsestate2 ss;
 	parsestate2* pss = &ss;
-	ps2_init( pss, szRecord, strlen( szRecord ) );
+	ar_util_ps2_init( pss, szRecord, strlen( szRecord ) );
 
 	word32 token;
-	while( token = ps2_token( pss ) )
+	while( token = ar_util_ps2_token( pss ) )
 	{
 		if( token == 'mc=0' || token == 'sc=0' )
 		{ *ppFirst = ss.data_first; *ppLast = ss.data_last; break; }
@@ -264,10 +124,10 @@ int ar_uri_locate_topic( byteptr* ppFirst, byteptr* ppLast, byteptr szRecord )
 	
 	parsestate2 ss;
 	parsestate2* pss = &ss;
-	ps2_init( pss, szRecord, strlen( szRecord ) );
+	ar_util_ps2_init( pss, szRecord, strlen( szRecord ) );
 
 	word32 token;
-	while( token = ps2_token( pss ) )
+	while( token = ar_util_ps2_token( pss ) )
 	{
 		if( token == 'tp=0' )
 		{ *ppFirst = ss.data_first; *ppLast = ss.data_last; break; }
@@ -318,10 +178,10 @@ void ar_uri_parse_vardatalen( size_t* pLen, byteptr buf )
 
 	parsestate2 ss;
 	parsestate2* pss = &ss;
-	ps2_init( pss, buf, strlen( buf ) );
+	ar_util_ps2_init( pss, buf, strlen( buf ) );
 
 	word32 token;
-	while( token = ps2_token( pss ) )
+	while( token = ar_util_ps2_token( pss ) )
 	{
 		size_t deltalen = 0;
 
@@ -359,10 +219,10 @@ int ar_uri_parse_info( word16ptr pType, word16ptr pShares, byteptr pThreshold, b
 
 	parsestate2 ss;
 	parsestate2* pss = &ss;
-	ps2_init( pss, szRecord, strlen( szRecord ) );
+	ar_util_ps2_init( pss, szRecord, strlen( szRecord ) );
 
 	word32 token;
-	while( token = ps2_token( pss ) )
+	while( token = ar_util_ps2_token( pss ) )
 	{
 		if( token == 'ai=0' )		{ *pType = 1; break; }
 		else if( token == 'si=0' )	{ *pType = 2; break; }
@@ -543,10 +403,10 @@ int ar_uri_parse_a( arAuthptr* arecord_out, byteptr szRecord )
 
 	parsestate2 ss;
 	ps2ptr pss = &ss;
-	ps2_init( pss, szRecord, strlen(szRecord) );
+	ar_util_ps2_init( pss, szRecord, strlen(szRecord) );
 
 	word32 token = 0;
-	while( token = ps2_token( pss ) )
+	while( token = ar_util_ps2_token( pss ) )
 	{
 		if( token == '\n\0\0\0' ) { break; }
 
@@ -650,10 +510,10 @@ int ar_uri_parse_s( arShareptr* srecord_out, byteptr szRecord )
 
 	parsestate2 ss;
 	ps2ptr pss = &ss;
-	ps2_init( pss, szRecord, strlen(szRecord) );
+	ar_util_ps2_init( pss, szRecord, strlen(szRecord) );
 
 	word32 token = 0;
-	while( token = ps2_token( pss ) )
+	while( token = ar_util_ps2_token( pss ) )
 	{
 		if( token == '\n\0\0\0' ) { break; }
 

@@ -30,6 +30,9 @@ int ar_util_u16_hexdecode( size_t* deltalen, word16ptr buf, word16ptr bufend, by
 
 ////////
 
+byte ar_util_memcrc8_b8( byteptr buf, size_t len, byte start_0x8c );
+byte ar_util_memcrc8_w16( word16ptr buf, size_t word16len, byte start_0x8c );
+
 int ar_util_memcpy( byteptr buf, byteptr bufend, byteptr src, size_t len );
 int ar_util_strcpy( byteptr buf, byteptr bufend, byteptr src );
 int ar_util_strncpy( byteptr buf, byteptr bufend, byteptr src, size_t len );
@@ -58,6 +61,27 @@ int ar_util_vl2txt( byteptr buf, byteptr bufend, vlPoint v );
 
 int ar_util_txttow16( word16ptr pw, byteptr buf, size_t bufsize );
 int ar_util_w16totxt( byteptr buf, byteptr bufend, word16ptr pw );
+
+////////
+
+typedef struct
+{
+	byteptr buf_first;
+	byteptr buf_last;
+	//
+	byteptr curr;
+	word32	tagID;
+	byteptr	tagPTR;
+	//
+	byte	data_item;
+	byteptr	data_first;
+	byteptr	data_last;
+	size_t	data_len;
+} parsestate2;
+typedef parsestate2* ps2ptr;
+
+void ar_util_ps2_init( ps2ptr pps, byteptr buf, size_t buflen );
+word32 ar_util_ps2_token( ps2ptr pps );
 
 ////////
 

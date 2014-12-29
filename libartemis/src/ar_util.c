@@ -40,6 +40,26 @@ static byte b64charin[]  = {
         0x32, 0x33, // w - z
 }; // start at 0x2D
 
+// http://www.maximintegrated.com/en/app-notes/index.mvp/id/27
+static byte b8crc[] = {
+	0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 65,
+	157, 195, 33, 127, 252, 162, 64, 30, 95, 1, 227, 189, 62, 96, 130, 220,
+	35, 125, 159, 193, 66, 28, 254, 160, 225, 191, 93, 3, 128, 222, 60, 98,
+	190, 224, 2, 92, 223, 129, 99, 61, 124, 34, 192, 158, 29, 67, 161, 255,
+	70, 24, 250, 164, 39, 121, 155, 197, 132, 218, 56, 102, 229, 187, 89, 7,
+	219, 133, 103, 57, 186, 228, 6, 88, 25, 71, 165, 251, 120, 38, 196, 154,
+	101, 59, 217, 135, 4, 90, 184, 230, 167, 249, 27, 69, 198, 152, 122, 36,
+	248, 166, 68, 26, 153, 199, 37, 123, 58, 100, 134, 216, 91, 5, 231, 185,
+	140, 210, 48, 110, 237, 179, 81, 15, 78, 16, 242, 172, 47, 113, 147, 205,
+	17, 79, 173, 243, 112, 46, 204, 146, 211, 141, 111, 49, 178, 236, 14, 80,
+	175, 241, 19, 77, 206, 144, 114, 44, 109, 51, 209, 143, 12, 82, 176, 238,
+	50, 108, 142, 208, 83, 13, 239, 177, 240, 174, 76, 18, 145, 207, 45, 115,
+	202, 148, 118, 40, 171, 245, 23, 73, 8, 86, 180, 234, 105, 55, 213, 139,
+	87, 9, 235, 181, 54, 104, 138, 212, 149, 203, 41, 119, 244, 170, 72, 22,
+	233, 183, 85, 11, 136, 214, 52, 106, 43, 117, 151, 201, 74, 20, 246, 168,
+	116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53
+};
+
 ///////
 
 #if defined(_DEBUG)
@@ -384,6 +404,26 @@ EXIT:
 
 ///////////////////////////////////////
 
+// suitable for short strings
+byte ar_util_memcrc8_b8( byteptr buf, size_t len, byte start_0x8c )
+{
+	byte crc8 = start_0x8c;
+	for( size_t i=0; i<len; i++ ) { crc8 ^= b8crc[ buf[i] ]; }
+	return crc8;
+}
+
+byte ar_util_memcrc8_w16( word16ptr buf, size_t word16len, byte start_0x8c )
+{
+	byte crc8 = start_0x8c;
+	for( size_t i=0; i<word16len; i++ )
+	{
+		word16 v = buf[i]; // platform safe crc8
+		crc8 ^= b8crc[ (v >> 8) & 0xFF ]; // high bits first
+		crc8 ^= b8crc[ (v     ) & 0xFF ]; // low bits second
+	}
+	return crc8;
+}
+
 int ar_util_memcpy( byteptr buf, byteptr bufend, byteptr src, size_t len )
 {
 	int rc = 0;
@@ -590,6 +630,130 @@ int ar_util_isvalid7bit( byteptr szRecord )
 		if( szRecord[i] & 0x80 ) { return 0; }
 	}
 	return 1;
+}
+
+//////////////////
+
+static void ar_util_ps2_scan( ps2ptr pps )
+{
+	while( pps->curr <= pps->buf_last )
+	{
+		// buf can't start with tag marker, as there would be no psuedotag (+2 to ensure a 2 char psuedotag)
+		// also, buf can't end with tag marker, as there would be no data (-1 to allow 1 char of data at end)
+		if( pps->buf_first + 2 <= pps->curr && pps->curr <= pps->buf_last - 3 - 1 )
+		{
+			// look for tag patterns ?__= or &__=
+			if( pps->curr[0] == '?' && pps->curr[3] == '=' ) { break; } // found front tag
+			if( pps->curr[0] == '&' && pps->curr[3] == '=' ) { break; } // found interior tag
+		}
+		// buf can't start with tag delim, as there would be no tag marker (+7 to ensure a 2 char psuedotag, 4 char tag with markers and 1 char data before delim)
+		// also, buf can't end with tag delim, as there would be no data (-1 to allow 1 char of data at end)
+		if( pps->buf_first + 7 <= pps->curr && pps->curr <= pps->buf_last - 1 )
+		{
+			if( pps->curr[0] == '!' ) { break; } // found tag delim
+		}
+		if( pps->curr[0] == '\n' ) { break; } // end of line
+		(pps->curr) += 1; // next char
+	}
+}
+
+void ar_util_ps2_init( ps2ptr pps, byteptr buf, size_t buflen )
+{
+	int rc = 0;
+
+	if( !pps ) { rc = RC_INTERNAL; LOGFAIL( rc ); return; }
+	pps->buf_first = pps->curr = buf;
+	pps->buf_last = buf + buflen - 1;
+	pps->tagID = 0;
+	//
+	pps->tagPTR = pps->data_last = pps->data_first = 0;
+}
+
+word32 ar_util_ps2_token( ps2ptr pps )
+{
+	int rc = 0;
+
+	int bPsuedoTag = ( pps->curr == pps->buf_first );
+
+	if( pps->curr > pps->buf_last ) { return pps->tagID = 0; } // no more
+
+	///////////////////////
+	// find next tag
+
+	ar_util_ps2_scan( pps );
+	if( pps->curr[0] == '\n' ) { pps->curr++; return pps->tagID = '\n\0\0\0'; } // end of line
+	if( pps->curr > pps->buf_last ) { rc = RC_ARG; LOGFAIL( rc ); goto FINI; } // found buffer end without finding a tag
+	if( bPsuedoTag && pps->curr[0] != '?' ) { rc = RC_ARG; LOGFAIL( rc ); goto FINI; } // first delim not '?'
+
+	///////////////////////
+	// handle tag type
+
+	if( bPsuedoTag )
+	{
+		pps->tagPTR = pps->buf_first; // return psuedotag
+	}
+	else if( pps->curr[0] == '&' || pps->curr[0] == '?' )
+	{
+		pps->tagPTR = pps->curr + 1; // construct tag from buf chars
+	}
+	else if( pps->curr[0] == '!' )
+	{
+		// no touchie tagPTR
+	}
+	else { rc = RC_ARG; LOGFAIL( rc ); goto FINI; } // check for invalid scan termination
+
+	///////////////////////
+	// scan for data
+
+	if( bPsuedoTag )
+	{
+		if( pps->curr[0] != '?' ) { rc = RC_ARG; LOGFAIL( rc ); goto FINI; }
+		pps->data_item = 0;
+		pps->data_first = pps->buf_first; // data for tag starts at start of buf
+		pps->data_last = pps->curr - 1;
+	}
+	else
+	{
+		if( pps->data_last == 0 ) { rc = RC_ARG; LOGFAIL( rc ); goto FINI; }
+
+		if( pps->data_last[1] == '!' )
+		{
+			pps->curr += 1; // skip sequence delimiter
+			pps->data_item++; // inc count when data is split
+		}
+		else
+		{
+			pps->curr += 4; // skip over tag to start of data
+			pps->data_item = 0;
+		}
+		pps->data_first = pps->curr;
+		ar_util_ps2_scan( pps ); // find data for tag
+		pps->data_last = pps->curr - 1; // data ends prior to stopping char (or buf end)
+	}
+	pps->data_len = pps->data_last - pps->data_first + 1;
+
+	///////////////////////
+	// set the return tag
+
+	char char3 = bPsuedoTag ? '=' : pps->tagPTR[2];
+
+	pps->tagID = 0;
+#if defined(LITTLE_ENDIAN)
+	pps->tagID |= ((pps->tagPTR[0])     <<24)&0xff000000;
+	pps->tagID |= ((pps->tagPTR[1])     <<16)&0x00ff0000;
+	pps->tagID |= ((char3)              << 8)&0x0000ff00;
+	pps->tagID |= ((0x30+pps->data_item)<< 0)&0x000000ff;
+#else
+	pps->tagID |= ((pps->tagPTR[0])     << 0)&0x000000ff;
+	pps->tagID |= ((pps->tagPTR[1])     << 8)&0x0000ff00;
+	pps->tagID |= ((char3)              <<16)&0x00ff0000;
+	pps->tagID |= ((0x30+pps->data_item)<<24)&0xff000000;
+#endif
+	return pps->tagID;
+
+FINI:
+	pps->curr = pps->buf_last;
+	return pps->tagID = 0;
 }
 
 //////////////////
