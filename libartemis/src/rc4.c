@@ -2,6 +2,8 @@
 
 #include "rc4.h"
 
+#include <string.h>
+
 // Key Scheduling Algorithm 
 // Input: state - the state used to generate the keystream
 //        key - Key to use to initialize the state 
@@ -42,4 +44,5 @@ void rc4( byteptr key, word32 keylen, word32 skip, byteptr txt, word32 txtlen )
 	ksa( state, key, keylen );
 	prga( state, 0, skip );
 	prga( state, txt, txtlen );
+	memset( state, 0, 256 ); // clear
 }
