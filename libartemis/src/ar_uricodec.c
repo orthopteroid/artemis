@@ -311,6 +311,9 @@ int ar_uri_create_s( byteptr buf, byteptr bufend, arShare* pSRecord )
 	int rc = 0;
 	STACKGAP();
 
+	if( !buf ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+	if( !pSRecord ) { rc = RC_NULL; LOGFAIL( rc ); goto EXIT; }
+
 	size_t buflen = 0;
 	size_t tokenlen = 0;
 	word32 ordering[] = {'tp=\0', 'si=\0', 'ss=\0', 'sh=\0', 'sc=\0' };
