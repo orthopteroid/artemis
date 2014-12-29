@@ -172,7 +172,7 @@ static void ar_core_cryptcoefs( gfPoint* pCryptCoefArr, size_t numThres )
 static void ar_core_rc4( byteptr buf, size_t buflen, gfPoint gfKey )
 {
 	vlPoint vlKey;
-	gfPack( gfKey, vlKey );
+	gfPack( vlKey, gfKey );
 
 	word32 rc4cranks = 1000;
 	size_t deltalen = 0;
@@ -367,7 +367,7 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 		(*srecordtbl_out)[i]->threshold = numThres;
 		(*srecordtbl_out)[i]->shareid = shareIDArr[i];
 
-		gfPack( shareArr[i], (*srecordtbl_out)[i]->share );
+		gfPack( (*srecordtbl_out)[i]->share, shareArr[i] );
 
 		////////////
 

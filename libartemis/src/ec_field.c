@@ -513,7 +513,7 @@ int gfYbit (const gfPoint p)
 } /* gfYbit */
 
 
-void gfPack (const gfPoint p, vlPoint k)
+void gfPack( vlPoint k, const gfPoint p )
 	/* packs a field point into a vlPoint */
 {
 	if( !gfIsValid( p ) ) { LOGFAIL( RC_INTERNAL ); vlClear( k ); return; }
@@ -531,7 +531,7 @@ void gfPack (const gfPoint p, vlPoint k)
 } /* gfPack */
 
 
-int gfUnpack (gfPoint p, const vlPoint k)
+int gfUnpack( gfPoint p, const vlPoint k )
 	/* unpacks a vlPoint into a field point */
 {
 	if( !vlIsValid( k ) ) { LOGFAIL( RC_INTERNAL ); gfClear( p ); return 1; }

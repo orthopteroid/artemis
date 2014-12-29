@@ -47,10 +47,10 @@ int ecMultiply (ecPoint *p, const vlPoint k);
 int ecYbit (const ecPoint *p);
 	/* evaluates to 0 if p->x == 0, otherwise to gfYbit (p->y / p->x) */
 
-void ecPack (const ecPoint *p, vlPoint k);
+void ecPack( vlPoint k, const ecPoint *p );
 	/* packs a curve point into a vlPoint */
 
-int ecUnpack (ecPoint *p, const vlPoint k);
+int ecUnpack( ecPoint *p, const vlPoint k );
 	/* unpacks a vlPoint into a curve point, returns 0 if error */
 
 #endif /* __EC_CURVE_H */

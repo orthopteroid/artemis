@@ -85,7 +85,7 @@ int  gfSolveQuad (gfPoint p, const gfPoint q);
 int  gfYbit (const gfPoint p);
 	/* evaluates to the rightmost (least significant) bit of p (or an error code) */
 
-void gfPack (const gfPoint p, vlPoint k);
+void gfPack (vlPoint k, const gfPoint p);
 	/* packs a field point into a vlPoint */
 
 int gfUnpack (gfPoint p, const vlPoint k);

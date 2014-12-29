@@ -281,7 +281,7 @@ int ecYbit (const ecPoint *p)
 } /* ecYbit */
 
 
-void ecPack (const ecPoint *p, vlPoint k)
+void ecPack( vlPoint k, const ecPoint *p )
 	/* packs a curve point into a vlPoint */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); k[0] = 0; return; }
@@ -290,7 +290,7 @@ void ecPack (const ecPoint *p, vlPoint k)
 
 	if( p->x[0] )
 	{
-		gfPack(p->x, k);
+		gfPack( k, p->x );
 		vlShortLshift (k, 1);
 		vlSetUnit(a, (word16) ecYbit (p));
 		vlAdd(k, a);
@@ -302,7 +302,7 @@ void ecPack (const ecPoint *p, vlPoint k)
 } /* ecPack */
 
 
-int ecUnpack (ecPoint *p, const vlPoint k)
+int ecUnpack( ecPoint *p, const vlPoint k )
 	/* unpacks a vlPoint into a curve point */
 {
 	if( !p ) { LOGFAIL( RC_INTERNAL ); return 1; }
@@ -391,9 +391,9 @@ int ecSelfTest (int test_count)
 			/* printf ("Y calculation test #%d failed!\n", i); */
 		}
 		/* packing test: unpack (pack (f)) = f */
-		ecPack (&f, p);
-		ecUnpack (&x, p);
-		if (!ecEqual (&f, &x)) {
+		ecPack( p, &f );
+		ecUnpack( &x, p );
+		if (!ecEqual( &f, &x )) {
 			pfail++;
 			/* printf ("Packing test #%d failed!\n", i); */
 		}

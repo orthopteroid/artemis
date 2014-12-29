@@ -147,12 +147,12 @@ void ar_shamir_test()
 				gfPoint g;
 				gfUnpack(g, vl0);
 				gfReduce(g);
-				gfPack(g, vl0);
+				gfPack(vl0, g);
 			}
 
 			ecPoint ec0, ec1;
 			ecUnpack( &ec0, vl0 );
-			ecPack( &ec0, vl1 );
+			ecPack( vl1, &ec0 );
 			ecUnpack( &ec1, vl1 );
 			TESTASSERT( ecEqual( &ec0, &ec1 ) );
 			TESTASSERT( vlEqual( vl0, vl1 ) );

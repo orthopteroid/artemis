@@ -33,9 +33,9 @@ int cpMakePublicKey( vlPoint vlPublicKey, const vlPoint vlPrivateKey)
 	int rc = 0;
 	ecPoint ecPublicKey;
 
-	ecCopy (&ecPublicKey, &curve_point);
+	ecCopy( &ecPublicKey, &curve_point );
 	if( rc = ecMultiply( &ecPublicKey, vlPrivateKey ) ) { LOGFAIL( rc ); goto EXIT; }
-	ecPack (&ecPublicKey, vlPublicKey);
+	ecPack( vlPublicKey, &ecPublicKey );
 EXIT:
 	return rc;
 } /* cpMakePublicKey */
@@ -46,12 +46,12 @@ int cpEncodeSecret(vlPoint vlSecret, vlPoint vlMessage, const vlPoint vlPublicKe
 	int rc = 0;
 	ecPoint q;
 
-	ecCopy (&q, &curve_point);
+	ecCopy( &q, &curve_point );
 	if( rc = ecMultiply( &q, vlSecret ) ) { LOGFAIL( rc ); goto EXIT; }
-	ecPack (&q, vlMessage);
-	ecUnpack (&q, vlPublicKey);
+	ecPack( vlMessage, &q );
+	ecUnpack( &q, vlPublicKey );
 	if( rc = ecMultiply( &q, vlSecret ) ) { LOGFAIL( rc ); goto EXIT; }
-	gfPack (q.x, vlSecret);
+	gfPack( vlSecret, q.x );
 EXIT:
 	return rc;
 } /* cpMakeSecret */
@@ -62,9 +62,9 @@ int cpDecodeSecret(vlPoint d, vlPoint vlMessage, const vlPoint vlPrivateKey)
 	int rc = 0;
 	ecPoint q;
 
-	ecUnpack (&q, vlMessage);	
+	ecUnpack( &q, vlMessage );
 	if( rc = ecMultiply( &q, vlPrivateKey ) ) { LOGFAIL( rc ); goto EXIT; }
-	gfPack(q.x, d);
+	gfPack( d, q.x );
 EXIT:
 	return rc;
 } /* ecDecodeSecret */
@@ -78,7 +78,7 @@ int cpSign(cpPair * sig, const vlPoint vlPrivateKey, const vlPoint k, const vlPo
 	vlClear( tmp );
 	ecCopy( &q, &curve_point );
 	if( rc = ecMultiply( &q, k ) ) { LOGFAIL( rc ); goto EXIT; }
-	gfPack(q.x, sig->r);
+	gfPack( sig->r, q.x );
 	vlAdd( sig->r, vlMac );
 	vlRemainder( sig->r, prime_order );
 	if( sig->r[0] == 0 ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
@@ -112,7 +112,7 @@ int cpVerify(int* pEqual, cpPair * sig, const vlPoint vlPublicKey, const vlPoint
 	if( rc = ecUnpack( &t2, vlPublicKey ) ) { LOGFAIL( rc ); goto EXIT; }
 	if( rc = ecMultiply( &t2, sig->r ) ) { LOGFAIL( rc ); goto EXIT; }
 	ecAdd( &t1, &t2 );
-	gfPack( t1.x, t4 );
+	gfPack( t4, t1.x );
 	vlRemainder( t4, prime_order );
 	vlCopy( t3, sig->r );
 	if( vlGreater( t4, t3 ) ) { vlAdd( t3, prime_order ); }
