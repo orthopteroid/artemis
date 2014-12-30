@@ -134,31 +134,33 @@ void ar_shamir_test()
 		}
 	}
 
-#if 0
 	{
-		printf("# test ecPacking\n");
+		printf("# test public-key point-compression\n");
 
 		for( int i=0; i<100; i++ )
 		{
-			vlPoint vl0, vl1;
-			vlSetRandom( vl0, &ar_util_rnd16, VL_BYTES );
+			vlPoint pri, vlp0, vlp1;
+			vlSetRandom( pri, &ar_util_rnd16, AR_AUTHKEYBYTES );
 
-			if(0){
-				gfPoint g;
-				gfUnpack(g, vl0);
-				gfReduce(g);
-				gfPack(vl0, g);
-			}
+			// reposition onto curve
+			cpMakePublicKey( vlp0, pri );
 
-			ecPoint ec0, ec1;
-			ecUnpack( &ec0, vl0 );
-			ecPack( vl1, &ec0 );
-			ecUnpack( &ec1, vl1 );
-			TESTASSERT( ecEqual( &ec0, &ec1 ) );
-			TESTASSERT( vlEqual( vl0, vl1 ) );
+			// compress
+			ecPoint compressedPoint;
+			TESTASSERT( 0 == ecUnpack( &compressedPoint, vlp0 ) );
+			int ybit = ecYbit( &compressedPoint );
+			gfClear( compressedPoint.y );
+
+			// uncompress
+			ecPoint ecp1;
+			ecClear( &ecp1 );
+			gfCopy( ecp1.x, compressedPoint.x );
+			TESTASSERT( 0 == ecCalcY( &ecp1, ybit ) );
+			ecPack( vlp1, &ecp1 );
+
+			TESTASSERT( vlEqual( vlp0, vlp1 ) );
 		}
 	}
-#endif
 
 	{
 		printf("# test signing\n");
