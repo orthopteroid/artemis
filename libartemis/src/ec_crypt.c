@@ -77,11 +77,11 @@ int cpSign(cpPair * sig, const vlPoint vlPrivateKey, const vlPoint k, const vlPo
 	
 	vlClear( tmp );
 	ecCopy( &q, &curve_point );
-	if( rc = ecMultiply( &q, k ) ) { LOGFAIL( rc ); goto EXIT; }
+	if( rc = ecMultiply( &q, k ) ) { LOGFAIL( rc ); cpClear( sig ); goto EXIT; }
 	gfPack( sig->r, q.x );
 	vlAdd( sig->r, vlMac );
 	vlRemainder( sig->r, prime_order );
-	if( sig->r[0] == 0 ) { rc = RC_INTERNAL; LOGFAIL( rc ); goto EXIT; }
+	if( sig->r[0] == 0 ) { rc = RC_INTERNAL; LOGFAIL( rc ); cpClear( sig ); goto EXIT; }
 	vlMulMod( tmp, vlPrivateKey, sig->r, prime_order );
 	vlCopy( sig->s, k );
 	if( vlGreater( tmp, sig->s ) ) { vlAdd( sig->s, prime_order ); }

@@ -316,7 +316,11 @@ int ecUnpack( ecPoint *p, const vlPoint k )
 	vlShortRshift(a, 1);
 	if( 1 == gfUnpack( p->x, a ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
 
-	if( p->x[0] || yb ) { return ecCalcY(p, yb); }
+	if( p->x[0] || yb )
+	{
+		if( 1 == ecCalcY( p, yb ) ) { LOGFAIL( RC_INTERNAL ); ecClear( p ); return 1; }
+		return 0;
+	}
 
 	p->y[0] = 0;
 	return 0;
