@@ -240,6 +240,8 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	int rc = 0;
 	STACKGAP();
 	
+	vlPoint pubSigningkey, priSigningkey, mac;
+
 	gfPoint* gfCryptCoefArr = 0;
 	gfPoint* shareArr = 0;
 	word16* shareIDArr = 0;
@@ -388,29 +390,17 @@ int ar_core_create( arAuthptr* arecord_out, arSharetbl* srecordtbl_out, word16 n
 	///////////////////
 	// make keypair and sign structures
 
+	if( rc = ar_core_makekeypair( pubSigningkey, priSigningkey ) ) { LOGFAIL( rc ); goto EXIT; }
+
+	vlCopy( arecord_out[0]->pubkey, pubSigningkey );
+	ar_core_mac_arecord( mac, arecord_out[0], AR_VERSION );
+	if( rc = ar_core_sign( &arecord_out[0]->authsig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
+
+	for( int i=0; i<numShares; i++ )
 	{
-		vlPoint pubSigningkey, priSigningkey;
-
-		if( rc = ar_core_makekeypair( pubSigningkey, priSigningkey ) ) { LOGFAIL( rc ); goto EXIT; }
-
-		{
-			vlPoint mac;
-
-			vlCopy( arecord_out[0]->pubkey, pubSigningkey );
-			ar_core_mac_arecord( mac, arecord_out[0], AR_VERSION );
-			if( rc = ar_core_sign( &arecord_out[0]->authsig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
-
-			for( int i=0; i<numShares; i++ )
-			{
-				vlCopy( (*srecordtbl_out)[i]->pubkey, pubSigningkey );
-				ar_core_mac_srecord( mac, (*srecordtbl_out)[i], AR_VERSION );
-				if( rc = ar_core_sign( &(*srecordtbl_out)[i]->sharesig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
-			}
-
-			vlClear( mac );
-		}
-		vlClear( pubSigningkey );
-		vlClear( priSigningkey );
+		vlCopy( (*srecordtbl_out)[i]->pubkey, pubSigningkey );
+		ar_core_mac_srecord( mac, (*srecordtbl_out)[i], AR_VERSION );
+		if( rc = ar_core_sign( &(*srecordtbl_out)[i]->sharesig, pubSigningkey, priSigningkey, mac ) ) { LOGFAIL( rc ); goto EXIT; }
 	}
 
 	///////////////////
@@ -422,6 +412,10 @@ EXIT:
 
 	// add entropy to pool, so we don't leave it available for easy snooping
 	ar_util_rndcrank(0,0);
+
+	vlClear( mac );
+	vlClear( pubSigningkey );
+	vlClear( priSigningkey );
 
 	if( gfCryptCoefArr ) { memset( gfCryptCoefArr, 0, sizeof(gfPoint) * numThres ); free( gfCryptCoefArr ); }
 	if( shareArr ) { memset( shareArr, 0, sizeof(gfPoint) * numShares ); free( shareArr ); }
