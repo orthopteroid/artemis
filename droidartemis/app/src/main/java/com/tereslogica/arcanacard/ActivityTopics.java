@@ -400,9 +400,6 @@ public class ActivityTopics extends FragmentActivity {
             case R.id.menu_licenses:
                 Notifier.ShowText(thisActivity, R.string.text_licenses);
                 return true;
-            case R.id.menu_cryptoinfo:
-                Notifier.ShowText(thisActivity, R.string.text_cryptoinfo);
-                return true;
             case R.id.menu_howtos:
                 Notifier.ShowHowto( thisActivity, R.string.text_howto_intro, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int _which) {
@@ -412,7 +409,11 @@ public class ActivityTopics extends FragmentActivity {
                                     public void onClick(DialogInterface dialog, int _which) {
                                         Notifier.ShowHowto( thisActivity, R.string.text_howto_indicators, new DialogInterface.OnClickListener() {
                                             public void onClick(DialogInterface dialog, int _which) {
-                                                Notifier.ShowHowto( thisActivity, R.string.text_howto_test, null );
+                                                Notifier.ShowHowto( thisActivity, R.string.text_howto_test, new DialogInterface.OnClickListener() {
+                                                    public void onClick(DialogInterface dialog, int _which) {
+                                                        Notifier.ShowHowto( thisActivity, R.string.text_howto_scrolltimer, null );
+                                                    }
+                                                });
                                             }
                                         });
                                     }

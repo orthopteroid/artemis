@@ -95,12 +95,12 @@ The topic list shows information about cards and the set it was minted with. Arc
 On the main screen you can short-press on a topic to read a message or long-press to access
  other topic-related options where you can view the QRCodes or send them to a PC for printing.
 \n\nExporting your topic to a PC and printing the codes is the way to take ArcanaCard out
- into the real world.
+ into the physical world.
     </string>
 
     <string name="text_howto_scrolltimer">
-Use a scrolltimer to have the app randomly switch to a different card in the set after a delay.\n
-\nYou can host a \'guess the author\' style of game this way.
+When viewing a set of cards, use a scrolltimer to have the app randomly switch to a different card in the set after a delay.\n
+\nYou can host a \'guess the author\' style of game this way with a group of people.
     </string>
 
     <string name="text_features_limitedversion">
@@ -108,8 +108,7 @@ This version of ArcanaCard is restricted to 7 keys, 7 locks and 63 character
  messages and clues.</string>
 
     <string name="text_eula">
-TLDR: This software is a toy. Don\'t do anything serious with it.\n
-\nBy using this software you accept the following:\n
+By using this software you accept the following:\n
 \nTHIS SOFTWARE IS PROVIDED \"AS IS\" AND ANY EXPRESS
  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -127,15 +126,12 @@ This software contains components developed by tereslogica &lt;tereslogica@gmail
 \n\npegwit, Public Domain, License granted by George Barwood  &lt;george.barwood@dial.pipex.com&gt;,
  Paulo S.L.M. Barreto &lt;pbarreto@uninet.com.br&gt; and Mr. Tines &lt;tines@windsong.demon.co.uk&gt;
 \n\nsha1, Public Domain, License granted by Steve Reid &lt;steve@edmweb.com&gt;
-\n\nzxing, Copyright 2007 ZXing Authors, Apache 2.0 License, http://www.apache.org/licenses/LICENSE-2.0.html
+\n\nzxing, Copyright ZXing Authors, Apache 2.0 License, http://www.apache.org/licenses/LICENSE-2.0.html
+\n\n1-wire, Copyright Maxim/Dallas Semiconductor Corporation, Public Use License
 \n\nPortions of works by William Shakespeare, Jules Verne and Beatrix Potter all Public Domain.
+\n\nThis app uses rc4 with a 56 bit key, Shamir\'s Secret Sharing Algorithm with 56 bit coefficients,
+ and per-topic/single-use 96 bit ECDSA on the non-prime binary-field GF(2^112).
     </string>
-    <string name="text_cryptoinfo">
-This application stores hidden messages using the rc4 cipher with a 56 bit key and uses
- Shamir\'s Secret Sharing Algorithm with 56 bit coefficients for key reconstruction. Topic
- tokens are signed with per-topic, single-use 96 bit authentication keys. All field
- arithmetic is performed on the non-prime binary-field GF(2^112). This application claims
- export-restriction exempt status under Wassenaar 5.A.2.a.1.a and US EAR 5x992.
-    </string>
+<!-- Wassenaar 5.A.2.a.1.a and US EAR 5x992 compliant -->
 
 </resources>
