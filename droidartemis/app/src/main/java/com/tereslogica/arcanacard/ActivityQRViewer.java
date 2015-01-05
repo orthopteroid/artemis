@@ -1,18 +1,23 @@
 package com.tereslogica.arcanacard;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -24,6 +29,8 @@ public class ActivityQRViewer extends FragmentActivity {
     private ListView listView;
     private ArtemisSQL.SortOrder sortOrder = ArtemisSQL.SortOrder.MOSTRECENT;
     private ArrayList<ArtemisShare> shareArrayList = new ArrayList<ArtemisShare>();
+    private Handler uiThreadScrollTimer = null;
+    private Random rndGen = new Random();
 
     ////////////////////////////////////
 
@@ -134,5 +141,62 @@ public class ActivityQRViewer extends FragmentActivity {
         if (cursor != null) {
             (new ShareArrayLoader()).execute(cursor);
         }
+    }
+
+    ////////////////
+    // menu creation & handling
+
+    private void setScrollTimer() {
+        String delayValues[] = {"disabled", "1 second", "2 seconds", "3 seconds"};
+
+        Notifier.ShowMenu( thisActivity, R.string.dialog_info_scrolltimer, delayValues, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int _which) {
+                uiThreadScrollTimer = null;
+                if( _which == 0 ) { return; }
+
+                final Integer delay = _which * 1000;
+
+                // http://stackoverflow.com/questions/1921514/how-to-run-a-runnable-thread-in-android
+                uiThreadScrollTimer = new Handler();
+                final Runnable r = new Runnable() // synchronous to ui thread
+                {
+                    public void run()
+                    {
+                        if( uiThreadScrollTimer != null ) {
+                            listView.smoothScrollToPosition( rndGen.nextInt( listView.getCount() ) );
+                            uiThreadScrollTimer.postDelayed(this, delay);
+                        }
+                    }
+                };
+                uiThreadScrollTimer.postDelayed(r, delay);
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.viewer_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_viewer_scrolltimer:
+                if( false == Prefs.GetAndSetBool( Prefs.HOWTO_SCROLLTIMER ) ) {
+                    Notifier.ShowHowto( thisActivity, R.string.text_howto_scrolltimer, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int _which) {
+                            setScrollTimer();
+                        }
+                    });
+                } else {
+                    setScrollTimer();
+                }
+                break;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

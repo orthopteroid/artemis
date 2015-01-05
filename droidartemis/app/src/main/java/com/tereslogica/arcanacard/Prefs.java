@@ -16,6 +16,7 @@ public class Prefs {
     public static final String HOWTO_INTRO = "howto-intro";
     public static final String HOWTO_TEST = "howto-test";
     public static final String HOWTO_AUTOFILL = "howto-autofill";
+    public static final String HOWTO_SCROLLTIMER = "howto-scrolltimer";
 
     public static int DEFAULT_WIDTH = 300;
     public static int DEFAULT_HEIGHT = 300;

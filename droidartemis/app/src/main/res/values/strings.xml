@@ -15,6 +15,7 @@
     <string name="menu_clearfill">Clear items</string>
     <string name="menu_autofill">Autofill</string>
     <string name="menu_cryptoinfo">Crypto info</string>
+    <string name="menu_scrolltimer">Scrolltimer</string>
     <string name="dialog_howto">Howto</string>
     <string name="dialog_selectsorting">Change Sorting</string>
     <string name="dialog_noscanner">Scanner app (zxing) not found.</string>
@@ -24,6 +25,7 @@
     <string name="dialog_info_clue">New clue found</string>
     <string name="dialog_info_topic">New topic found</string>
     <string name="dialog_info_autofill">Select Autofill</string>
+    <string name="dialog_info_scrolltimer">Select Delay</string>
     <string name="dialog_newtopic">New topic created</string>
     <string name="dialog_err_encode">There was an encoding failure.</string>
     <string name="dialog_err_decode">There was a decoding failure.</string>
@@ -51,8 +53,7 @@ ArcanaCard allows you to make short hidden messages that require multiple keys t
 \n\nTo reveal a message you must have the message card and at least two of the key
  cards; exactly how many keys you require will depend on the \'locks\' setting when the topic was minted.
 \n\nArcanaCard shares topics using QRCodes and so needs you to install a QRCode scanning app,
- like ZXing or Google Goggles. As well, it works best with physically printed QRCodes that
- you can trade between friends or hide for friends to find.
+ like ZXing or Google Goggles.
 \n\nTo get started press the NEW BUTTON to create your first topic.
     </string>
 
@@ -70,7 +71,7 @@ You create a new topic with a message, hidden by a number of locks and unlockabl
 Autofill will create an example game for you using some works that are in the
  public domain.
 \n\nThis kind of game requires you to guess the title of an author\'s book or play from
- only seeing famous portions of its text. You lose if you collect enough keys to unlock it.
+ only seeing famous portions of its text. How you win the game is up to you: the first to guess the book, or the first to unlock the message.
 \n\nAutofill works with your current key and lock settings, so you can customize the difficulty of each game.
     </string>
 
@@ -79,7 +80,7 @@ Great work, you\'ve made a new topic!
     </string>
 
     <string name="text_howto_indicators">
-Each card contains information about the set it was minted with. ArcanaCard can show you this
+The topic list shows information about cards and the set it was minted with. ArcanaCard can show you this
  information and how many cards of each topic you currently have. The main screen shows
  these indicators in the top right of each topic:
 \n\n* M nK nL nT
@@ -95,6 +96,11 @@ On the main screen you can short-press on a topic to read a message or long-pres
  other topic-related options where you can view the QRCodes or send them to a PC for printing.
 \n\nExporting your topic to a PC and printing the codes is the way to take ArcanaCard out
  into the real world.
+    </string>
+
+    <string name="text_howto_scrolltimer">
+Use a scrolltimer to have the app randomly switch to a different card in the set after a delay.\n
+\nYou can host a \'guess the author\' style of game this way.
     </string>
 
     <string name="text_features_limitedversion">
