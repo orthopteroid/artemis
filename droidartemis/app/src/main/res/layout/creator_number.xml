@@ -11,10 +11,10 @@
         android:layout_height="wrap_content"
         android:layout_toLeftOf="@+id/button_more"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:focusable="true"
+        android:focusable="false"
         android:enabled="true"
         android:inputType="number"
-        android:editable="true"
+        android:editable="false"
     />
 
     <Button
